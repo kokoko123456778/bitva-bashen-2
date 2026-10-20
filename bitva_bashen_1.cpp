@@ -1211,7 +1211,7 @@ typedef ProfileT<MAXCARDS> Profile;
 typedef ProfileT<23> ProfileV1;                                     // первая версия (23 карты)
 static_assert(NCARD <= MAXCARDS, "карт больше запаса");
 // ---- баланс: множители силы карт, подобраны на 24 000 боях ботов (цель - 49-52% побед) ----
-static const float BAL_K[NCARD] = {0.999f, 0.875f, 1.152f, 1.269f, 1.228f, 0.942f, 0.976f, 0.992f, 0.914f, 1.000f, 0.971f, 0.842f, 1.144f, 0.987f, 1.300f, 0.750f, 0.904f, 0.750f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 0.750f, 0.944f, 1.233f, 0.750f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.300f, 1.579f};
+static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.144f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.300f, 1.579f};
 static void balanceInit() {
   static bool done = false; if (done) return; done = true;
   for (int c = 0; c < NCARD; c++) { float k = BAL_K[c]; if (fabsf(k - 1) < 1e-4f) continue; Card &cd = CARDS[c];

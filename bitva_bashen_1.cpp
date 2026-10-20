@@ -1227,14 +1227,27 @@ static void newProfile() {
   newQuests(); newShop();
 }
 static const unsigned SAVE_MAGIC = 0xBA5E0001u;
-static void saveProfile() {
-  FILE *f = fopen(pth("bashni.sav"), "wb"); if (!f) return;
-  unsigned m = SAVE_MAGIC; int sz = (int)sizeof pf; fwrite(&m, 4, 1, f); fwrite(&sz, 4, 1, f); fwrite(&pf, sizeof pf, 1, f); fclose(f);
+// сохранение надёжно: пишем во временный файл, проверяем и только потом подменяем; прошлое сохранение остаётся копией
+static unsigned profSum(const Profile &p) { const unsigned char *b = (const unsigned char *)&p; unsigned h = 2166136261u; for (size_t i = 0; i < sizeof p; i++) { h ^= b[i]; h *= 16777619u; } return h; }
+static bool writeProfileTo(const char *fn) {
+  FILE *f = fopen(fn, "wb"); if (!f) return false;
+  unsigned m = SAVE_MAGIC; int sz = (int)sizeof pf; unsigned cs = profSum(pf);
+  bool ok = fwrite(&m, 4, 1, f) == 1 && fwrite(&sz, 4, 1, f) == 1 && fwrite(&pf, sizeof pf, 1, f) == 1 && fwrite(&cs, 4, 1, f) == 1;
+  ok = (fflush(f) == 0) && ok; ok = (fclose(f) == 0) && ok; return ok;
 }
-static bool loadProfile() {
-  FILE *f = fopen(pth("bashni.sav"), "rb"); if (!f) return false;
+static void saveProfile() {
+  char tmp[600], main0[600], bak[600]; snprintf(tmp, sizeof tmp, "%s", pth("bashni.tmp")); snprintf(main0, sizeof main0, "%s", pth("bashni.sav")); snprintf(bak, sizeof bak, "%s", pth("bashni.bak"));
+  if (!writeProfileTo(tmp)) { writeProfileTo(main0); return; }
+  remove(bak); rename(main0, bak);                       // старое сохранение - в запас
+  if (rename(tmp, main0) != 0) writeProfileTo(main0);
+}
+static bool loadProfileFrom(const char *fn);
+static bool loadProfile() { if (loadProfileFrom(pth("bashni.sav"))) return true; if (loadProfileFrom(pth("bashni.bak"))) { saveProfile(); return true; } return loadProfileFrom(pth("bashni.tmp")); }
+static bool loadProfileFrom(const char *fn) {
+  FILE *f = fopen(fn, "rb"); if (!f) return false;
   unsigned m = 0; int sz = 0; bool ok = fread(&m, 4, 1, f) == 1 && fread(&sz, 4, 1, f) == 1 && m == SAVE_MAGIC;
-  if (ok && sz == (int)sizeof pf) ok = fread(&pf, sizeof pf, 1, f) == 1;
+  if (ok && sz == (int)sizeof pf) { static Profile t; ok = fread(&t, sizeof t, 1, f) == 1; unsigned cs = 0; if (ok && fread(&cs, 4, 1, f) == 1 && cs != profSum(t)) ok = false;   // повреждённый файл не берём
+    if (ok) pf = t; }
   else if (ok && sz == (int)sizeof(ProfileV1)) { static ProfileV1 o; ok = fread(&o, sizeof o, 1, f) == 1;           // старое сохранение: переносим поля
     if (ok) { memset(&pf, 0, sizeof pf); memcpy(pf.name, o.name, sizeof pf.name); pf.gold = o.gold; pf.gems = o.gems; pf.trophies = o.trophies; pf.bestTrophies = o.bestTrophies; pf.kingLvl = o.kingLvl; pf.kingXp = o.kingXp;
       pf.wins = o.wins; pf.losses = o.losses; pf.threeCrowns = o.threeCrowns; for (int c = 0; c < MAXCARDS; c++) { pf.lvl[c] = c < 23 ? o.lvl[c] : 1; pf.cnt[c] = c < 23 ? o.cnt[c] : 0; pf.have[c] = c < 23 ? o.have[c] : false; }
@@ -2903,7 +2916,8 @@ int main(int argc, char **argv) {
   rotMode = false; LW = SW; LH = SH;
   computeSize(); if (!allocBuffers()) return 1;
   srand((unsigned)time(NULL));
-  if (!loadProfile()) { newProfile(); saveProfile(); }
+  if (!loadProfile()) { FILE *old = fopen(pth("bashni.sav"), "rb"); if (old) { fclose(old); rename(pth("bashni.sav"), pth("bashni.broken")); }   // нечитаемый файл не затираем
+    newProfile(); saveProfile(); }
   dailyRefresh();
   genThumbs();
   audioInit();

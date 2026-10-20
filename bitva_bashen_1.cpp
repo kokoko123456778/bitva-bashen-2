@@ -2470,6 +2470,7 @@ static void cardInfo() {
 }
 static void menuDeck() {
   int y0 = safeTop() + fs * 22, y1 = IH - tabH(); char b[64];
+  bool popup = infoCard >= 0, clk = P.clicked; if (popup) P.clicked = false;   // пока открыто окно карты, нажатия идут только в него (иначе ЗАКРЫТЬ попадало в карту под ним)
   int cw = (colW - fs * 10) / 4, ch = cw * 6 / 5;
   float avg = 0; for (int i = 0; i < 8; i++) avg += CARDS[pf.deck[i]].cost; avg /= 8;
   snprintf(b, sizeof b, "КОЛОДА  (СРЕДНИЙ ЭЛИКСИР %.1f)", avg); drawTextSh(IW / 2, y0, b, fs, RGB(255, 230, 150), 1);
@@ -2496,6 +2497,7 @@ static void menuDeck() {
       else { snprintf(b, sizeof b, "АРЕНА %d", CARDS[c].arena + 1); drawText(x + cw / 2, yy + ch / 2 - fs * 3, b, imax(1, fs - 1), RGB(150, 155, 175), 1); } }
     if (yy >= listY0 && yy + ch <= listY1 && hitR(x, yy, cw, ch) && fabsf((float)(P.cy - P.sy)) < fs * 6) { if (pf.have[c]) { infoCard = c; swapCard = -1; } else say(CARDS[c].arena <= arenaOf(pf.trophies) ? "ЭТА КАРТА ВЫПАДАЕТ ИЗ СУНДУКОВ" : "ОТКРОЕТСЯ НА СЛЕДУЮЩЕЙ АРЕНЕ"); sfx(SFX_CLICK); } }
   setClipRect(0, 0, IW, IH);
+  if (popup) P.clicked = clk;
   if (infoCard >= 0) cardInfo();
 }
 static void menuShop() {

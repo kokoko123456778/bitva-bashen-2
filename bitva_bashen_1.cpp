@@ -1236,7 +1236,10 @@ static bool writeProfileTo(const char *fn) {
   bool ok = fwrite(&m, 4, 1, f) == 1 && fwrite(&sz, 4, 1, f) == 1 && fwrite(&pf, sizeof pf, 1, f) == 1 && fwrite(&cs, 4, 1, f) == 1;
   ok = (fflush(f) == 0) && ok; ok = (fclose(f) == 0) && ok; return ok;
 }
+// режим разработчика: отдельный профиль (bashni_dev.sav), настоящий профиль с кубками не трогается
+static bool devMode = false; static Profile realPf;
 static void saveProfile() {
+  if (devMode) { writeProfileTo(pth("bashni_dev.sav")); return; }
   char tmp[600], main0[600], bak[600]; snprintf(tmp, sizeof tmp, "%s", pth("bashni.tmp")); snprintf(main0, sizeof main0, "%s", pth("bashni.sav")); snprintf(bak, sizeof bak, "%s", pth("bashni.bak"));
   if (!writeProfileTo(tmp)) { writeProfileTo(main0); return; }
   remove(bak); rename(main0, bak);                       // старое сохранение - в запас
@@ -1269,6 +1272,18 @@ static void dailyRefresh() {
   if (pf.crownDay != d) { pf.crownDay = d; pf.crowns = 0; }
 }
 static int kingTowerLvl() { return pf.kingLvl; }
+static void devMaxOut() {                                         // все карты есть и прокачаны до максимума
+  for (int c = 0; c < NCARD; c++) { pf.have[c] = true; pf.lvl[c] = MAXLVL; }
+  pf.kingLvl = MAXLVL; pf.kingXp = KING_XP[MAXLVL - 1]; if (pf.gold < 999999) pf.gold = 999999; if (pf.gems < 99999) pf.gems = 99999;
+  if (pf.trophies < ARENAS[NARENA - 1].trophies) pf.trophies = ARENAS[NARENA - 1].trophies; if (pf.bestTrophies < pf.trophies) pf.bestTrophies = pf.trophies;
+}
+static void dailyRefresh();
+static void enterDev() {
+  if (devMode) return; saveProfile(); realPf = pf; devMode = true;
+  if (!loadProfileFrom(pth("bashni_dev.sav"))) { newProfile(); snprintf(pf.name, sizeof pf.name, "РАЗРАБОТЧИК"); }
+  devMaxOut(); dailyRefresh(); saveProfile();
+}
+static void exitDev() { if (!devMode) return; saveProfile(); pf = realPf; devMode = false; }
 static void addKingXp(int xp) { pf.kingXp += xp; while (pf.kingLvl < MAXLVL && pf.kingXp >= KING_XP[pf.kingLvl]) pf.kingLvl++; }
 
 // =====================================================================
@@ -2066,7 +2081,7 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
 // =====================================================================
 //  БИТВА БАШЕН: интерфейс боя, меню, колода, сундуки, магазин, задания
 // =====================================================================
-enum { GS_MENU, GS_BATTLE, GS_RESULT, GS_CHEST, GS_LOBBY };
+enum { GS_MENU, GS_BATTLE, GS_RESULT, GS_CHEST, GS_LOBBY, GS_START };
 static int gs = GS_MENU, menuTab = 2;
 static char msg[160] = ""; static float msgT = 0;
 static void say(const char *s, float t = 2.5f) { snprintf(msg, sizeof msg, "%s", s); msgT = t; }
@@ -2335,11 +2350,26 @@ static void frameChest(float dt) {
 static float deckScroll = 0; static int infoCard = -1, swapCard = -1;
 static int tabH() { return fs * 20; }
 static void topBar() {
-  char b[64], m[32]; int st = safeTop(); fillRect(0, 0, IW, st + fs * 16, RGB(20, 26, 44));
+  char b[64], m[32]; int st = safeTop(); fillRect(0, 0, IW, st + fs * 16, devMode ? RGB(70, 30, 80) : RGB(20, 26, 44));   // в режиме разработчика полоса фиолетовая
   fmtNum(m, sizeof m, pf.gold); snprintf(b, sizeof b, "ЗОЛОТО %s", m); drawTextSh(colX + fs * 3, st + fs * 3, b, fs, RGB(255, 215, 80), 0);
   snprintf(b, sizeof b, "КРИСТАЛЛЫ %d", pf.gems); drawTextSh(colX + fs * 3, st + fs * 10, b, fs, RGB(120, 230, 140), 0);
   snprintf(b, sizeof b, "КУБКИ %d", pf.trophies); drawTextSh(colX + colW - fs * 3, st + fs * 3, b, fs, RGB(255, 200, 120), 2);
   snprintf(b, sizeof b, "КОРОЛЬ УР. %d", pf.kingLvl); drawTextSh(colX + colW - fs * 3, st + fs * 10, b, fs, RGB(160, 200, 255), 2);
+}
+// ---- экран при входе: обычная игра или режим разработчика ----
+static void frameStart() {
+  layoutCol(); fillRect(0, 0, IW, IH, RGB(30, 38, 62));
+  for (int y = 0; y < IH; y += fs * 4) fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? RGB(36, 45, 70) : RGB(34, 42, 66));
+  int y = safeTop() + IH / 8; drawTextSh(IW / 2, y, "БИТВА", fs * 4, RGB(255, 220, 90), 1); drawTextSh(IW / 2, y + fs * 34, "БАШЕН", fs * 4, RGB(255, 120, 90), 1);
+  y = IH * 45 / 100; int bw = colW * 3 / 4, bh = fs * 24; char b[96];
+  snprintf(b, sizeof b, "КУБКИ %d   КОРОЛЬ УР. %d", realPf.trophies, realPf.kingLvl);
+  if (button(IW / 2 - bw / 2, y, bw, bh, "ИГРАТЬ", true, RGB(60, 150, 70))) { exitDev(); previewDirty = true; gs = GS_MENU; menuTab = 2; sfx(SFX_CLICK); return; }
+  drawText(IW / 2, y + bh + fs * 3, b, fs, RGB(200, 210, 230), 1); y += bh + fs * 16;
+  if (button(IW / 2 - bw / 2, y, bw, bh, "РЕЖИМ РАЗРАБОТЧИКА", true, RGB(150, 70, 170))) { enterDev(); previewDirty = true; gs = GS_MENU; menuTab = 2; sfx(SFX_CLICK); say("РЕЖИМ РАЗРАБОТЧИКА: ВСЕ КАРТЫ МАКСИМАЛЬНОГО УРОВНЯ", 4); return; }
+  y += bh + fs * 4;
+  const char *ln[4] = {"ВСЕ КАРТЫ ОТКРЫТЫ", "И ПРОКАЧАНЫ ДО МАКСИМУМА.", "ТВОИ НАСТОЯЩИЕ КУБКИ", "И КАРТЫ НЕ МЕНЯЮТСЯ."};
+  for (int i = 0; i < 4; i++) { drawText(IW / 2, y, ln[i], fs, RGB(220, 190, 240), 1); y += fs * 10; }
+  drawText(IW / 2, IH - fs * 14, "КНОПКА НАЗАД В МЕНЮ - ВЕРНУТЬСЯ СЮДА", imax(1, fs - 1), RGB(160, 170, 190), 1);
 }
 static void tabsBar() {
   static const char *TN[4] = {"МАГАЗИН", "КОЛОДА", "БОЙ", "ЗАДАНИЯ"};
@@ -2904,7 +2934,8 @@ static void fingerDown(long long id, int x, int y) { if (P.down) return; ptrId =
 static void fingerMove(long long id, int x, int y) { if (!P.down || id != ptrId) return; P.dx += x - P.x; P.dy += y - P.y; P.x = x; P.y = y; }
 static void fingerUp(long long id, int x, int y) { if (!P.down || id != ptrId) return; P.down = false; P.x = x; P.y = y; P.cx = x; P.cy = y; P.clicked = true; }
 static void goBack(bool &running) {
-  if (gs == GS_MENU) { if (infoCard >= 0) infoCard = -1; else if (menuTab != 2) menuTab = 2; else running = false; }
+  if (gs == GS_START) running = false;
+  else if (gs == GS_MENU) { if (infoCard >= 0) infoCard = -1; else if (menuTab != 2) menuTab = 2; else { saveProfile(); if (!devMode) realPf = pf; gs = GS_START; } }
   else if (gs == GS_LOBBY) { netClose(); gs = GS_MENU; }
   else if (gs == GS_CHEST) gs = GS_MENU;
   else if (gs == GS_RESULT) gs = GS_MENU;
@@ -2924,7 +2955,7 @@ int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   if (!loadProfile()) { FILE *old = fopen(pth("bashni.sav"), "rb"); if (old) { fclose(old); rename(pth("bashni.sav"), pth("bashni.broken")); }   // нечитаемый файл не затираем
     newProfile(); saveProfile(); }
-  dailyRefresh();
+  dailyRefresh(); realPf = pf; gs = GS_START;
   genThumbs();
   audioInit();
   memset(&P, 0, sizeof P);
@@ -2966,7 +2997,7 @@ int main(int argc, char **argv) {
 #endif
     netTick(dt);
     if (msgT > 0 && gs != GS_BATTLE) msgT -= dt;
-    if (gs == GS_MENU) frameMenu(); else if (gs == GS_BATTLE) frameBattle(dt); else if (gs == GS_RESULT) frameResult(); else if (gs == GS_CHEST) frameChest(dt); else frameLobby(dt);
+    if (gs == GS_START) frameStart(); else if (gs == GS_MENU) frameMenu(); else if (gs == GS_BATTLE) frameBattle(dt); else if (gs == GS_RESULT) frameResult(); else if (gs == GS_CHEST) frameChest(dt); else frameLobby(dt);
     if (fpsOn) { char b[16]; snprintf(b, sizeof b, "%d", (int)(fpsShow + 0.5f)); drawText(IW - fs * 2, IH - fs * 9, b, imax(1, fs - 1), RGB(150, 160, 180), 2); }
     gfxPresent();
     Uint32 spent = SDL_GetTicks() - now; fpsAcc += dt; fpsN++; if (fpsAcc >= 1.0f) { fpsShow = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; }

@@ -1050,7 +1050,7 @@ static const float AW = 18.0f, AL = 32.0f, RIVER_Z = 16.0f, RIVER_HW = 1.0f;
 static const float BRIDGE_X[2] = {3.5f, 14.5f}; static const float BRIDGE_HW = 1.1f;
 
 // ---- модели (как рисовать) ----
-enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, M_XBOW, M_BULL, M_GOLEM, M_NECRO, M_LANCER, M_BAT, M_BOMBER, M_GOBKING, M_DART, M_VOLAR, M_PUP, M_RECRUIT, M_ICEWIZ,
+enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, M_XBOW, M_BULL, M_GOLEM, M_NECRO, M_LANCER, M_BAT, M_BOMBER, M_GOBKING, M_DART, M_VOLAR, M_PUP, M_RECRUIT, M_ICEWIZ, M_BARB, M_EBARB, M_HOG, M_MEGA,
        M_CANNON, M_ATOWER, M_HUT, M_PRINCESS, M_KING, NMODEL };
 
 // ---- юниты: войска, здания и башни ----
@@ -1058,7 +1058,7 @@ enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, 
 // sight - на каком расстоянии замечает врага; splash - радиус урона по площади; projV - скорость снаряда (0 - удар вблизи)
 enum { UT_TROOP, UT_BUILD, UT_TOWER };
 struct UnitT { const char *name; int model, kind; float hp, dmg, hitT, speed, range, radius, sight, splash, projV; bool air, onlyBuild, canAir; float mass, lifeT; int spawnU, spawnN; float spawnT, deathDmg, deathR; int deathU, deathN; float shield; };   // deathN > 0: при гибели распадается на deathN юнитов deathU
-enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ,
+enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ, U_BARB, U_EBARB, U_HOG, U_MEGA,
        U_CANNON, U_ATOWER, U_HUT, U_PRINCESS, U_KING, NUNIT };
 static const UnitT UNITS[NUNIT] = {
   //  имя                модель      вид       hp     урон  удар  скор  дальн радиус обзор  сплеш снаряд возд  здан  по возд масса жизнь
@@ -1080,8 +1080,12 @@ static const UnitT UNITS[NUNIT] = {
   {"ГОБЛИН-ДУДЕЦ",      M_DART,     UT_TROOP, 250,   100, 0.7f, 1.4f, 6.0f, 0.35f, 6.5f, 0,    18,    false, false, true,  2, 0, -1, 0, 0, 0, 0},
   {"ВОЛАР БЕБЕ",        M_VOLAR,    UT_TROOP, 2757,  148.5f,1.8f, 0.5f, 2.0f, 0.8f,  7.5f, 0,    9,     true,  true,  false, 16, 0, -1, 0, 0, 0, 0, U_PUP, 6},
   {"ЛЕТАЮЩИЙ ЩЕНОК",    M_PUP,      UT_TROOP, 200,   50,  1.2f, 1.0f, 1.6f, 0.35f, 5.5f, 0,    10,    true,  false, true,  2, 0, -1, 0, 0, 0, 0},
-  {"НОВОБРАНЕЦ",        M_RECRUIT,  UT_TROOP, 307.5f,74.7f,1.3f, 1.0f, 1.3f, 0.4f,  5.5f, 0,    0,     false, false, false, 5, 0, -1, 0, 0, 0, 0, -1, 0, 134.9f},   // со щитом
+  {"НОВОБРАНЕЦ",        M_RECRUIT,  UT_TROOP, 307.5f,74.7f,1.3f, 1.0f, 1.3f, 0.4f,  5.5f, 0,    0,     false, false, false, 5, 0, -1, 0, 0, 0, 0, -1, 0, 184.5f},   // щит = 60% здоровья
   {"ЛЕДЯНОЙ МАГ",       M_ICEWIZ,   UT_TROOP, 320.2f,41.6f,1.7f, 1.0f, 5.5f, 0.4f,  6.0f, 1.0f, 10,    false, false, true,  4, 0, -1, 0, 0, 0, 0},
+  {"ВАРВАР",            M_BARB,     UT_TROOP, 284.2f,81.5f,1.3f, 1.0f, 0.7f, 0.42f, 5.5f, 0,    0,     false, false, false, 5, 0, -1, 0, 0, 0, 0},
+  {"ЭЛИТНЫЙ ВАРВАР",    M_EBARB,    UT_TROOP, 576.4f,165.0f,1.4f,1.5f, 1.2f, 0.45f, 5.5f, 0,    0,     false, false, false, 6, 0, -1, 0, 0, 0, 0},
+  {"ВСАДНИК НА КАБАНЕ", M_HOG,      UT_TROOP, 719.7f,134.4f,1.6f,2.0f, 0.8f, 0.55f, 9.5f, 0,    0,     false, true,  false, 7, 0, -1, 0, 0, 0, 0},
+  {"МЕГАРЫЦАРЬ",        M_MEGA,     UT_TROOP, 1693.5f,113.7f,1.7f,1.0f,1.2f, 0.75f, 6.0f, 1.3f, 0,     false, false, false, 22, 0, -1, 0, 0, 0, 0},
   {"ПУШКА",             M_CANNON,   UT_BUILD, 800,   150, 0.8f, 0,    5.5f, 0.6f,  5.5f, 0,    18,    false, false, false, 99, 30, -1, 0, 0, 0, 0},
   {"БАШНЯ ЛУЧНИКОВ",    M_ATOWER,   UT_BUILD, 1100,  100, 0.9f, 0,    7.0f, 0.7f,  7.0f, 0,    16,    false, false, true,  99, 40, -1, 0, 0, 0, 0},
   {"ГОБЛИНСКАЯ ХИЖИНА", M_HUT,      UT_BUILD, 900,   0,   1.0f, 0,    0,    0.8f,  0,    0,    0,     false, false, false, 99, 40, U_GOBLIN, 1, 5.0f, 0, 0},
@@ -1097,7 +1101,7 @@ static const u32 RARC[NRAR] = {RGB(110, 160, 220), RGB(240, 150, 50), RGB(180, 8
 enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL };
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
-       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, NCARD };
+       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, NCARD };
 static const Card CARDS[NCARD] = {
   {"РЫЦАРЬ",            3, CT_TROOP, RA_COMMON, U_KNIGHT,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "КРЕПКИЙ БОЕЦ С МЕЧОМ. ДЕРЖИТ УДАР И БЬЁТ ВБЛИЗИ."},
   {"ЛУЧНИЦЫ",           3, CT_TROOP, RA_COMMON, U_ARCHER,   2, 0, SP_NONE, 0, 0, 0, 0, 0, "ДВЕ ЛУЧНИЦЫ. СТРЕЛЯЮТ ИЗДАЛЕКА, ДОСТАЮТ ЛЕТАЮЩИХ."},
@@ -1129,6 +1133,10 @@ static const Card CARDS[NCARD] = {
   {"КОРОЛЕВСКИЕ НОВОБРАНЦЫ", 7, CT_TROOP, RA_COMMON, U_RECRUIT, 6, 2, SP_NONE, 0, 0, 0, 0, 0, "ШЕСТЬ ВОИНОВ С КОПЬЯМИ И ЩИТАМИ ВСТАЮТ ЦЕПЬЮ НА ВСЮ ШИРИНУ АРЕНЫ. ЩИТ ПРИНИМАЕТ УДАРЫ ПЕРВЫМ."},
   {"ЛЕДЯНОЙ МАГ",       3, CT_TROOP, RA_LEGEND, U_ICEWIZ,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ПРИ ПОЯВЛЕНИИ БЬЁТ ХОЛОДОМ ВОКРУГ. ЕГО ЛЕДЯНЫЕ ШАРЫ ЗАМЕДЛЯЮТ ВРАГОВ НА 2.5 С."},
   {"БОЧКА С ГОБЛИНАМИ", 3, CT_SPELL, RA_EPIC,   U_GOBLIN,   3, 1, SP_BARREL, 1.5f, 0, 0, 0, 0, "КОРОЛЬ БРОСАЕТ БОЧКУ КУДА УГОДНО - ДАЖЕ К ВРАЖЕСКОЙ БАШНЕ. ИЗ НЕЁ ВЫПРЫГИВАЮТ 3 ГОБЛИНА."},
+  {"ВАРВАРЫ",           5, CT_TROOP, RA_COMMON, U_BARB,     5, 2, SP_NONE, 0, 0, 0, 0, 0, "ПЯТЬ КРЕПКИХ БОЙЦОВ С МЕЧАМИ. СИЛЬНЫ ПРОТИВ ТАНКОВ, НО БОЯТСЯ УРОНА ПО ПЛОЩАДИ."},
+  {"ЭЛИТНЫЕ ВАРВАРЫ",   6, CT_TROOP, RA_COMMON, U_EBARB,    2, 3, SP_NONE, 0, 0, 0, 0, 0, "ДВА БЫСТРЫХ И ЗЛЫХ ВАРВАРА. БЕГУТ К БАШНЕ И БЬЮТ ОЧЕНЬ БОЛЬНО."},
+  {"ВСАДНИК НА КАБАНЕ", 4, CT_TROOP, RA_RARE,   U_HOG,      1, 2, SP_NONE, 0, 0, 0, 0, 0, "ОЧЕНЬ БЫСТРО НЕСЁТСЯ К ЗДАНИЯМ И БАШНЯМ, ПЕРЕПРЫГИВАЕТ РЕКУ."},
+  {"МЕГАРЫЦАРЬ",        7, CT_TROOP, RA_LEGEND, U_MEGA,     1, 4, SP_NONE, 0, 0, 0, 0, 0, "ОГРОМНЫЙ ЛАТНИК. ПРИ ПОЯВЛЕНИИ БЬЁТ ВСЕХ ВОКРУГ, ПРЫГАЕТ НА ВРАГОВ ИЗДАЛЕКА И ДАВИТ ИХ ПО ПЛОЩАДИ."},
 };
 static const int START_DECK[8] = {C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON};
 
@@ -1297,7 +1305,7 @@ static void addKingXp(int xp) { pf.kingXp += xp; while (pf.kingLvl < MAXLVL && p
 static const float SIM_DT = 1.0f / 30.0f;
 static const float MATCH_T = 180.0f, OVER_T = 60.0f, ELIX_T = 2.8f;
 struct Unit {
-  int id, type, team, lvl; float x, z, px, pz, y, hp, maxhp, dmg, atkCD, deployT, frozenT, stunT, spawnCD, chargeDist, face, anim, atkAnim, flash, slowT, shield;
+  int id, type, team, lvl; float x, z, px, pz, y, hp, maxhp, dmg, atkCD, deployT, frozenT, stunT, spawnCD, chargeDist, face, anim, atkAnim, flash, slowT, shield, jumpT, jumpCD, jx0, jz0, jx1, jz1;
   int target; bool alive, attacking, charging, moving;
 };
 enum { PJ_ARROW, PJ_BOLT, PJ_FIRE, PJ_BOMB, PJ_CANNON, PJ_DARK, PJ_DART, PJ_LAVA, PJ_ICE };
@@ -1334,6 +1342,7 @@ static int spawnUnit(int type, int team, int lvl, float x, float z, float deploy
   B.units.push_back(u); return u.id;
 }
 static inline int teamOf(int si) { return si & 1; }
+static inline bool riverJumper(int type) { return type == U_BULL || type == U_HOG; }   // перепрыгивают реку
 static void initSide(int si, const int *deck, const int *lvls, int kingLvl, bool bot) {
   int team = teamOf(si); Side &s = B.side[si]; memset(&s, 0, sizeof s);
   for (int i = 0; i < 8; i++) { s.deck[i] = deck[i]; s.lvl[i] = lvls[i]; }
@@ -1460,7 +1469,7 @@ static int findTarget(const Unit &u) {
     if (t.kind != UT_TROOP) { if (d > t.range) continue; }
     else if (!t.onlyBuild && d > t.sight && !isBuild(o)) continue;
     if (t.kind == UT_TROOP && !t.onlyBuild && isBuild(o) && d > t.sight) d += 1000;      // здание вдалеке - запасная цель
-    if (t.kind == UT_TROOP && !t.air && u.type != U_BULL && !UT(o).air) {                                       // через реку - длиннее
+    if (t.kind == UT_TROOP && !t.air && !riverJumper(u.type) && !UT(o).air) {                                       // через реку - длиннее
       if ((u.z - RIVER_Z) * (o.z - RIVER_Z) < 0) { float bx = fabsf(u.x - BRIDGE_X[0]) + fabsf(o.x - BRIDGE_X[0]) < fabsf(u.x - BRIDGE_X[1]) + fabsf(o.x - BRIDGE_X[1]) ? BRIDGE_X[0] : BRIDGE_X[1]; d += fabsf(u.x - bx) + fabsf(o.x - bx) - fabsf(u.x - o.x); } }
     if (d < bd) { bd = d; best = o.id; } }
   return best;
@@ -1519,7 +1528,7 @@ static bool onBridge(float x) { return fabsf(x - BRIDGE_X[0]) < BRIDGE_HW || fab
 static void moveToward(Unit &u, float tx, float tz, float dt) {
   const UnitT &t = UT(u); float sp = t.speed * (u.charging ? 2.0f : 1.0f) * (u.slowT > 0 ? 0.65f : 1.0f);
   float gx = tx, gz = tz;
-  bool jumper = u.type == U_BULL;                                       // бык перепрыгивает реку, как кабан в CR
+  bool jumper = riverJumper(u.type);                                       // бык перепрыгивает реку, как кабан в CR
   if (!t.air && !jumper && (u.z - RIVER_Z) * (tz - RIVER_Z) < 0) {                // нужна переправа
     float bx = fabsf(u.x - BRIDGE_X[0]) + fabsf(tx - BRIDGE_X[0]) < fabsf(u.x - BRIDGE_X[1]) + fabsf(tx - BRIDGE_X[1]) ? BRIDGE_X[0] : BRIDGE_X[1];
     float sd = u.z < RIVER_Z ? -1.0f : 1.0f;                              // на какой стороне
@@ -1542,7 +1551,7 @@ static void separate() {
       a.x -= dx / d * ov * ka; a.z -= dz / d * ov * ka; b.x += dx / d * ov * kb; b.z += dz / d * ov * kb; } }
   for (size_t i = 0; i < n; i++) { Unit &u = B.units[i]; if (!u.alive || UT(u).kind != UT_TROOP) continue; const UnitT &t = UT(u);
     u.x = clampf(u.x, t.radius, AW - t.radius); u.z = clampf(u.z, t.radius, AL - t.radius);
-    if (!t.air && u.type != U_BULL && fabsf(u.z - RIVER_Z) < RIVER_HW + 0.1f && !onBridge(u.x)) {                // в реку нельзя
+    if (!t.air && !riverJumper(u.type) && u.jumpT <= 0 && fabsf(u.z - RIVER_Z) < RIVER_HW + 0.1f && !onBridge(u.x)) {                // в реку нельзя
       if (fabsf(u.pz - RIVER_Z) >= RIVER_HW + 0.1f || !onBridge(u.px)) { if (onBridge(u.px) && fabsf(u.pz - RIVER_Z) < RIVER_HW + 0.1f) { float bx = fabsf(u.px - BRIDGE_X[0]) < BRIDGE_HW ? BRIDGE_X[0] : BRIDGE_X[1]; u.x = clampf(u.x, bx - BRIDGE_HW + 0.05f, bx + BRIDGE_HW - 0.05f); }
         else u.z = u.pz < RIVER_Z ? RIVER_Z - RIVER_HW - 0.1f : RIVER_Z + RIVER_HW + 0.1f; } } }
 }
@@ -1552,16 +1561,28 @@ static void updateUnit(Unit &u, float dt) {
   const UnitT &t = UT(u);
   u.flash = fmaxv(0.0f, u.flash - dt); u.atkAnim = fmaxv(0.0f, u.atkAnim - dt * 3.0f); u.moving = false;
   if (u.deployT > 0) { u.deployT -= dt;
+    if (u.deployT <= 0 && u.type == U_MEGA) { float r = 2.2f; splashAt(u.x, u.z, r, 182.4f * lvlK(u.lvl), u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, r); bEvent(BE_BOOM, u.team, u.x, u.z); }   // удар при приземлении
     if (u.deployT <= 0 && u.type == U_ICEWIZ) { float r = 2.5f; splashAt(u.x, u.z, r, 39.1f * lvlK(u.lvl), u.team, true, true, 1.0f, false); slowArea(u.x, u.z, r, u.team, 2.5f); addFx(FX_SPLASH, u.team, u.x, u.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, u.team, u.x, u.z, SP_FREEZE); }   // холодный удар при появлении
     return; }
   float slowK = 1.0f; if (u.slowT > 0) { u.slowT -= dt; slowK = 0.65f; }
+  if (u.jumpT > 0) {                                                          // мегарыцарь в прыжке: летит к цели и давит при приземлении
+    u.jumpT -= dt; float k = clampf(1.0f - u.jumpT / 0.8f, 0, 1); u.x = u.jx0 + (u.jx1 - u.jx0) * k; u.z = u.jz0 + (u.jz1 - u.jz0) * k; u.moving = false;
+    if (u.jumpT <= 0) { splashAt(u.x, u.z, 2.0f, 227.8f * lvlK(u.lvl), u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.6f, 2.0f); bEvent(BE_BOOM, u.team, u.x, u.z); u.atkCD = t.hitT * 0.5f; }
+    return; }
+  if (u.jumpCD > 0) u.jumpCD -= dt;
   if (t.kind == UT_BUILD && t.lifeT > 0) { u.hp -= u.maxhp / t.lifeT * dt; if (u.hp <= 0) { killUnit(u); return; } }
   if (u.frozenT > 0) { u.frozenT -= dt; return; }
   if (u.stunT > 0) { u.stunT -= dt; return; }
   // спавн (некромант, хижина)
   if (t.spawnU >= 0) { u.spawnCD -= dt; if (u.spawnCD <= 0) { u.spawnCD = t.spawnT; float fz = u.team == 0 ? 1.0f : -1.0f;
-      for (int k = 0; k < t.spawnN; k++) { float a = (k - (t.spawnN - 1) * 0.5f) * 0.9f; spawnUnit(t.spawnU, u.team, u.lvl, clampf(u.x + a, 0.5f, AW - 0.5f), clampf(u.z + fz * (t.radius + 0.5f), 0.5f, AL - 0.5f), 0.3f); }
-      addFx(FX_DEPLOY, u.team, u.x, u.z + fz * (t.radius + 0.5f), 0, 0.4f, 0.8f); } }
+      bool ring = t.kind == UT_TROOP;                                      // войска (некромант, король гоблинов) призывают кольцом вокруг себя
+      for (int k = 0; k < t.spawnN; k++) { float sx, sz;
+        if (ring) { float a = k * 6.2832f / t.spawnN + u.face + 0.785f, rr = t.radius + 0.55f; sx = u.x + sinf(a) * rr; sz = u.z + cosf(a) * rr; }
+        else { float a = (k - (t.spawnN - 1) * 0.5f) * 0.9f; sx = u.x + a; sz = u.z + fz * (t.radius + 0.5f); }
+        sx = clampf(sx, 0.5f, AW - 0.5f); sz = clampf(sz, 0.5f, AL - 0.5f);
+        if (!UNITS[t.spawnU].air && fabsf(sz - RIVER_Z) < RIVER_HW + 0.2f) sz = u.z;                // не в реку
+        spawnUnit(t.spawnU, u.team, u.lvl, sx, sz, 0.3f); }
+      addFx(FX_DEPLOY, u.team, u.x, u.z + (ring ? 0 : fz * (t.radius + 0.5f)), 0, 0.4f, ring ? t.radius + 0.9f : 0.8f); } }
   if (t.dmg <= 0) return;
   Unit *tg = u.target >= 0 ? unitById(u.target) : NULL;
   if (tg && !canHit(u, *tg)) tg = NULL;
@@ -1571,6 +1592,9 @@ static void updateUnit(Unit &u, float dt) {
     if (t.kind == UT_TROOP) { float gz = zOf(u.team, 28.0f); moveToward(u, u.x < 9 ? BRIDGE_X[0] : BRIDGE_X[1], gz, dt); }
     return; }
   float d = edgeDist(u, *tg);
+  if (u.type == U_MEGA && u.jumpCD <= 0 && !u.attacking && !isBuild(*tg) && d >= 2.5f && d <= 5.0f && (u.z - RIVER_Z) * (tg->z - RIVER_Z) >= 0) {   // прыжок на врага
+    u.jumpT = 0.8f; u.jumpCD = 3.0f; u.jx0 = u.x; u.jz0 = u.z; float dx = tg->x - u.x, dz = tg->z - u.z, l = sqrtf(dx * dx + dz * dz) + 1e-4f, back = UT(*tg).radius + t.radius * 0.6f;
+    u.jx1 = tg->x - dx / l * back; u.jz1 = tg->z - dz / l * back; u.face = atan2f(dx, dz); return; }
   if (d <= t.range) {
     if (!u.attacking) { u.attacking = true; u.atkCD = fmaxv(u.atkCD, t.hitT * 0.35f); }
     u.face = atan2f(tg->x - u.x, tg->z - u.z);
@@ -1882,6 +1906,52 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       PART(0, 0.66f, 0.12f, 0.085f, 0.1f, 0.02f, FZ(RGB(240, 248, 255))); PART(0, 0.55f, 0.125f, 0.05f, 0.04f, 0.015f, FZ(RGB(240, 248, 255)));          // длинная белая борода
       PART(0, 0.36f, 0.135f, 0.13f, 0.02f, 0.004f, ice); PART(0, 0.5f, 0.112f, 0.06f, 0.06f, 0.004f, FZ(tc));
       { float hx2 = 0.23f, hy2 = 0.5f + atk * 0.12f - 0.16f + 0.7f, hz2 = 0.04f + atk * 0.18f + 0.06f; for (int k = 0; k < 3; k++) { float a = k * 2.094f + gTime * 2; PART(hx2 + cosf(a) * 0.07f, hy2 + 0.04f, hz2 + sinf(a) * 0.07f, 0.02f, 0.05f, 0.02f, RGB(200, 245, 255)); } } } break;   // осколки льда кружат у кристалла
+    case M_BARB: { s = 1.2f * US; gBrow = RGB(110, 70, 30);                                              // варвар: голый торс, меховая жилетка, борода, широкий меч
+      humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(225, 180, 140)), FZ(RGB(110, 80, 55)), FZ(tc), walk, atk, WP_SWORD, HT_NONE, 0, false); gBrow = 0;
+      PART(0, 0.52f, -0.02f, 0.175f, 0.14f, 0.1f, FZ(RGB(120, 85, 50))); PART(0, 0.52f, 0.08f, 0.06f, 0.14f, 0.035f, FZ(RGB(225, 180, 140)));    // меховая жилетка, открытая грудь
+      PART(0, 0.37f, 0, 0.18f, 0.03f, 0.12f, FZ(RGB(70, 50, 35))); PART(0, 0.37f, 0.12f, 0.035f, 0.025f, 0.006f, FZ(RGB(220, 190, 90)));          // ремень с бляхой
+      PART(0, 0.9f, -0.01f, 0.125f, 0.04f, 0.125f, FZ(RGB(120, 75, 35))); PART(0, 0.86f, -0.115f, 0.12f, 0.1f, 0.02f, FZ(RGB(120, 75, 35)));  // волосы
+      PART(0, 0.88f, 0.121f, 0.125f, 0.012f, 0.004f, FZ(tc));                                                                                 // повязка цвета команды
+      PART(0, 0.7f, 0.115f, 0.1f, 0.06f, 0.025f, FZ(RGB(120, 75, 35))); PART(0, 0.755f, 0.125f, 0.07f, 0.015f, 0.006f, FZ(RGB(120, 75, 35))); } break;   // борода и усы
+    case M_EBARB: { s = 1.3f * US; gBrow = RGB(40, 30, 30); gPads = FZ(RGB(90, 90, 100));               // элитный варвар: рогатый шлем, наплечники, два меча
+      humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(220, 175, 135)), FZ(RGB(60, 55, 70)), FZ(tc), walk, atk, WP_SWORD, HT_NONE, 0, false); gBrow = 0; gPads = 0;
+      PART(0, 0.5f, 0.0f, 0.176f, 0.17f, 0.111f, FZ(RGB(70, 70, 82))); PART(0, 0.5f, 0.113f, 0.1f, 0.12f, 0.004f, FZ(tc));                       // кожаный нагрудник цвета команды
+      PART(0, 0.9f, -0.005f, 0.13f, 0.06f, 0.13f, FZ(RGB(110, 110, 120))); PART(0, 0.96f, 0, 0.05f, 0.02f, 0.05f, FZ(RGB(220, 190, 80)));       // шлем
+      PART(-0.17f, 0.97f, 0, 0.05f, 0.025f, 0.025f, FZ(RGB(240, 230, 210))); PART(0.17f, 0.97f, 0, 0.05f, 0.025f, 0.025f, FZ(RGB(240, 230, 210)));
+      PART(-0.21f, 1.04f, 0, 0.022f, 0.06f, 0.022f, FZ(RGB(240, 230, 210))); PART(0.21f, 1.04f, 0, 0.022f, 0.06f, 0.022f, FZ(RGB(240, 230, 210)));   // рога
+      PART(0, 0.7f, 0.115f, 0.09f, 0.06f, 0.025f, FZ(RGB(60, 40, 35)));                                                                          // чёрная борода
+      PART(-0.23f, 0.58f, 0.25f, 0.018f, 0.2f, 0.035f, RGB(215, 220, 230)); PART(-0.23f, 0.37f, 0.06f, 0.055f, 0.015f, 0.03f, RGB(140, 110, 50));   // второй меч в левой руке
+      PART(-0.23f, 0.45f, 0.04f, 0.056f, 0.02f, 0.056f, FZ(RGB(220, 190, 80))); } break;                                                         // золотой браслет
+    case M_HOG: { s = 1.15f * US; float sw = sinf(walk * 1.6f) * 0.08f, bob = fabsf(sinf(walk * 1.6f)) * 0.04f;     // всадник на кабане: кабан с клыками и наездник с булавой
+      u32 hide = FZ(RGB(140, 95, 75)), dark = FZ(RGB(100, 65, 50));
+      PART(0, 0.45f + bob, 0, 0.24f, 0.2f, 0.4f, hide); PART(0, 0.62f + bob, -0.05f, 0.18f, 0.06f, 0.3f, dark);                                  // туловище и щетина на спине
+      PART(0, 0.48f + bob, 0.46f, 0.17f, 0.15f, 0.14f, hide); PART(0, 0.42f + bob, 0.63f, 0.09f, 0.07f, 0.05f, FZ(RGB(220, 160, 150)));         // голова и пятачок
+      PART(-0.04f, 0.42f + bob, 0.685f, 0.015f, 0.02f, 0.004f, RGB(60, 30, 30)); PART(0.04f, 0.42f + bob, 0.685f, 0.015f, 0.02f, 0.004f, RGB(60, 30, 30));
+      PART(-0.13f, 0.38f + bob, 0.6f, 0.025f, 0.07f, 0.025f, FZ(RGB(245, 240, 225))); PART(0.13f, 0.38f + bob, 0.6f, 0.025f, 0.07f, 0.025f, FZ(RGB(245, 240, 225)));   // клыки
+      PART(-0.09f, 0.56f + bob, 0.6f, 0.025f, 0.025f, 0.004f, RGB(250, 220, 60)); PART(0.09f, 0.56f + bob, 0.6f, 0.025f, 0.025f, 0.004f, RGB(250, 220, 60));          // глаза
+      PART(-0.12f, 0.66f + bob, 0.47f, 0.04f, 0.05f, 0.03f, dark); PART(0.12f, 0.66f + bob, 0.47f, 0.04f, 0.05f, 0.03f, dark);                   // уши
+      for (int k = 0; k < 4; k++) { float lx = (k & 1 ? 0.15f : -0.15f), lz = (k & 2 ? 0.27f : -0.27f), o = (k == 0 || k == 3) ? sw : -sw; PART(lx, 0.14f, lz + o, 0.06f, 0.14f, 0.06f, dark); }
+      PART(0, 0.66f + bob, 0.05f, 0.25f, 0.03f, 0.2f, FZ(tc));                                                                                    // попона цвета команды
+      { float rs = 0.62f; float y0 = y + (0.48f + bob) * s; float s0 = s; s = s * rs; float yb = y; (void)yb;                                     // наездник сидит сверху
+        float rx = x, rz = z; float ry = y0; float _sv = s;
+        { float y = ry; PART(-0.17f, 0.2f, 0.05f, 0.055f, 0.06f, 0.15f, FZ(RGB(90, 70, 50))); PART(0.17f, 0.2f, 0.05f, 0.055f, 0.06f, 0.15f, FZ(RGB(90, 70, 50)));   // ноги по бокам
+          PART(0, 0.48f, 0, 0.17f, 0.17f, 0.11f, FZ(RGB(220, 180, 140))); PART(0, 0.48f, 0.112f, 0.1f, 0.12f, 0.005f, FZ(tc)); PART(0, 0.34f, 0, 0.175f, 0.025f, 0.115f, FZ(RGB(70, 50, 35)));
+          PART(0, 0.78f, 0, 0.12f, 0.12f, 0.12f, FZ(skin)); PART(-0.05f, 0.8f, 0.121f, 0.022f, 0.022f, 0.003f, RGB(250, 250, 250)); PART(0.05f, 0.8f, 0.121f, 0.022f, 0.022f, 0.003f, RGB(250, 250, 250));
+          PART(-0.045f, 0.795f, 0.123f, 0.012f, 0.014f, 0.003f, RGB(25, 25, 35)); PART(0.045f, 0.795f, 0.123f, 0.012f, 0.014f, 0.003f, RGB(25, 25, 35));
+          PART(0, 0.72f, 0.122f, 0.06f, 0.02f, 0.005f, FZ(RGB(90, 50, 30))); PART(0, 0.9f, 0, 0.13f, 0.05f, 0.13f, FZ(RGB(150, 150, 160))); PART(0, 0.97f, -0.01f, 0.03f, 0.04f, 0.1f, FZ(RGB(150, 150, 160)));   // усы и шлем с гребнем
+          float a = atk; PART(0.23f, 0.5f + a * 0.15f, 0.05f + a * 0.15f, 0.05f, 0.14f, 0.05f, FZ(RGB(220, 180, 140))); PART(-0.23f, 0.5f, 0.06f, 0.05f, 0.14f, 0.05f, FZ(RGB(220, 180, 140)));
+          PART(0.23f, 0.62f + a * 0.3f, 0.12f + a * 0.3f, 0.025f, 0.2f, 0.025f, RGB(110, 80, 50)); PART(0.23f, 0.86f + a * 0.3f, 0.14f + a * 0.35f, 0.09f, 0.07f, 0.09f, FZ(RGB(120, 120, 130))); }   // булава
+        (void)rx; (void)rz; (void)_sv; s = s0; } } break;
+    case M_MEGA: { s = 1.75f * US; gEyes = RGB(255, 170, 60); gPads = FZ(RGB(70, 80, 100));             // мегарыцарь: тяжёлые латы, рогатый шлем с горящими глазами, огромные кулаки
+      u32 pl = FZ(RGB(90, 100, 120)), pd = FZ(RGB(55, 62, 78));
+      humanoid(x, y, z, yaw, s, FZ(RGB(60, 66, 80)), pl, pd, FZ(tc), walk, atk, WP_NONE, HT_NONE, 0, false); gEyes = 0; gPads = 0;
+      PART(0, 0.5f, 0.0f, 0.2f, 0.19f, 0.13f, pl); PART(0, 0.55f, 0.132f, 0.11f, 0.1f, 0.004f, FZ(tc)); PART(0, 0.36f, 0.0f, 0.205f, 0.03f, 0.135f, pd);   // кираса шире тела
+      PART(0, 0.84f, 0, 0.135f, 0.13f, 0.135f, pd); PART(0, 0.82f, 0.136f, 0.1f, 0.02f, 0.004f, RGB(255, 150, 50));                                 // глухой шлем со светящейся щелью
+      for (int k = -1; k <= 1; k += 2) { PART(k * 0.15f, 1.0f, 0, 0.03f, 0.08f, 0.03f, FZ(RGB(200, 200, 210))); PART(k * 0.18f, 1.1f, -0.02f, 0.02f, 0.05f, 0.02f, FZ(RGB(200, 200, 210))); }   // рога-шипы
+      PART(0, 1.0f, 0, 0.02f, 0.06f, 0.06f, FZ(RGB(200, 200, 210)));
+      float a = atk; PART(0.27f, 0.32f + a * 0.2f, 0.06f + a * 0.2f, 0.09f, 0.08f, 0.09f, pd); PART(-0.27f, 0.32f + a * 0.2f, 0.06f + a * 0.2f, 0.09f, 0.08f, 0.09f, pd);   // огромные кулаки
+      PART(0.27f, 0.32f + a * 0.2f, 0.155f + a * 0.2f, 0.07f, 0.02f, 0.004f, FZ(RGB(200, 200, 210))); PART(-0.27f, 0.32f + a * 0.2f, 0.155f + a * 0.2f, 0.07f, 0.02f, 0.004f, FZ(RGB(200, 200, 210)));
+      PART(0, 0.45f, -0.14f, 0.2f, 0.3f, 0.015f, FZ(td)); PART(0, 0.04f, 0.06f, 0.08f, 0.04f, 0.1f, pd); } break;                                    // плащ
     case M_BOMBER: s = 0.75f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(90, 100, 160)), FZ(RGB(70, 60, 50)), FZ(tc), walk, atk, WP_BOMB, HT_BEARD, 0, false);
       PART(-0.05f, 0.93f, 0.12f, 0.035f, 0.03f, 0.012f, FZ(RGB(70, 60, 50))); PART(0.05f, 0.93f, 0.12f, 0.035f, 0.03f, 0.012f, FZ(RGB(70, 60, 50)));   // очки
       PART(-0.05f, 0.93f, 0.133f, 0.022f, 0.018f, 0.002f, RGB(150, 220, 255)); PART(0.05f, 0.93f, 0.133f, 0.022f, 0.018f, 0.002f, RGB(150, 220, 255));
@@ -1976,7 +2046,7 @@ static float modelTop0(int model);
 static float modelTop(int model) { return modelTop0(model) * (model < M_CANNON ? 1.35f : 1.0f); }
 static float modelTop0(int model) {
   switch (model) { case M_GIANT: return 2.2f; case M_GOLEM: return 1.95f; case M_PRINCESS: return 4.6f; case M_KING: return 4.3f; case M_ATOWER: return 3.7f; case M_HUT: return 1.7f; case M_CANNON: return 0.95f;
-    case M_BULL: return 1.25f; case M_GOBKING: return 1.75f; case M_DART: return 0.95f; case M_VOLAR: return 0.8f; case M_PUP: return 0.35f; case M_ICEWIZ: return 1.45f; case M_DRAGON: return 0.7f; case M_BAT: return 0.35f; case M_GOBLIN: return 0.85f; case M_BOMBER: return 0.85f; case M_SKELETON: return 0.85f; default: return 1.35f; }
+    case M_BULL: return 1.25f; case M_GOBKING: return 1.75f; case M_DART: return 0.95f; case M_VOLAR: return 0.8f; case M_PUP: return 0.35f; case M_ICEWIZ: return 1.45f; case M_HOG: return 1.55f; case M_MEGA: return 2.0f; case M_DRAGON: return 0.7f; case M_BAT: return 0.35f; case M_GOBLIN: return 0.85f; case M_BOMBER: return 0.85f; case M_SKELETON: return 0.85f; default: return 1.35f; }
 }
 
 // ---- арена ----
@@ -2155,7 +2225,8 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
     if (!u.alive) { if (t.kind == UT_TOWER) { BX(x, 0.25f, z, t.radius * 0.9f, 0.25f, t.radius * 0.9f, 0.3f, RGB(110, 105, 100)); BX(x + 0.4f, 0.55f, z - 0.3f, 0.5f, 0.3f, 0.4f, 0.7f, RGB(130, 125, 118)); } continue; }
     DISC(x, z, t.radius * (t.kind == UT_TOWER ? 1.0f : 0.9f), 0.012f, mixc(ARENAS[B.arena].grass, RGB(0, 0, 0), 0.35f));
     float y = t.air ? 2.0f + sinf(gTime * 3 + u.id) * 0.15f : 0;
-    if (u.type == U_BULL && fabsf(z - RIVER_Z) < RIVER_HW + 0.8f) y += cosf((z - RIVER_Z) / (RIVER_HW + 0.8f) * 1.5708f) * 1.3f;   // прыжок через реку
+    if (u.jumpT > 0) y += sinf(clampf(1.0f - u.jumpT / 0.8f, 0, 1) * 3.14159f) * 2.5f;               // прыжок мегарыцаря
+    if (riverJumper(u.type) && fabsf(z - RIVER_Z) < RIVER_HW + 0.8f) y += cosf((z - RIVER_Z) / (RIVER_HW + 0.8f) * 1.5708f) * 1.3f;   // прыжок через реку
     float dep = u.deployT > 0 ? clampf(1.0f - u.deployT, 0.2f, 1) : 1;
     if (u.deployT > 0) y += (1 - dep) * 1.2f;
     gShieldOn = u.shield > 0; drawModel(t.model, u.team, x, y, z, u.face, u.anim, u.atkAnim, u.flash, u.frozenT > 0 || u.slowT > 0, 1); gShieldOn = true;
@@ -2616,6 +2687,7 @@ static int cardStatLine(int c, int lvl, char lines[][64]) {
   const UnitT &u = UNITS[cd.unit];
   snprintf(lines[n++], 64, "ЗДОРОВЬЕ: %d", (int)(u.hp * k));
   if (u.shield > 0) snprintf(lines[n++], 64, "ЩИТ: %d", (int)(u.shield * k));
+  if (cd.unit == U_MEGA) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(182.4f * k)); snprintf(lines[n++], 64, "УРОН ПРЫЖКОМ: %d", (int)(227.8f * k)); }
   if (cd.unit == U_ICEWIZ) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(39.1f * k)); snprintf(lines[n++], 64, "ЗАМЕДЛЕНИЕ: 2.5 С"); }
   if (u.dmg > 0) snprintf(lines[n++], 64, "УРОН: %d%s", (int)(u.dmg * k), u.splash > 0 ? " ПО ПЛОЩАДИ" : "");
   if (u.dmg > 0) snprintf(lines[n++], 64, "СКОРОСТЬ УДАРА: %.1f С", u.hitT);

@@ -2482,7 +2482,7 @@ static void menuDeck() {
   drawTextSh(IW / 2, y, "КОЛЛЕКЦИЯ", fs, RGB(255, 230, 150), 1); y += fs * 10;
   // коллекция с прокруткой
   int listY0 = y, listY1 = y1 - fs * 2; static int dragY = -1; static float dragS = 0;
-  if (P.pressed && P.y > listY0 && P.y < listY1) { dragY = P.y; dragS = deckScroll; }
+  if (P.pressed && !popup && P.y > listY0 && P.y < listY1) { dragY = P.y; dragS = deckScroll; }
   if (P.down && dragY >= 0) deckScroll = dragS + (P.y - dragY);
   if (!P.down) dragY = -1;
   int ord[NCARD], n = 0; for (int c = 0; c < NCARD; c++) { bool in = false; for (int i = 0; i < 8; i++) if (pf.deck[i] == c) in = true; if (!in) ord[n++] = c; }

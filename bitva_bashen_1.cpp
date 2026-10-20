@@ -1067,18 +1067,18 @@ static const UnitT UNITS[NUNIT] = {
   {"ГОБЛИН",            M_GOBLIN,   UT_TROOP, 170,   100, 1.1f, 1.6f, 0.5f, 0.35f, 5.5f, 0,    0,     false, false, false, 2, 0, -1, 0, 0, 0, 0},
   {"ВЕЛИКАН",           M_GIANT,    UT_TROOP, 3300,  210, 1.5f, 0.75f,0.7f, 0.75f, 7.5f, 0,    0,     false, true,  false, 18, 0, -1, 0, 0, 0, 0},
   {"МАГ ОГНЯ",          M_FIREMAGE, UT_TROOP, 550,   210, 1.4f, 1.0f, 5.5f, 0.4f,  5.5f, 1.5f, 9,     false, false, true,  4, 0, -1, 0, 0, 0, 0},
-  {"ДРАКОНЧИК",         M_DRAGON,   UT_TROOP, 900,   120, 1.6f, 1.33f,3.5f, 0.6f,  5.5f, 1.2f, 10,    true,  false, true,  5, 0, -1, 0, 0, 0, 0},
+  {"ДРАКОНЧИК",         M_DRAGON,   UT_TROOP, 1272.5f,148.5f, 1.6f, 1.33f,3.5f, 0.6f,  5.5f, 1.2f, 10,    true,  false, true,  5, 0, -1, 0, 0, 0, 0},
   {"СКЕЛЕТ",            M_SKELETON, UT_TROOP, 80,    80,  1.0f, 1.33f,0.5f, 0.3f,  5.5f, 0,    0,     false, false, false, 1, 0, -1, 0, 0, 0, 0},
   {"АРБАЛЕТЧИК",        M_XBOW,     UT_TROOP, 600,   180, 1.1f, 1.0f, 6.0f, 0.4f,  6.5f, 0,    16,    false, false, true,  4, 0, -1, 0, 0, 0, 0},
   {"БОЕВОЙ БЫК",        M_BULL,     UT_TROOP, 1450,  260, 1.6f, 2.0f, 0.6f, 0.6f,  9.5f, 0,    0,     false, true,  false, 8, 0, -1, 0, 0, 0, 0},
   {"КАМЕННЫЙ ГОЛЕМ",    M_GOLEM,    UT_TROOP, 6000,  280, 2.5f, 0.6f, 0.8f, 1.0f,  7.5f, 0,    0,     false, true,  false, 40, 0, -1, 0, 0, 260, 2.0f},
-  {"НЕКРОМАНТ",         M_NECRO,    UT_TROOP, 700,   90,  1.0f, 1.0f, 5.0f, 0.4f,  5.5f, 0,    10,    false, false, true,  4, 0, U_SKELETON, 3, 7.0f, 0, 0},
+  {"НЕКРОМАНТ",         M_NECRO,    UT_TROOP, 700,   90,  1.0f, 1.0f, 5.0f, 0.4f,  5.5f, 1.2f, 10,    false, false, true,  4, 0, U_SKELETON, 4, 7.0f, 0, 0},
   {"КОПЕЙЩИК",          M_LANCER,   UT_TROOP, 1300,  250, 1.5f, 1.0f, 1.4f, 0.5f,  5.5f, 0,    0,     false, false, false, 7, 0, -1, 0, 0, 0, 0},
   {"ЛЕТУЧАЯ МЫШЬ",      M_BAT,      UT_TROOP, 70,    70,  1.1f, 2.0f, 0.5f, 0.3f,  5.5f, 0,    0,     true,  false, true,  1, 0, -1, 0, 0, 0, 0},
   {"ГНОМ-ПОДРЫВНИК",    M_BOMBER,   UT_TROOP, 300,   170, 1.8f, 1.0f, 4.5f, 0.35f, 5.0f, 1.5f, 7,     false, false, false, 3, 0, -1, 0, 0, 0, 0},
-  {"КОРОЛЬ ГОБЛИНОВ",   M_GOBKING,  UT_TROOP, 2600,  300, 1.8f, 0.75f,0.8f, 0.7f,  7.5f, 0,    0,     false, true,  false, 14, 0, U_GOBLIN, 4, 4.0f, 0, 0},
+  {"КОРОЛЬ ГОБЛИНОВ",   M_GOBKING,  UT_TROOP, 2600,  254.5f,1.8f, 0.75f,0.8f, 0.7f,  7.5f, 0,    0,     false, true,  false, 14, 0, U_GOBLIN, 4, 5.0f, 0, 0},
   {"ГОБЛИН-ДУДЕЦ",      M_DART,     UT_TROOP, 250,   100, 0.7f, 1.4f, 6.0f, 0.35f, 6.5f, 0,    18,    false, false, true,  2, 0, -1, 0, 0, 0, 0},
-  {"ВОЛАР БЕБЕ",        M_VOLAR,    UT_TROOP, 2000,  180, 1.8f, 0.75f,2.0f, 0.8f,  7.5f, 0,    9,     true,  true,  false, 16, 0, -1, 0, 0, 0, 0, U_PUP, 6},
+  {"ВОЛАР БЕБЕ",        M_VOLAR,    UT_TROOP, 2757,  148.5f,1.8f, 0.5f, 2.0f, 0.8f,  7.5f, 0,    9,     true,  true,  false, 16, 0, -1, 0, 0, 0, 0, U_PUP, 6},
   {"ЛЕТАЮЩИЙ ЩЕНОК",    M_PUP,      UT_TROOP, 200,   50,  1.2f, 1.0f, 1.6f, 0.35f, 5.5f, 0,    10,    true,  false, true,  2, 0, -1, 0, 0, 0, 0},
   {"ПУШКА",             M_CANNON,   UT_BUILD, 800,   150, 0.8f, 0,    5.5f, 0.6f,  5.5f, 0,    18,    false, false, false, 99, 30, -1, 0, 0, 0, 0},
   {"БАШНЯ ЛУЧНИКОВ",    M_ATOWER,   UT_BUILD, 1100,  100, 0.9f, 0,    7.0f, 0.7f,  7.0f, 0,    16,    false, false, true,  99, 40, -1, 0, 0, 0, 0},
@@ -1108,7 +1108,7 @@ static const Card CARDS[NCARD] = {
   {"КОПЕЙЩИК",          4, CT_TROOP, RA_RARE,   U_LANCER,   1, 1, SP_NONE, 0, 0, 0, 0, 0, "РАЗГОНЯЕТСЯ И ПЕРВЫМ УДАРОМ БЬЁТ ВДВОЕ СИЛЬНЕЕ."},
   {"ЛЕТУЧИЕ МЫШИ",      2, CT_TROOP, RA_COMMON, U_BAT,      4, 1, SP_NONE, 0, 0, 0, 0, 0, "СТАЯ ИЗ ЧЕТЫРЁХ. ЛЕТАЮТ, БЫСТРЫЕ, НО ХРУПКИЕ."},
   {"РАЗРЯД",            2, CT_SPELL, RA_RARE,   -1,         0, 1, SP_ZAP, 2.5f, 160, 0.35f, 0, 0, "МГНОВЕННАЯ МОЛНИЯ. ОГЛУШАЕТ НА ПОЛСЕКУНДЫ."},
-  {"НЕКРОМАНТ",         5, CT_TROOP, RA_EPIC,   U_NECRO,    1, 2, SP_NONE, 0, 0, 0, 0, 0, "ПОДНИМАЕТ СКЕЛЕТОВ И СТРЕЛЯЕТ ТЁМНОЙ МАГИЕЙ."},
+  {"НЕКРОМАНТ",         5, CT_TROOP, RA_EPIC,   U_NECRO,    1, 2, SP_NONE, 0, 0, 0, 0, 0, "ПОДНИМАЕТ ПО 4 СКЕЛЕТА. ТЁМНАЯ МАГИЯ БЬЁТ ПО ПЛОЩАДИ."},
   {"ГНОМ-ПОДРЫВНИК",    3, CT_TROOP, RA_COMMON, U_BOMBER,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "КИДАЕТ БОМБЫ ПО ТОЛПЕ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
   {"БАШНЯ ЛУЧНИКОВ",    4, CT_BUILD, RA_RARE,   U_ATOWER,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. ДАЛЕКО СТРЕЛЯЕТ ПО ВСЕМ, И ПО ЛЕТАЮЩИМ."},
   {"ЗАМОРОЗКА",         4, CT_SPELL, RA_EPIC,   -1,         0, 3, SP_FREEZE, 3.0f, 90, 1.0f, 0, 4.0f, "ВСЁ В КРУГУ ЗАМИРАЕТ НА 4 СЕКУНДЫ."},
@@ -1120,7 +1120,7 @@ static const Card CARDS[NCARD] = {
   {"КАМЕННЫЙ ГОЛЕМ",    8, CT_TROOP, RA_EPIC,   U_GOLEM,    1, 5, SP_NONE, 0, 0, 0, 0, 0, "САМЫЙ КРЕПКИЙ. ИДЁТ К ЗДАНИЯМ, ПРИ ГИБЕЛИ ВЗРЫВАЕТСЯ."},
   {"БОЕВОЙ БЫК",        4, CT_TROOP, RA_RARE,   U_BULL,     1, 5, SP_NONE, 0, 0, 0, 0, 0, "БЫСТРО НЕСЁТСЯ К БАШНЯМ, ПЕРЕПРЫГИВАЕТ РЕКУ."},
   {"ЛЕЧЕНИЕ",           3, CT_SPELL, RA_RARE,   -1,         0, 5, SP_HEAL, 3.0f, 450, 0, 0, 2.0f, "ЛЕЧИТ СВОИХ В КРУГУ ЗА 2 СЕКУНДЫ."},
-  {"КОРОЛЬ ГОБЛИНОВ",   7, CT_TROOP, RA_LEGEND, U_GOBKING,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ИДЁТ ТОЛЬКО К ЗДАНИЯМ И БАШНЯМ. КАЖДЫЕ 4 СЕКУНДЫ ПРИЗЫВАЕТ 4 ГОБЛИНОВ."},
+  {"КОРОЛЬ ГОБЛИНОВ",   8, CT_TROOP, RA_LEGEND, U_GOBKING,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ИДЁТ ТОЛЬКО К ЗДАНИЯМ И БАШНЯМ. КАЖДЫЕ 5 СЕКУНД ПРИЗЫВАЕТ 4 ГОБЛИНОВ."},
   {"ГОБЛИН-ДУДЕЦ",      3, CT_TROOP, RA_RARE,   U_DART,     1, 1, SP_NONE, 0, 0, 0, 0, 0, "ПЛЮЁТСЯ ИЗ ДУДКИ ОЧЕНЬ БЫСТРО И ДАЛЕКО. ДОСТАЁТ ЛЕТАЮЩИХ."},
   {"ВОЛАР БЕБЕ",        7, CT_TROOP, RA_LEGEND, U_VOLAR,    1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И АТАКУЕТ ТОЛЬКО ЗДАНИЯ. ПРИ ГИБЕЛИ - 6 ЩЕНКОВ, ОНИ БЬЮТ ВСЕХ."},
   {"АРМИЯ СКЕЛЕТОВ",    3, CT_TROOP, RA_EPIC,   U_SKELETON, 17, 0, SP_NONE, 0, 0, 0, 0, 0, "ЦЕЛАЯ ТОЛПА: 17 СКЕЛЕТОВ СРАЗУ. ОКРУЖАЕТ И РАЗБИРАЕТ ОДИНОЧНЫХ ВРАГОВ, НО БОИТСЯ СТРЕЛ И ЗАЖИГАЛОК."},
@@ -1718,6 +1718,9 @@ static inline void LP(float x, float z, float yaw, float ox, float oz, float &rx
 enum { WP_NONE, WP_SWORD, WP_BOW, WP_STAFF, WP_SPEAR, WP_XBOW, WP_DAGGER, WP_BOMB, WP_CLUB, WP_SCEPTER, WP_PIPE };
 enum { HT_NONE, HT_HELM, HT_HOOD, HT_WIZARD, HT_CROWN, HT_EARS, HT_SKULL, HT_BEARD };
 static u32 gHair = 0;          // не 0 - девушка: длинные волосы этого цвета, юбка, ресницы, губы
+static u32 gEyes = 0;          // не 0 - глаза-огоньки этого цвета в тёмных глазницах (скелет, некромант)
+static u32 gPads = 0;          // не 0 - наплечники этого цвета
+static u32 gBrow = 0;          // не 0 - цвет бровей (иначе тёмные)
 static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u32 body, u32 leg, u32 team, float walk, float atk, int weapon, int hat, u32 wcol, bool shield) {
   float sw = sinf(walk) * 0.09f, sw2 = -sw;
   PART(-0.09f, 0.17f, sw, 0.055f, 0.17f, 0.06f, leg); PART(0.09f, 0.17f, sw2, 0.055f, 0.17f, 0.06f, leg);
@@ -1738,11 +1741,23 @@ static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u3
     PART(0, 0.9f, -0.01f, 0.122f, 0.045f, 0.125f, gHair); PART(0, 0.87f, 0.105f, 0.12f, 0.025f, 0.012f, gHair);
     PART(-0.115f, 0.74f, 0.02f, 0.02f, 0.13f, 0.1f, gHair); PART(0.115f, 0.74f, 0.02f, 0.02f, 0.13f, 0.1f, gHair);
     PART(0, 0.72f, -0.115f, 0.115f, 0.17f, 0.02f, gHair); PART(0, 0.5f, -0.14f, 0.06f, 0.14f, 0.03f, gHair); PART(0, 0.36f, -0.15f, 0.04f, 0.05f, 0.025f, mixc(gHair, RGB(0, 0, 0), 0.2f)); }
-  else { PART(-0.05f, 0.82f, 0.121f, 0.02f, 0.02f, 0.003f, RGB(20, 20, 24)); PART(0.05f, 0.82f, 0.121f, 0.02f, 0.02f, 0.003f, RGB(20, 20, 24)); }   // глаза
+  else if (gEyes) { float fz = 0.121f;                                                     // тёмные глазницы со светящимися точками
+    PART(-0.05f, 0.82f, fz, 0.032f, 0.03f, 0.003f, RGB(25, 22, 28)); PART(0.05f, 0.82f, fz, 0.032f, 0.03f, 0.003f, RGB(25, 22, 28));
+    PART(-0.05f, 0.82f, fz + 0.002f, 0.013f, 0.013f, 0.003f, gEyes); PART(0.05f, 0.82f, fz + 0.002f, 0.013f, 0.013f, 0.003f, gEyes); }
+  else { float fz = 0.121f; u32 br = gBrow ? gBrow : mixc(skin, RGB(30, 20, 15), 0.7f);   // лицо: белки, зрачки, брови, нос, рот
+    PART(-0.05f, 0.82f, fz, 0.026f, 0.026f, 0.003f, RGB(250, 250, 250)); PART(0.05f, 0.82f, fz, 0.026f, 0.026f, 0.003f, RGB(250, 250, 250));
+    PART(-0.045f, 0.815f, fz + 0.002f, 0.014f, 0.017f, 0.003f, RGB(25, 25, 35)); PART(0.045f, 0.815f, fz + 0.002f, 0.014f, 0.017f, 0.003f, RGB(25, 25, 35));
+    PART(-0.052f, 0.862f, fz, 0.032f, 0.008f, 0.004f, br); PART(0.052f, 0.862f, fz, 0.032f, 0.008f, 0.004f, br);
+    PART(0, 0.78f, fz + 0.012f, 0.016f, 0.022f, 0.014f, mixc(skin, RGB(120, 60, 40), 0.18f));
+    PART(0, 0.735f, fz, 0.035f, 0.007f, 0.003f, mixc(skin, RGB(90, 30, 30), 0.6f)); }
   // руки: правая с оружием выносится вперёд при ударе
   float a = atk;  float raZ = 0.04f + a * 0.18f, raY = 0.5f + a * 0.12f;
   PART(0.23f, raY, raZ, 0.05f, 0.14f, 0.05f, body); PART(0.23f, raY - 0.16f, raZ + 0.02f, 0.045f, 0.04f, 0.045f, skin);
   PART(-0.23f, 0.5f, 0.04f - sw * 0.5f, 0.05f, 0.14f, 0.05f, body); PART(-0.23f, 0.34f, 0.06f - sw * 0.5f, 0.045f, 0.04f, 0.045f, skin);
+  PART(-0.23f, 0.4f, 0.04f - sw * 0.5f, 0.054f, 0.02f, 0.054f, mixc(body, RGB(0, 0, 0), 0.3f)); PART(0.23f, raY - 0.1f, raZ, 0.054f, 0.02f, 0.054f, mixc(body, RGB(0, 0, 0), 0.3f));   // манжеты
+  PART(0, 0.69f, 0, 0.06f, 0.025f, 0.06f, mixc(skin, RGB(0, 0, 0), 0.15f));                                                    // шея
+  if (gPads) { PART(-0.23f, 0.65f, 0.03f, 0.075f, 0.04f, 0.075f, gPads); PART(0.23f, raY + 0.15f, raZ - 0.01f, 0.075f, 0.04f, 0.075f, gPads);
+    PART(-0.23f, 0.69f, 0.03f, 0.06f, 0.012f, 0.06f, mixc(gPads, RGB(255, 255, 255), 0.3f)); PART(0.23f, raY + 0.19f, raZ - 0.01f, 0.06f, 0.012f, 0.06f, mixc(gPads, RGB(255, 255, 255), 0.3f)); }
   float hx = 0.23f, hy = raY - 0.16f, hz = raZ + 0.06f;
   switch (weapon) {
     case WP_SWORD: PART(hx, hy + 0.25f - a * 0.1f, hz + a * 0.15f, 0.018f, 0.22f, 0.035f, RGB(215, 220, 230)); PART(hx, hy + 0.03f, hz, 0.06f, 0.015f, 0.025f, RGB(140, 110, 50)); break;
@@ -1776,19 +1791,33 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
   #define FZ(c) (frozen ? mixc((c), RGB(170, 220, 255), 0.55f) : (flash > 0 ? mixc((c), RGB(255, 255, 255), 0.35f) : (c)))
   float s = 1, US = model < M_CANNON ? 1.35f : 1.0f;            // войска крупнее: на телефоне их лучше видно
   switch (model) {
-    case M_KNIGHT: s = 1.25f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(150, 155, 165)), FZ(RGB(90, 90, 100)), FZ(tc), walk, atk, WP_SWORD, HT_HELM, 0, true); break;
+    case M_KNIGHT: s = 1.25f * US; gPads = FZ(RGB(185, 190, 200)); gBrow = RGB(110, 70, 40); humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(150, 155, 165)), FZ(RGB(90, 90, 100)), FZ(tc), walk, atk, WP_SWORD, HT_HELM, 0, true); gPads = 0; gBrow = 0;
+      PART(0, 0.42f, -0.125f, 0.16f, 0.26f, 0.012f, FZ(td)); PART(0, 0.36f, 0.118f, 0.03f, 0.022f, 0.004f, FZ(RGB(230, 200, 80))); break;   // плащ и пряжка
     case M_ARCHER: s = 1.05f * US; gHair = FZ(RGB(200, 90, 40)); humanoid(x, y, z, yaw, s, FZ(RGB(250, 215, 185)), FZ(RGB(90, 150, 80)), FZ(RGB(70, 100, 60)), FZ(tc), walk, atk, WP_BOW, HT_NONE, 0, false); gHair = 0;
-      PART(0.0f, 0.95f, -0.05f, 0.05f, 0.02f, 0.05f, FZ(RGB(240, 230, 120))); break;   // заколка
-    case M_GOBLIN: s = 0.8f * US; humanoid(x, y, z, yaw, s, FZ(RGB(110, 180, 80)), FZ(RGB(120, 90, 60)), FZ(RGB(90, 70, 50)), FZ(tc), walk, atk, WP_DAGGER, HT_EARS, 0, false); break;
+      PART(0.0f, 0.95f, -0.05f, 0.05f, 0.02f, 0.05f, FZ(RGB(240, 230, 120)));   // заколка
+      PART(0.12f, 0.55f, -0.17f, 0.045f, 0.14f, 0.045f, FZ(RGB(120, 80, 45))); for (int k = 0; k < 3; k++) PART(0.1f + k * 0.02f, 0.72f, -0.17f, 0.008f, 0.04f, 0.008f, FZ(RGB(240, 240, 240))); break;   // колчан
+    case M_GOBLIN: s = 0.8f * US; humanoid(x, y, z, yaw, s, FZ(RGB(110, 180, 80)), FZ(RGB(120, 90, 60)), FZ(RGB(90, 70, 50)), FZ(tc), walk, atk, WP_DAGGER, HT_EARS, 0, false);
+      PART(-0.23f, 0.87f, -0.01f, 0.04f, 0.018f, 0.015f, FZ(RGB(100, 170, 70))); PART(0.23f, 0.87f, -0.01f, 0.04f, 0.018f, 0.015f, FZ(RGB(100, 170, 70)));   // кончики ушей
+      PART(0, 0.78f, 0.15f, 0.025f, 0.03f, 0.03f, FZ(RGB(95, 160, 65))); PART(-0.03f, 0.725f, 0.124f, 0.008f, 0.014f, 0.004f, RGB(250, 250, 240)); PART(0.03f, 0.725f, 0.124f, 0.008f, 0.014f, 0.004f, RGB(250, 250, 240));
+      PART(0, 0.9f, -0.005f, 0.124f, 0.025f, 0.124f, FZ(tc)); break;   // нос, клыки, повязка
     case M_GIANT: s = 2.1f * US; humanoid(x, y, z, yaw, s, FZ(RGB(230, 180, 130)), FZ(RGB(150, 110, 70)), FZ(RGB(110, 80, 55)), FZ(tc), walk, atk, WP_CLUB, HT_NONE, 0, false);
-      PART(0, 0.9f, 0, 0.125f, 0.035f, 0.125f, FZ(RGB(170, 110, 60))); break;     // волосы
-    case M_SKELETON: s = 0.85f * US; humanoid(x, y, z, yaw, s, FZ(RGB(235, 235, 225)), FZ(RGB(225, 225, 215)), FZ(RGB(215, 215, 205)), FZ(tc), walk, atk, WP_SWORD, HT_NONE, 0, false); break;
-    case M_XBOW: s = 1.15f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(110, 90, 140)), FZ(RGB(70, 60, 80)), FZ(tc), walk, atk, WP_XBOW, HT_HELM, 0, false); break;
-    case M_LANCER: s = 1.3f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(200, 200, 210)), FZ(RGB(120, 120, 130)), FZ(tc), walk, atk, WP_SPEAR, HT_HELM, 0, true); break;
-    case M_NECRO: s = 1.25f * US; humanoid(x, y, z, yaw, s, FZ(RGB(200, 210, 190)), FZ(RGB(50, 40, 60)), FZ(RGB(40, 30, 50)), FZ(tc), walk, atk, WP_STAFF, HT_HOOD, FZ(RGB(120, 255, 140)), false);
-      PART(0, 0.25f, 0, 0.2f, 0.25f, 0.14f, FZ(RGB(45, 35, 55))); break;            // мантия
+      PART(0, 0.9f, 0, 0.125f, 0.035f, 0.125f, FZ(RGB(170, 110, 60)));     // волосы
+      PART(0, 0.72f, 0.1f, 0.1f, 0.035f, 0.025f, FZ(RGB(150, 95, 55))); PART(0, 0.36f, 0.12f, 0.04f, 0.03f, 0.005f, FZ(RGB(220, 190, 90)));   // щетина, бляха
+      PART(0, 0.55f, 0.113f, 0.1f, 0.012f, 0.003f, FZ(td)); break;
+    case M_SKELETON: s = 0.85f * US; gEyes = RGB(120, 220, 255); humanoid(x, y, z, yaw, s, FZ(RGB(235, 235, 225)), FZ(RGB(225, 225, 215)), FZ(RGB(215, 215, 205)), FZ(tc), walk, atk, WP_SWORD, HT_NONE, 0, false); gEyes = 0;
+      for (int k = 0; k < 3; k++) PART(0, 0.58f - k * 0.07f, 0.113f, 0.14f, 0.012f, 0.004f, RGB(90, 90, 95));   // рёбра
+      PART(0, 0.74f, 0.121f, 0.06f, 0.012f, 0.003f, RGB(60, 60, 64)); for (int k = -2; k <= 2; k++) PART(k * 0.022f, 0.74f, 0.123f, 0.003f, 0.016f, 0.003f, RGB(235, 235, 225)); break;   // зубы
+    case M_XBOW: s = 1.15f * US; gPads = FZ(RGB(90, 70, 110)); humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(110, 90, 140)), FZ(RGB(70, 60, 80)), FZ(tc), walk, atk, WP_XBOW, HT_HELM, 0, false); gPads = 0;
+      PART(-0.13f, 0.55f, -0.16f, 0.04f, 0.12f, 0.04f, FZ(RGB(110, 75, 45))); PART(0, 0.3f, 0.118f, 0.15f, 0.08f, 0.004f, FZ(td)); break;   // колчан, набедренник
+    case M_LANCER: s = 1.3f * US; gPads = FZ(RGB(220, 200, 110)); humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(200, 200, 210)), FZ(RGB(120, 120, 130)), FZ(tc), walk, atk, WP_SPEAR, HT_HELM, 0, true); gPads = 0;
+      PART(0, 1.08f, -0.06f, 0.025f, 0.05f, 0.1f, FZ(tc)); PART(0, 0.42f, -0.125f, 0.17f, 0.27f, 0.012f, FZ(td)); break;   // высокий плюмаж и плащ
+    case M_NECRO: s = 1.25f * US; gEyes = RGB(120, 255, 140); humanoid(x, y, z, yaw, s, FZ(RGB(200, 210, 190)), FZ(RGB(50, 40, 60)), FZ(RGB(40, 30, 50)), FZ(tc), walk, atk, WP_STAFF, HT_HOOD, FZ(RGB(120, 255, 140)), false);
+      gEyes = 0; PART(0, 0.25f, 0, 0.2f, 0.25f, 0.14f, FZ(RGB(45, 35, 55)));            // мантия
+      PART(0, 0.36f, 0.145f, 0.04f, 0.04f, 0.01f, FZ(RGB(225, 225, 210))); PART(-0.015f, 0.365f, 0.156f, 0.01f, 0.01f, 0.002f, RGB(30, 30, 30)); PART(0.015f, 0.365f, 0.156f, 0.01f, 0.01f, 0.002f, RGB(30, 30, 30));   // череп на поясе
+      PART(0, 0.48f, 0.142f, 0.012f, 0.2f, 0.004f, FZ(RGB(120, 255, 140))); break;   // светящаяся вышивка
     case M_FIREMAGE: s = 1.2f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(190, 50, 40)), FZ(RGB(150, 40, 30)), FZ(tc), walk, atk, WP_STAFF, HT_WIZARD, FZ(RGB(255, 140, 40)), false);
-      PART(0, 0.25f, 0, 0.19f, 0.25f, 0.13f, FZ(RGB(170, 40, 35))); break;
+      PART(0, 0.25f, 0, 0.19f, 0.25f, 0.13f, FZ(RGB(170, 40, 35)));
+      PART(0, 0.68f, 0.12f, 0.08f, 0.07f, 0.02f, FZ(RGB(235, 235, 230))); PART(0, 0.36f, 0.135f, 0.13f, 0.02f, 0.004f, FZ(RGB(255, 190, 60))); break;   // борода, золотой пояс
     case M_GOBKING: { s = 1.6f * US; gHair = 0;                     // король гоблинов: зелёный, в короне, с мантией и скипетром
       humanoid(x, y, z, yaw, s, FZ(RGB(110, 180, 80)), FZ(RGB(120, 60, 150)), FZ(RGB(80, 60, 50)), FZ(tc), walk, atk, WP_SCEPTER, HT_CROWN, 0, false);
       PART(-0.16f, 0.82f, 0, 0.07f, 0.03f, 0.025f, FZ(RGB(110, 180, 80))); PART(0.16f, 0.82f, 0, 0.07f, 0.03f, 0.025f, FZ(RGB(110, 180, 80)));   // уши
@@ -1814,12 +1843,17 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       PART(0, 0, 0, 0.2f, 0.17f, 0.22f, rock); PART(0, 0.12f, 0.24f, 0.15f, 0.14f, 0.12f, rock);
       PART(-0.06f, 0.15f, 0.365f, 0.035f, 0.035f, 0.003f, RGB(255, 230, 120)); PART(0.06f, 0.15f, 0.365f, 0.035f, 0.035f, 0.003f, RGB(255, 230, 120));
       PART(0, 0.18f, 0, 0.1f, 0.01f, 0.03f, lava); PART(-0.28f, 0.06f + fl, 0, 0.14f, 0.015f, 0.12f, FZ(tc)); PART(0.28f, 0.06f + fl, 0, 0.14f, 0.015f, 0.12f, FZ(tc)); } break;
-    case M_BOMBER: s = 0.75f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(90, 100, 160)), FZ(RGB(70, 60, 50)), FZ(tc), walk, atk, WP_BOMB, HT_BEARD, 0, false); break;
+    case M_BOMBER: s = 0.75f * US; humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(90, 100, 160)), FZ(RGB(70, 60, 50)), FZ(tc), walk, atk, WP_BOMB, HT_BEARD, 0, false);
+      PART(-0.05f, 0.93f, 0.12f, 0.035f, 0.03f, 0.012f, FZ(RGB(70, 60, 50))); PART(0.05f, 0.93f, 0.12f, 0.035f, 0.03f, 0.012f, FZ(RGB(70, 60, 50)));   // очки
+      PART(-0.05f, 0.93f, 0.133f, 0.022f, 0.018f, 0.002f, RGB(150, 220, 255)); PART(0.05f, 0.93f, 0.133f, 0.022f, 0.018f, 0.002f, RGB(150, 220, 255));
+      PART(0.14f, 0.36f, 0.08f, 0.04f, 0.04f, 0.04f, FZ(RGB(30, 30, 34))); break;   // запасная бомба на поясе
     case M_BAT: { s = 0.7f * US; float fl = sinf(walk * 3.0f) * 0.25f;
       PART(0, 0, 0, 0.12f, 0.1f, 0.14f, FZ(RGB(60, 45, 70))); PART(0, 0.08f, 0.14f, 0.08f, 0.07f, 0.06f, FZ(RGB(70, 55, 80)));
       PART(-0.06f, 0.17f, 0.15f, 0.025f, 0.05f, 0.015f, FZ(RGB(70, 55, 80))); PART(0.06f, 0.17f, 0.15f, 0.025f, 0.05f, 0.015f, FZ(RGB(70, 55, 80)));
       PART(-0.04f, 0.1f, 0.205f, 0.015f, 0.015f, 0.003f, RGB(255, 60, 60)); PART(0.04f, 0.1f, 0.205f, 0.015f, 0.015f, 0.003f, RGB(255, 60, 60));
-      PART(-0.32f, fl, 0, 0.22f, 0.012f, 0.12f, FZ(tc)); PART(0.32f, fl, 0, 0.22f, 0.012f, 0.12f, FZ(tc)); } break;
+      PART(-0.32f, fl, 0, 0.22f, 0.012f, 0.12f, FZ(tc)); PART(0.32f, fl, 0, 0.22f, 0.012f, 0.12f, FZ(tc));
+      PART(-0.32f, fl - 0.005f, -0.06f, 0.2f, 0.01f, 0.05f, FZ(td)); PART(0.32f, fl - 0.005f, -0.06f, 0.2f, 0.01f, 0.05f, FZ(td));   // перепонки
+      PART(-0.025f, 0.03f, 0.2f, 0.008f, 0.02f, 0.004f, RGB(250, 250, 250)); PART(0.025f, 0.03f, 0.2f, 0.008f, 0.02f, 0.004f, RGB(250, 250, 250)); } break;   // клыки
     case M_DRAGON: { s = 1.3f * US; float fl = sinf(walk * 1.5f) * 0.3f;
       PART(0, 0, 0, 0.22f, 0.2f, 0.32f, FZ(RGB(90, 170, 90))); PART(0, -0.08f, 0.02f, 0.18f, 0.12f, 0.26f, FZ(RGB(220, 200, 120)));
       PART(0, 0.18f, 0.36f, 0.1f, 0.1f, 0.12f, FZ(RGB(90, 170, 90))); PART(0, 0.26f, 0.54f, 0.13f, 0.11f, 0.14f, FZ(RGB(100, 180, 95)));
@@ -1828,7 +1862,12 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       PART(-0.08f, 0.4f, 0.48f, 0.025f, 0.08f, 0.025f, FZ(RGB(240, 230, 200))); PART(0.08f, 0.4f, 0.48f, 0.025f, 0.08f, 0.025f, FZ(RGB(240, 230, 200)));
       PART(0, 0.05f, -0.42f, 0.07f, 0.07f, 0.16f, FZ(RGB(80, 160, 80))); PART(0, 0.1f, -0.62f, 0.04f, 0.04f, 0.1f, FZ(RGB(80, 160, 80)));
       PART(-0.48f, 0.15f + fl, -0.02f, 0.3f, 0.02f, 0.22f, FZ(tc)); PART(0.48f, 0.15f + fl, -0.02f, 0.3f, 0.02f, 0.22f, FZ(tc));
-      PART(-0.72f, 0.15f + fl * 1.6f, -0.08f, 0.1f, 0.018f, 0.14f, FZ(td)); PART(0.72f, 0.15f + fl * 1.6f, -0.08f, 0.1f, 0.018f, 0.14f, FZ(td)); } break;
+      PART(-0.72f, 0.15f + fl * 1.6f, -0.08f, 0.1f, 0.018f, 0.14f, FZ(td)); PART(0.72f, 0.15f + fl * 1.6f, -0.08f, 0.1f, 0.018f, 0.14f, FZ(td));
+      for (int k = 0; k < 4; k++) PART(0, 0.22f, 0.22f - k * 0.17f, 0.02f, 0.05f, 0.04f, FZ(RGB(230, 120, 50)));                      // шипы на спине
+      for (int k = 0; k < 3; k++) PART(0, -0.2f, 0.16f - k * 0.14f, 0.15f, 0.005f, 0.04f, FZ(RGB(190, 165, 95)));                    // полосы на брюшке
+      PART(-0.03f, 0.23f, 0.74f, 0.012f, 0.012f, 0.004f, RGB(40, 30, 20)); PART(0.03f, 0.23f, 0.74f, 0.012f, 0.012f, 0.004f, RGB(40, 30, 20));   // ноздри
+      PART(-0.065f, 0.305f, 0.676f, 0.012f, 0.016f, 0.003f, RGB(20, 20, 20)); PART(0.065f, 0.305f, 0.676f, 0.012f, 0.016f, 0.003f, RGB(20, 20, 20));   // зрачки
+      for (int k = 0; k < 2; k++) { float lx = k ? 0.12f : -0.12f; PART(lx, -0.24f, 0.12f, 0.04f, 0.06f, 0.04f, FZ(RGB(80, 155, 80))); PART(lx, -0.3f, 0.16f, 0.035f, 0.012f, 0.03f, RGB(240, 235, 220)); } } break;   // лапки с когтями
     case M_BULL: { s = 1.2f * US; float sw = sinf(walk * 1.3f) * 0.08f;
       PART(0, 0.55f, 0, 0.28f, 0.22f, 0.45f, FZ(RGB(110, 70, 45))); PART(0, 0.6f, 0.52f, 0.17f, 0.17f, 0.17f, FZ(RGB(100, 62, 40)));
       PART(0, 0.53f, 0.68f, 0.13f, 0.09f, 0.04f, FZ(RGB(180, 140, 120)));
@@ -1836,14 +1875,21 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       PART(-0.32f, 0.88f, 0.55f, 0.025f, 0.08f, 0.025f, FZ(RGB(240, 235, 220))); PART(0.32f, 0.88f, 0.55f, 0.025f, 0.08f, 0.025f, FZ(RGB(240, 235, 220)));
       PART(0, 0.79f, 0, 0.29f, 0.04f, 0.3f, FZ(tc)); PART(0, 0.6f, 0.0f, 0.3f, 0.12f, 0.12f, FZ(td));    // попона
       for (int k = 0; k < 4; k++) { float lx = (k & 1 ? 0.18f : -0.18f), lz = (k & 2 ? 0.3f : -0.3f), o = (k == 0 || k == 3) ? sw : -sw; PART(lx, 0.18f, lz + o, 0.07f, 0.18f, 0.07f, FZ(RGB(90, 58, 38))); }
-      PART(0, 0.6f, -0.48f, 0.02f, 0.1f, 0.02f, FZ(RGB(90, 58, 38))); } break;
+      PART(0, 0.6f, -0.48f, 0.02f, 0.1f, 0.02f, FZ(RGB(90, 58, 38))); PART(0, 0.48f, -0.49f, 0.04f, 0.04f, 0.03f, FZ(RGB(60, 40, 28)));   // хвост с кисточкой
+      PART(-0.1f, 0.68f, 0.69f, 0.03f, 0.03f, 0.004f, RGB(250, 250, 250)); PART(0.1f, 0.68f, 0.69f, 0.03f, 0.03f, 0.004f, RGB(250, 250, 250));
+      PART(-0.1f, 0.675f, 0.693f, 0.016f, 0.02f, 0.003f, RGB(30, 20, 20)); PART(0.1f, 0.675f, 0.693f, 0.016f, 0.02f, 0.003f, RGB(30, 20, 20));   // глаза
+      PART(-0.1f, 0.73f, 0.69f, 0.035f, 0.01f, 0.004f, RGB(40, 25, 20)); PART(0.1f, 0.73f, 0.69f, 0.035f, 0.01f, 0.004f, RGB(40, 25, 20));       // злые брови
+      PART(0, 0.47f, 0.72f, 0.04f, 0.035f, 0.008f, FZ(RGB(230, 200, 80))); } break;   // кольцо в носу
     case M_GOLEM: { s = 1.5f * US; float sw = sinf(walk) * 0.08f; u32 st = FZ(RGB(130, 125, 120)), sd = FZ(RGB(105, 100, 98));
       PART(-0.17f, 0.2f, sw, 0.12f, 0.2f, 0.13f, sd); PART(0.17f, 0.2f, -sw, 0.12f, 0.2f, 0.13f, sd);
       PART(0, 0.68f, 0, 0.32f, 0.3f, 0.24f, st); PART(0, 0.68f, 0.245f, 0.12f, 0.12f, 0.005f, FZ(tc));
       PART(0, 1.06f, 0.04f, 0.16f, 0.12f, 0.15f, sd); PART(-0.06f, 1.08f, 0.195f, 0.03f, 0.02f, 0.004f, RGB(255, 180, 60)); PART(0.06f, 1.08f, 0.195f, 0.03f, 0.02f, 0.004f, RGB(255, 180, 60));
       PART(-0.42f, 0.62f + atk * 0.1f, atk * 0.2f, 0.11f, 0.26f, 0.12f, st); PART(0.42f, 0.62f + atk * 0.1f, atk * 0.2f, 0.11f, 0.26f, 0.12f, st);
       PART(-0.42f, 0.32f, atk * 0.25f, 0.13f, 0.08f, 0.13f, sd); PART(0.42f, 0.32f, atk * 0.25f, 0.13f, 0.08f, 0.13f, sd);
-      PART(0.15f, 0.9f, -0.2f, 0.06f, 0.04f, 0.06f, FZ(RGB(90, 150, 70))); } break;   // мох
+      PART(0.15f, 0.9f, -0.2f, 0.06f, 0.04f, 0.06f, FZ(RGB(90, 150, 70)));   // мох
+      PART(-0.4f, 0.92f, 0, 0.13f, 0.06f, 0.13f, sd); PART(0.4f, 0.92f, 0, 0.13f, 0.06f, 0.13f, sd); PART(-0.4f, 0.99f, 0.02f, 0.08f, 0.03f, 0.08f, FZ(RGB(90, 150, 70)));   // каменные плечи
+      PART(-0.15f, 0.55f, 0.245f, 0.08f, 0.008f, 0.004f, FZ(RGB(70, 66, 64))); PART(0.18f, 0.8f, 0.245f, 0.006f, 0.08f, 0.004f, FZ(RGB(70, 66, 64)));            // трещины
+      PART(0, 1.0f, 0.195f, 0.1f, 0.012f, 0.004f, FZ(RGB(70, 66, 64))); PART(0, 0.97f, 0.195f, 0.04f, 0.008f, 0.003f, RGB(255, 140, 40)); } break;   // брови-скала и светящийся рот
     case M_CANNON: { s = 1.0f; u32 wd = FZ(RGB(130, 90, 55));
       PART(0, 0.18f, 0, 0.42f, 0.18f, 0.42f, wd); PART(0, 0.37f, 0, 0.44f, 0.02f, 0.44f, FZ(tc));
       for (int k = -1; k <= 1; k += 2) PART(k * 0.28f, 0.5f, 0, 0.06f, 0.13f, 0.18f, FZ(RGB(90, 60, 40)));
@@ -2438,7 +2484,7 @@ static int cardStatLine(int c, int lvl, char lines[][64]) {
   snprintf(lines[n++], 64, "ЗДОРОВЬЕ: %d", (int)(u.hp * k));
   if (u.dmg > 0) snprintf(lines[n++], 64, "УРОН: %d%s", (int)(u.dmg * k), u.splash > 0 ? " ПО ПЛОЩАДИ" : "");
   if (u.dmg > 0) snprintf(lines[n++], 64, "СКОРОСТЬ УДАРА: %.1f С", u.hitT);
-  if (cd.type == CT_TROOP) snprintf(lines[n++], 64, "СКОРОСТЬ: %s", u.speed >= 1.9f ? "ОЧЕНЬ БЫСТРО" : (u.speed >= 1.3f ? "БЫСТРО" : (u.speed >= 0.95f ? "СРЕДНЕ" : "МЕДЛЕННО")));
+  if (cd.type == CT_TROOP) snprintf(lines[n++], 64, "СКОРОСТЬ: %s", u.speed >= 1.9f ? "ОЧЕНЬ БЫСТРО" : (u.speed >= 1.3f ? "БЫСТРО" : (u.speed >= 0.95f ? "СРЕДНЕ" : (u.speed >= 0.65f ? "МЕДЛЕННО" : "ОЧЕНЬ МЕДЛЕННО"))));
   if (u.dmg > 0) snprintf(lines[n++], 64, "ДАЛЬНОСТЬ: %s", u.range < 1.5f ? "ВБЛИЗИ" : (u.range < 4 ? "СРЕДНЯЯ" : "ДАЛЕКО"));
   snprintf(lines[n++], 64, "ЦЕЛИ: %s", u.onlyBuild ? "ТОЛЬКО ЗДАНИЯ" : (u.canAir ? "НАЗЕМНЫЕ И ВОЗДУШНЫЕ" : "НАЗЕМНЫЕ"));
   if (cd.count > 1) snprintf(lines[n++], 64, "КОЛИЧЕСТВО: %d", cd.count);

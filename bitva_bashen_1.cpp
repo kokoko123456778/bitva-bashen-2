@@ -1095,7 +1095,7 @@ static const u32 RARC[NRAR] = {RGB(110, 160, 220), RGB(240, 150, 50), RGB(180, 8
 enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP };
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
-       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, NCARD };
+       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, NCARD };
 static const Card CARDS[NCARD] = {
   {"РЫЦАРЬ",            3, CT_TROOP, RA_COMMON, U_KNIGHT,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "КРЕПКИЙ БОЕЦ С МЕЧОМ. ДЕРЖИТ УДАР И БЬЁТ ВБЛИЗИ."},
   {"ЛУЧНИЦЫ",           3, CT_TROOP, RA_COMMON, U_ARCHER,   2, 0, SP_NONE, 0, 0, 0, 0, 0, "ДВЕ ЛУЧНИЦЫ. СТРЕЛЯЮТ ИЗДАЛЕКА, ДОСТАЮТ ЛЕТАЮЩИХ."},
@@ -1123,6 +1123,7 @@ static const Card CARDS[NCARD] = {
   {"КОРОЛЬ ГОБЛИНОВ",   7, CT_TROOP, RA_LEGEND, U_GOBKING,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ИДЁТ ТОЛЬКО К ЗДАНИЯМ И БАШНЯМ. КАЖДЫЕ 4 СЕКУНДЫ ПРИЗЫВАЕТ 4 ГОБЛИНОВ."},
   {"ГОБЛИН-ДУДЕЦ",      3, CT_TROOP, RA_RARE,   U_DART,     1, 1, SP_NONE, 0, 0, 0, 0, 0, "ПЛЮЁТСЯ ИЗ ДУДКИ ОЧЕНЬ БЫСТРО И ДАЛЕКО. ДОСТАЁТ ЛЕТАЮЩИХ."},
   {"ВОЛАР БЕБЕ",        7, CT_TROOP, RA_LEGEND, U_VOLAR,    1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И АТАКУЕТ ТОЛЬКО ЗДАНИЯ. ПРИ ГИБЕЛИ - 6 ЩЕНКОВ, ОНИ БЬЮТ ВСЕХ."},
+  {"АРМИЯ СКЕЛЕТОВ",    3, CT_TROOP, RA_EPIC,   U_SKELETON, 17, 0, SP_NONE, 0, 0, 0, 0, 0, "ЦЕЛАЯ ТОЛПА: 17 СКЕЛЕТОВ СРАЗУ. ОКРУЖАЕТ И РАЗБИРАЕТ ОДИНОЧНЫХ ВРАГОВ, НО БОИТСЯ СТРЕЛ И ЗАЖИГАЛОК."},
 };
 static const int START_DECK[8] = {C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON};
 
@@ -1375,6 +1376,7 @@ static bool playCard(int si, int slot, float x, float z) {
       float ox = 0, oz = 0;
       if (n == 2) { ox = (i ? 0.6f : -0.6f); }
       else if (n == 3) { float a = i * 2.094f; ox = sinf(a) * 0.7f; oz = cosf(a) * 0.7f; }
+      else if (n > 4) { float rr = 0.4f * sqrtf((float)i), a = i * 2.39996f; ox = sinf(a) * rr; oz = cosf(a) * rr; }   // толпа - спиралью, чтобы не стояли друг в друге
       else if (n >= 4) { ox = ((i & 1) ? 0.55f : -0.55f); oz = ((i & 2) ? 0.55f : -0.55f); }
       float ux = clampf(x + ox, 0.4f, AW - 0.4f), uz = clampf(z + oz, 0.4f, AL - 0.4f);
       if (!t.air && fabsf(uz - RIVER_Z) < RIVER_HW + 0.2f) uz = z;
@@ -2083,6 +2085,8 @@ static void thumbRender(int c, float zoom, float shx, float shy) {
   for (int y = 0; y < TH; y++) for (int x = 0; x < TW; x++) fb[y * IW + x] = KEYC; clearDepth();
   float cy = top * 0.5f; setCamera(v3(dist * 0.42f, cy + dist * 0.45f, dist), v3(0, cy, 0)); focal = TW * 0.9f * zoom; vcx = TW * 0.5f + shx; vcy = TH * 0.5f + shy;
   gLight = 1.08f; gNight = 0; fogA = 1e9f; fogB = 2e9f; LDIR = vnorm(v3(0.45f, 0.8f, 0.7f));
+  if (cd.count >= 10) { for (int k = 5; k >= 0; k--) { int row = k / 3; float ox = ((k % 3) - 1 + row * 0.5f - 0.25f) * 0.45f * top, oz = -row * 0.55f * top;   // армия: два ряда
+      drawModel(ut.model, 0, ox, 0, oz, 0.35f, 0.9f, 0, 0, false, 1); } return; }
   int n = imin(cd.count, 3); for (int k = 0; k < imax(1, n); k++) { float ox = n > 1 ? (k - (n - 1) * 0.5f) * 0.5f * top : 0, oz = n > 1 ? -fabsf(ox) * 0.7f : 0;
     drawModel(ut.model, 0, ox, 0, oz, 0.35f, 0.9f, 0, 0, false, 1); }
 }
@@ -2151,9 +2155,11 @@ struct BattleInfo { bool net, vsBot, duo; char enemy[48]; int myTeam, mySide, ma
 static Bot bots[3]; static int nBots = 0;                 // боты в бою (в 2 на 2 их до трёх)
 static BattleInfo BI;
 static int selCard = -1; static bool dragging = false; static float ghostX = 0, ghostZ = 0; static bool ghostOn = false;
+// отступ сверху под строку состояния телефона (часы, батарея), иначе таймер прячется под ней
+static int safeTop() { return imax(fs * 6, IH * 45 / 1000); }
 static int handY0 = 0, cardW = 0, cardH = 0, handX0 = 0, arenaY1 = 0, topH = 0;
 static float simAlpha = 0; static bool previewDirty = true;
-static void battleLayout() { layoutCol(); topH = fs * 20; int bh = (int)(IH * 0.21f); arenaY1 = IH - bh; cardW = (colW - fs * 10) * 10 / 46; cardH = cardW * 6 / 5; handX0 = colX + fs * 2 + (colW - fs * 4) - 4 * cardW - 3 * fs * 2; handY0 = arenaY1 + fs * 3; }
+static void battleLayout() { layoutCol(); topH = safeTop() + fs * 20; int bh = (int)(IH * 0.21f); arenaY1 = IH - bh; cardW = (colW - fs * 10) * 10 / 46; cardH = cardW * 6 / 5; handX0 = colX + fs * 2 + (colW - fs * 4) - 4 * cardW - 3 * fs * 2; handY0 = arenaY1 + fs * 3; }
 static int netSendPlay(int slot, float x, float z);         // в b4: клиент отправляет ход хосту
 static bool netIsClient();
 static void netSendQuit();
@@ -2218,11 +2224,11 @@ static void drawBattleHud() {
   int me = BI.myTeam, en = 1 - me; Side &s = B.side[BI.mySide]; char b[96];
   // верх: противник, время, короны
   fillRectA(0, 0, IW, topH, RGB(10, 14, 24), 200);
-  drawFit(colX + fs * 3, fs * 3, BI.enemy, colW * 62 / 100, fs, RGB(255, 150, 140), 0);
-  snprintf(b, sizeof b, "КОРОНЫ %d", B.side[en].crowns); drawTextSh(colX + fs * 3, fs * 10, b, fs, RGB(255, 210, 120), 0);
+  int st = safeTop(); drawFit(colX + fs * 3, st + fs * 3, BI.enemy, colW * 62 / 100, fs, RGB(255, 150, 140), 0);
+  snprintf(b, sizeof b, "КОРОНЫ %d", B.side[en].crowns); drawTextSh(colX + fs * 3, st + fs * 10, b, fs, RGB(255, 210, 120), 0);
   int tl = (int)ceilf(fmaxv(0, timeLeft())); snprintf(b, sizeof b, "%d:%02d", tl / 60, tl % 60);
-  drawTextSh(colX + colW - fs * 3, fs * 2, B.overtime ? "ДОП. ВРЕМЯ" : "ДО КОНЦА", fs, RGB(200, 210, 230), 2);
-  drawTextSh(colX + colW - fs * 3, fs * 10, b, fs + 1, tl <= 10 ? RGB(255, 90, 80) : RGB(255, 255, 255), 2);
+  drawTextSh(colX + colW - fs * 3, st + fs * 2, B.overtime ? "ДОП. ВРЕМЯ" : "ДО КОНЦА", fs, RGB(200, 210, 230), 2);
+  drawTextSh(colX + colW - fs * 3, st + fs * 10, b, fs + 1, tl <= 10 ? RGB(255, 90, 80) : RGB(255, 255, 255), 2);
   if (doubleElixir() || B.overtime) { bool on = fmodf(gTime, 1.0f) < 0.7f; if (on) drawTextSh(IW / 2, topH + fs * 2, "ЭЛИКСИР X2", fs + 1, RGB(240, 120, 255), 1); }
   // свои короны - над картами
   snprintf(b, sizeof b, "МОИ КОРОНЫ %d", B.side[me].crowns); drawTextSh(colX + fs * 3, arenaY1 - fs * 10, b, fs, RGB(140, 200, 255), 0);
@@ -2303,7 +2309,7 @@ static void openChest(int type) {
 static void frameChest(float dt) {
   chestAnim += dt; fillRect(0, 0, IW, IH, RGB(25, 20, 45)); char b[96];
   for (int k = 0; k < 14; k++) { float a = k * 0.4488f + gTime * 0.2f; drawLine(IW / 2, IH / 3, IW / 2 + (int)(cosf(a) * IW), IH / 3 + (int)(sinf(a) * IW), mixc(RGB(25, 20, 45), CHESTS[chestType].col, 0.25f), fs * 3); }
-  drawTextSh(IW / 2, fs * 10, CHESTS[chestType].name, fs + 1, CHESTS[chestType].col, 1);
+  drawTextSh(IW / 2, safeTop() + fs * 10, CHESTS[chestType].name, fs + 1, CHESTS[chestType].col, 1);
   int n = (int)chestR.size();
   if (chestShown < n) { const Reward &r = chestR[chestShown]; int w = colW / 2, h = w * 6 / 5, x = IW / 2 - w / 2, y = IH / 3 - h / 3; float k = clampf(chestAnim * 3, 0, 1);
     int ww = (int)(w * (0.3f + 0.7f * k)), hh = (int)(h * (0.3f + 0.7f * k));
@@ -2329,11 +2335,11 @@ static void frameChest(float dt) {
 static float deckScroll = 0; static int infoCard = -1, swapCard = -1;
 static int tabH() { return fs * 20; }
 static void topBar() {
-  char b[64], m[32]; fillRect(0, 0, IW, fs * 16, RGB(20, 26, 44));
-  fmtNum(m, sizeof m, pf.gold); snprintf(b, sizeof b, "ЗОЛОТО %s", m); drawTextSh(colX + fs * 3, fs * 3, b, fs, RGB(255, 215, 80), 0);
-  snprintf(b, sizeof b, "КРИСТАЛЛЫ %d", pf.gems); drawTextSh(colX + fs * 3, fs * 10, b, fs, RGB(120, 230, 140), 0);
-  snprintf(b, sizeof b, "КУБКИ %d", pf.trophies); drawTextSh(colX + colW - fs * 3, fs * 3, b, fs, RGB(255, 200, 120), 2);
-  snprintf(b, sizeof b, "КОРОЛЬ УР. %d", pf.kingLvl); drawTextSh(colX + colW - fs * 3, fs * 10, b, fs, RGB(160, 200, 255), 2);
+  char b[64], m[32]; int st = safeTop(); fillRect(0, 0, IW, st + fs * 16, RGB(20, 26, 44));
+  fmtNum(m, sizeof m, pf.gold); snprintf(b, sizeof b, "ЗОЛОТО %s", m); drawTextSh(colX + fs * 3, st + fs * 3, b, fs, RGB(255, 215, 80), 0);
+  snprintf(b, sizeof b, "КРИСТАЛЛЫ %d", pf.gems); drawTextSh(colX + fs * 3, st + fs * 10, b, fs, RGB(120, 230, 140), 0);
+  snprintf(b, sizeof b, "КУБКИ %d", pf.trophies); drawTextSh(colX + colW - fs * 3, st + fs * 3, b, fs, RGB(255, 200, 120), 2);
+  snprintf(b, sizeof b, "КОРОЛЬ УР. %d", pf.kingLvl); drawTextSh(colX + colW - fs * 3, st + fs * 10, b, fs, RGB(160, 200, 255), 2);
 }
 static void tabsBar() {
   static const char *TN[4] = {"МАГАЗИН", "КОЛОДА", "БОЙ", "ЗАДАНИЯ"};
@@ -2370,8 +2376,8 @@ static void slotsRow(int y) {
       else { int cost = imax(1, (int)((left / 60 + 5) / 6)); if (pf.gems >= cost) { pf.gems -= cost; int t = sl.type; sl.type = -1; sl.opening = false; openChest(t); return; } snprintf(b, sizeof b, "ОТКРЫТЬ СЕЙЧАС: %d КРИСТАЛЛОВ", cost); say(b); } } }
 }
 static void startLobby();                                  // b4
-static int previewY0() { return fs * 16; }
-static int previewY1() { return fs * 16 + (IH - tabH() - fs * 16) * 45 / 100; }
+static int previewY0() { return safeTop() + fs * 16; }
+static int previewY1() { return previewY0() + (IH - tabH() - previewY0()) * 45 / 100; }
 static void menuBattle() {
   int y0 = previewY0(); char b[96];
   int prevBot = previewY1();
@@ -2433,7 +2439,7 @@ static void cardInfo() {
   if (button(x0 + fs * 9 + bw * 2, by, bw, fs * 18, "ЗАКРЫТЬ", true, RGB(90, 90, 110))) { infoCard = -1; sfx(SFX_CLICK); }
 }
 static void menuDeck() {
-  int y0 = fs * 22, y1 = IH - tabH(); char b[64];
+  int y0 = safeTop() + fs * 22, y1 = IH - tabH(); char b[64];
   int cw = (colW - fs * 10) / 4, ch = cw * 6 / 5;
   float avg = 0; for (int i = 0; i < 8; i++) avg += CARDS[pf.deck[i]].cost; avg /= 8;
   snprintf(b, sizeof b, "КОЛОДА  (СРЕДНИЙ ЭЛИКСИР %.1f)", avg); drawTextSh(IW / 2, y0, b, fs, RGB(255, 230, 150), 1);
@@ -2463,7 +2469,7 @@ static void menuDeck() {
   if (infoCard >= 0) cardInfo();
 }
 static void menuShop() {
-  int y = fs * 24; char b[96];
+  int y = safeTop() + fs * 24; char b[96];
   drawTextSh(IW / 2, y, "КАРТЫ ДНЯ", fs + 1, RGB(255, 230, 150), 1); y += fs * 12;
   int cw = (colW - fs * 12) / 3, ch = cw * 6 / 5;
   for (int i = 0; i < 3; i++) { int c = pf.shopCard[i], x = colX + fs * 3 + i * (cw + fs * 3); drawCard(c, pf.lvl[c], x, y, cw, ch, false, !pf.shopBought[i], true);
@@ -2485,7 +2491,7 @@ static void menuShop() {
   y += fs * 24; long long left = 86400 - (nowSec() % 86400); char t[32]; fmtTime(t, sizeof t, left); snprintf(b, sizeof b, "НОВЫЕ КАРТЫ ДНЯ ЧЕРЕЗ %s", t); drawText(IW / 2, y, b, fs, RGB(170, 180, 200), 1);
 }
 static void menuQuests() {
-  int y = fs * 24; char b[96];
+  int y = safeTop() + fs * 24; char b[96];
   drawTextSh(IW / 2, y, "ЗАДАНИЯ ДНЯ", fs + 1, RGB(255, 230, 150), 1); y += fs * 12;
   for (int i = 0; i < 3; i++) { Quest &q = pf.quests[i]; const QuestT &qt = QUESTS[q.type]; int h = fs * 30, x = colX + fs * 3, w = colW - fs * 6;
     fillRect(x, y, w, h, RGB(30, 36, 56)); snprintf(b, sizeof b, "%s: %d", qt.text, q.need); drawText(x + fs * 4, y + fs * 3, b, fs, RGB(235, 235, 245), 0);
@@ -2792,7 +2798,7 @@ static bool ipEdit = false;
 static void startLobby() { netClose(); memset(&peerDeck, 0, sizeof peerDeck); netDeckSent = false; gs = GS_LOBBY; netStatus[0] = 0; ipEdit = false; sfx(SFX_CLICK); }
 static void frameLobby(float dt) {
   (void)dt; layoutCol(); fillRect(0, 0, IW, IH, RGB(30, 38, 62)); char b[96];
-  int y = fs * 14; drawTextSh(IW / 2, y, "БОЙ С ДРУГОМ", fs * 2, RGB(255, 230, 150), 1); y += fs * 22;
+  int y = safeTop() + fs * 14; drawTextSh(IW / 2, y, "БОЙ С ДРУГОМ", fs * 2, RGB(255, 230, 150), 1); y += fs * 22;
   drawText(IW / 2, y, "ОБА ТЕЛЕФОНА - В ОДНОЙ WI-FI СЕТИ", fs, RGB(200, 210, 230), 1); y += fs * 10;
   drawText(IW / 2, y, "ИЛИ ОДИН РАЗДАЁТ ТОЧКУ ДОСТУПА", fs, RGB(200, 210, 230), 1); y += fs * 16;
   int bw = colW * 3 / 4, bh = fs * 20;
@@ -2809,7 +2815,7 @@ static void frameLobby(float dt) {
       y += fs * 18;
       if (peerDeck.got && netPeer) { if (button(IW / 2 - bw / 2, y, bw, bh, "НАЧАТЬ БОЙ", true, RGB(230, 170, 40))) {
           netSeed = (unsigned)rand() * 2654435761u + 7u; netArena = arenaOf(pf.trophies); netEvent(EV_START, (int)netSeed, netArena | (netDuo ? 256 : 0)); beginNetBattle(); return; } }
-      else drawText(IW / 2, y + fs * 6, "ДРУГ НАЖИМАЕТ «ПОДКЛЮЧИТЬСЯ К ДРУГУ»", fs, RGB(200, 210, 230), 1);
+      else drawText(IW / 2, y + fs * 6, "ДРУГ НАЖИМАЕТ ПОДКЛЮЧИТЬСЯ К ДРУГУ", fs, RGB(200, 210, 230), 1);
       y += bh + fs * 8;
     } else {
       if (netFound && !netPeer) { snprintf(b, sizeof b, "ПОДКЛЮЧИТЬСЯ: %s", netFoundIP); if (button(IW / 2 - bw / 2, y, bw, bh, b, true, RGB(60, 150, 70))) { netJoin(); sfx(SFX_CLICK); } }

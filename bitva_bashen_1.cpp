@@ -1084,7 +1084,7 @@ static const UnitT UNITS[NUNIT] = {
   {"ЛЕДЯНОЙ МАГ",       M_ICEWIZ,   UT_TROOP, 320.2f,41.6f,1.7f, 1.0f, 5.5f, 0.4f,  6.0f, 1.0f, 10,    false, false, true,  4, 0, -1, 0, 0, 0, 0},
   {"ВАРВАР",            M_BARB,     UT_TROOP, 284.2f,81.5f,1.3f, 1.0f, 0.7f, 0.42f, 5.5f, 0,    0,     false, false, false, 5, 0, -1, 0, 0, 0, 0},
   {"ЭЛИТНЫЙ ВАРВАР",    M_EBARB,    UT_TROOP, 576.4f,165.0f,1.4f,1.5f, 1.2f, 0.45f, 5.5f, 0,    0,     false, false, false, 6, 0, -1, 0, 0, 0, 0},
-  {"ВСАДНИК НА КАБАНЕ", M_HOG,      UT_TROOP, 719.7f,134.4f,1.6f,2.0f, 0.8f, 0.55f, 9.5f, 0,    0,     false, true,  false, 7, 0, -1, 0, 0, 0, 0},
+  {"ВСАДНИК НА КАБАНЕ", M_HOG,      UT_TROOP, 933.1f,134.4f,1.6f,2.0f, 0.8f, 0.55f, 9.5f, 0,    0,     false, true,  false, 7, 0, -1, 0, 0, 0, 0},
   {"МЕГАРЫЦАРЬ",        M_MEGA,     UT_TROOP, 1693.5f,113.7f,1.7f,1.0f,1.2f, 0.75f, 6.0f, 1.3f, 0,     false, false, false, 22, 0, -1, 0, 0, 0, 0},
   {"ПУШКА",             M_CANNON,   UT_BUILD, 800,   150, 0.8f, 0,    5.5f, 0.6f,  5.5f, 0,    18,    false, false, false, 99, 30, -1, 0, 0, 0, 0},
   {"БАШНЯ ЛУЧНИКОВ",    M_ATOWER,   UT_BUILD, 1100,  100, 0.9f, 0,    7.0f, 0.7f,  7.0f, 0,    16,    false, false, true,  99, 40, -1, 0, 0, 0, 0},

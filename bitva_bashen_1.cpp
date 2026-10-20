@@ -1060,7 +1060,7 @@ enum { UT_TROOP, UT_BUILD, UT_TOWER };
 struct UnitT { const char *name; int model, kind; float hp, dmg, hitT, speed, range, radius, sight, splash, projV; bool air, onlyBuild, canAir; float mass, lifeT; int spawnU, spawnN; float spawnT, deathDmg, deathR; int deathU, deathN; float shield; };   // deathN > 0: при гибели распадается на deathN юнитов deathU
 enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ, U_BARB, U_EBARB, U_HOG, U_MEGA,
        U_CANNON, U_ATOWER, U_HUT, U_PRINCESS, U_KING, NUNIT };
-static const UnitT UNITS[NUNIT] = {
+static UnitT UNITS[NUNIT] = {
   //  имя                модель      вид       hp     урон  удар  скор  дальн радиус обзор  сплеш снаряд возд  здан  по возд масса жизнь
   {"РЫЦАРЬ",            M_KNIGHT,   UT_TROOP, 1400,  160, 1.2f, 1.0f, 0.6f, 0.45f, 5.5f, 0,    0,     false, false, false, 6, 0, -1, 0, 0, 0, 0},
   {"ЛУЧНИЦА",           M_ARCHER,   UT_TROOP, 250,   85,  1.0f, 1.0f, 5.0f, 0.35f, 5.5f, 0,    14,    false, false, true,  3, 0, -1, 0, 0, 0, 0},
@@ -1102,7 +1102,7 @@ enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, S
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
        C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, NCARD };
-static const Card CARDS[NCARD] = {
+static Card CARDS[NCARD] = {
   {"РЫЦАРЬ",            3, CT_TROOP, RA_COMMON, U_KNIGHT,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "КРЕПКИЙ БОЕЦ С МЕЧОМ. ДЕРЖИТ УДАР И БЬЁТ ВБЛИЗИ."},
   {"ЛУЧНИЦЫ",           3, CT_TROOP, RA_COMMON, U_ARCHER,   2, 0, SP_NONE, 0, 0, 0, 0, 0, "ДВЕ ЛУЧНИЦЫ. СТРЕЛЯЮТ ИЗДАЛЕКА, ДОСТАЮТ ЛЕТАЮЩИХ."},
   {"ГОБЛИНЫ",           2, CT_TROOP, RA_COMMON, U_GOBLIN,   3, 0, SP_NONE, 0, 0, 0, 0, 0, "ТРИ БЫСТРЫХ ГОБЛИНА С КИНЖАЛАМИ."},
@@ -1126,7 +1126,7 @@ static const Card CARDS[NCARD] = {
   {"КАМЕННЫЙ ГОЛЕМ",    8, CT_TROOP, RA_EPIC,   U_GOLEM,    1, 5, SP_NONE, 0, 0, 0, 0, 0, "САМЫЙ КРЕПКИЙ. ИДЁТ К ЗДАНИЯМ, ПРИ ГИБЕЛИ ВЗРЫВАЕТСЯ."},
   {"БОЕВОЙ БЫК",        4, CT_TROOP, RA_RARE,   U_BULL,     1, 5, SP_NONE, 0, 0, 0, 0, 0, "БЫСТРО НЕСЁТСЯ К БАШНЯМ, ПЕРЕПРЫГИВАЕТ РЕКУ."},
   {"ЛЕЧЕНИЕ",           3, CT_SPELL, RA_RARE,   -1,         0, 5, SP_HEAL, 3.0f, 450, 0, 0, 2.0f, "ЛЕЧИТ СВОИХ В КРУГУ ЗА 2 СЕКУНДЫ."},
-  {"КОРОЛЬ ГОБЛИНОВ",   8, CT_TROOP, RA_LEGEND, U_GOBKING,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ИДЁТ ТОЛЬКО К ЗДАНИЯМ И БАШНЯМ. КАЖДЫЕ 5 СЕКУНД ПРИЗЫВАЕТ 4 ГОБЛИНОВ."},
+  {"КОРОЛЬ ГОБЛИНОВ",   7, CT_TROOP, RA_LEGEND, U_GOBKING,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ИДЁТ ТОЛЬКО К ЗДАНИЯМ И БАШНЯМ. КАЖДЫЕ 5 СЕКУНД ПРИЗЫВАЕТ 4 ГОБЛИНОВ."},
   {"ГОБЛИН-ДУДЕЦ",      3, CT_TROOP, RA_RARE,   U_DART,     1, 1, SP_NONE, 0, 0, 0, 0, 0, "ПЛЮЁТСЯ ИЗ ДУДКИ ОЧЕНЬ БЫСТРО И ДАЛЕКО. ДОСТАЁТ ЛЕТАЮЩИХ."},
   {"ВОЛАР БЕБЕ",        7, CT_TROOP, RA_LEGEND, U_VOLAR,    1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И АТАКУЕТ ТОЛЬКО ЗДАНИЯ. ПРИ ГИБЕЛИ - 6 ЩЕНКОВ, ОНИ БЬЮТ ВСЕХ."},
   {"АРМИЯ СКЕЛЕТОВ",    3, CT_TROOP, RA_EPIC,   U_SKELETON, 17, 0, SP_NONE, 0, 0, 0, 0, 0, "ЦЕЛАЯ ТОЛПА: 17 СКЕЛЕТОВ СРАЗУ. ОКРУЖАЕТ И РАЗБИРАЕТ ОДИНОЧНЫХ ВРАГОВ, НО БОИТСЯ СТРЕЛ И ЗАЖИГАЛОК."},
@@ -1210,6 +1210,18 @@ template <int N> struct ProfileT {
 typedef ProfileT<MAXCARDS> Profile;
 typedef ProfileT<23> ProfileV1;                                     // первая версия (23 карты)
 static_assert(NCARD <= MAXCARDS, "карт больше запаса");
+// ---- баланс: множители силы карт, подобраны на 24 000 боях ботов (цель - 49-52% побед) ----
+static const float BAL_K[NCARD] = {0.999f, 0.875f, 1.152f, 1.269f, 1.228f, 0.942f, 0.976f, 0.992f, 0.914f, 1.000f, 0.971f, 0.842f, 1.144f, 0.987f, 1.300f, 0.750f, 0.904f, 0.750f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 0.750f, 0.944f, 1.233f, 0.750f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.300f, 1.579f};
+static void balanceInit() {
+  static bool done = false; if (done) return; done = true;
+  for (int c = 0; c < NCARD; c++) { float k = BAL_K[c]; if (fabsf(k - 1) < 1e-4f) continue; Card &cd = CARDS[c];
+    if (c == C_HUT) { UNITS[U_HUT].hp *= k; UNITS[U_HUT].spawnT /= k; continue; }
+    if (c == C_BARREL) { cd.sDmg = 120.0f * (k - 1); cd.sTowerK = 0.35f; continue; }
+    if (cd.type == CT_SPELL) { if (cd.spell == SP_FREEZE) cd.sTime *= k; cd.sDmg *= k; continue; }
+    UnitT &u = UNITS[cd.unit]; u.hp *= k; u.dmg *= k; u.shield *= k;
+    if (c == C_VOLAR) { UNITS[U_PUP].hp *= k; UNITS[U_PUP].dmg *= k; } }
+}
+
 static Profile pf;
 static long long nowSec() { return (long long)time(NULL); }
 static long long dayOf(long long t) { time_t tt = (time_t)t; struct tm *lt = localtime(&tt); if (!lt) return t / 86400; return (long long)(lt->tm_year * 400 + lt->tm_yday); }
@@ -1516,6 +1528,7 @@ static void updateSpells(float dt) {
           for (int k = 0; k < bc.count; k++) { float a = k * 6.2832f / bc.count + 0.5f; float gx = clampf(s.x + cosf(a) * 0.6f, 0.5f, AW - 0.5f), gz = clampf(s.z + sinf(a) * 0.6f, 0.5f, AL - 0.5f);
             if (fabsf(gz - RIVER_Z) < RIVER_HW + 0.2f) gz = s.z < RIVER_Z ? RIVER_Z - RIVER_HW - 0.3f : RIVER_Z + RIVER_HW + 0.3f;
             spawnUnit(bc.unit, s.team, s.lvl, gx, gz, 0.25f); }
+          if (s.dmg > 0) splashAt(s.x, s.z, s.r, s.dmg, s.team, false, true, s.towerK, false);
           addFx(FX_BOOM, s.team, s.x, s.z, 0, 0.5f, 1.0f); bEvent(BE_BOOM, s.team, s.x, s.z); } break;
       } }
     if (s.kind == SP_HEAL && s.t < s.time) for (size_t k = 0; k < B.units.size(); k++) { Unit &u = B.units[k]; if (u.alive && u.team == s.team && (u.x - s.x) * (u.x - s.x) + (u.z - s.z) * (u.z - s.z) < s.r * s.r) healUnit(u, s.dmg / s.time * dt); }
@@ -1561,13 +1574,13 @@ static void updateUnit(Unit &u, float dt) {
   const UnitT &t = UT(u);
   u.flash = fmaxv(0.0f, u.flash - dt); u.atkAnim = fmaxv(0.0f, u.atkAnim - dt * 3.0f); u.moving = false;
   if (u.deployT > 0) { u.deployT -= dt;
-    if (u.deployT <= 0 && u.type == U_MEGA) { float r = 2.2f; splashAt(u.x, u.z, r, 182.4f * lvlK(u.lvl), u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, r); bEvent(BE_BOOM, u.team, u.x, u.z); }   // удар при приземлении
-    if (u.deployT <= 0 && u.type == U_ICEWIZ) { float r = 2.5f; splashAt(u.x, u.z, r, 39.1f * lvlK(u.lvl), u.team, true, true, 1.0f, false); slowArea(u.x, u.z, r, u.team, 2.5f); addFx(FX_SPLASH, u.team, u.x, u.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, u.team, u.x, u.z, SP_FREEZE); }   // холодный удар при появлении
+    if (u.deployT <= 0 && u.type == U_MEGA) { float r = 2.2f; splashAt(u.x, u.z, r, u.dmg * 1.604f, u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, r); bEvent(BE_BOOM, u.team, u.x, u.z); }   // удар при приземлении
+    if (u.deployT <= 0 && u.type == U_ICEWIZ) { float r = 2.5f; splashAt(u.x, u.z, r, u.dmg * 0.94f, u.team, true, true, 1.0f, false); slowArea(u.x, u.z, r, u.team, 2.5f); addFx(FX_SPLASH, u.team, u.x, u.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, u.team, u.x, u.z, SP_FREEZE); }   // холодный удар при появлении
     return; }
   float slowK = 1.0f; if (u.slowT > 0) { u.slowT -= dt; slowK = 0.65f; }
   if (u.jumpT > 0) {                                                          // мегарыцарь в прыжке: летит к цели и давит при приземлении
     u.jumpT -= dt; float k = clampf(1.0f - u.jumpT / 0.8f, 0, 1); u.x = u.jx0 + (u.jx1 - u.jx0) * k; u.z = u.jz0 + (u.jz1 - u.jz0) * k; u.moving = false;
-    if (u.jumpT <= 0) { splashAt(u.x, u.z, 2.0f, 227.8f * lvlK(u.lvl), u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.6f, 2.0f); bEvent(BE_BOOM, u.team, u.x, u.z); u.atkCD = t.hitT * 0.5f; }
+    if (u.jumpT <= 0) { splashAt(u.x, u.z, 2.0f, u.dmg * 2.003f, u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.6f, 2.0f); bEvent(BE_BOOM, u.team, u.x, u.z); u.atkCD = t.hitT * 0.5f; }
     return; }
   if (u.jumpCD > 0) u.jumpCD -= dt;
   if (t.kind == UT_BUILD && t.lifeT > 0) { u.hp -= u.maxhp / t.lifeT * dt; if (u.hp <= 0) { killUnit(u); return; } }
@@ -1661,7 +1674,8 @@ static void botThink(float dt) {
   if (th.n > 0) {
     int best = -1; float bestScore = -1;
     for (int i = 0; i < 4; i++) { int c = botHandCard(i); const Card &cd = CARDS[c]; if (cd.cost > s.elixir + 0.01f) continue; float sc = 0;
-      if (cd.type == CT_SPELL) { if (cd.spell == SP_HEAL) continue; if (th.swarm >= 2 && (cd.spell == SP_ARROWS || cd.spell == SP_ZAP || cd.spell == SP_FIREBALL)) sc = 3 + th.swarm; else if (th.n >= 3 && cd.spell == SP_FIREBALL) sc = 2.5f; else continue; }
+      if (cd.type == CT_SPELL) { if (cd.spell == SP_HEAL) continue; if (th.swarm >= 2 && (cd.spell == SP_ARROWS || cd.spell == SP_ZAP || cd.spell == SP_FIREBALL)) sc = 3 + th.swarm; else if (th.n >= 3 && cd.spell == SP_FIREBALL) sc = 2.5f;
+        else if (cd.spell == SP_ROCKET && th.hp >= 2000 && th.n >= 2) sc = 2.0f; else if (cd.spell == SP_FREEZE && th.hp >= 2500 && zOf(bot.team, th.z) < 9.0f) sc = 2.2f; else continue; }
       else { const UnitT &ut = UNITS[cd.unit];
         if (th.air && !ut.canAir) sc -= 3;
         if (th.tank && (cd.type == CT_BUILD || ut.dmg * imax(1, cd.count) > 300)) sc += 3;
@@ -1694,6 +1708,12 @@ static void botThink(float dt) {
         if (near >= 3 && botTry(i, sx / near, sz / near)) return; continue; }
       if (cd.type == CT_BUILD) continue; const UnitT &ut = UNITS[cd.unit]; if (ut.onlyBuild) continue;
       float pz = zOf(bot.team, clampf(zOf(bot.team, tankZ) - 1.5f, 2.0f, 14.5f)); if (botTry(i, clampf(tankX, 1.0f, AW - 1.0f), pz)) return; } }
+  { int myN = 0; float mx = 0, mz = 0, lost = 0; for (size_t k = 0; k < B.units.size(); k++) { const Unit &u = B.units[k]; if (!u.alive || u.team != bot.team || UT(u).kind != UT_TROOP || !u.attacking) continue; myN++; mx += u.x; mz += u.z; lost += u.maxhp - u.hp; }
+    if (myN >= 2) { mx /= myN; mz /= myN;
+      for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.type != CT_SPELL || cd.cost > s.elixir) continue;
+        if (cd.spell == SP_HEAL && lost > 700 && botTry(i, mx, mz)) return;                                           // лечим свою дерущуюся толпу
+        if (cd.spell == SP_FREEZE && zOf(bot.team, mz) > 18.0f) { Unit *tw = NULL; float bd = 1e9f; for (int q = 0; q < 3; q++) { Unit *t2 = unitById(B.side[1 - bot.team].towerId[q]); if (t2) { float d2 = (t2->x - mx) * (t2->x - mx) + (t2->z - mz) * (t2->z - mz); if (d2 < bd) { bd = d2; tw = t2; } } }
+          if (tw && bd < 36.0f && botTry(i, (tw->x + mx) * 0.5f, (tw->z + mz) * 0.5f)) return; } } } }        // замораживаем башню, пока наши её бьют
   bool go = s.elixir >= 9.5f || (s.elixir >= 7.0f && (rand() % 3) == 0) || (doubleElixir() && s.elixir >= 5.5f);
   if (!tankOut && go) {
     int best = -1; float bs = -1;
@@ -2681,14 +2701,14 @@ static void menuBattle() {
 }
 static int cardStatLine(int c, int lvl, char lines[][64]) {
   const Card &cd = CARDS[c]; int n = 0; float k = lvlK(lvl);
-  if (cd.type == CT_SPELL && cd.spell == SP_BARREL) { const UnitT &g = UNITS[cd.unit]; snprintf(lines[n++], 64, "ГОБЛИНОВ: %d", cd.count); snprintf(lines[n++], 64, "ГОБЛИН: ЗДОРОВЬЕ %d, УРОН %d", (int)(g.hp * k), (int)(g.dmg * k)); snprintf(lines[n++], 64, "РАДИУС: %.1f", cd.sR); snprintf(lines[n++], 64, "ЛЕТИТ КУДА УГОДНО"); return n; }
+  if (cd.type == CT_SPELL && cd.spell == SP_BARREL) { const UnitT &g = UNITS[cd.unit]; snprintf(lines[n++], 64, "ГОБЛИНОВ: %d", cd.count); if (cd.sDmg > 0) snprintf(lines[n++], 64, "УРОН ПРИ ПАДЕНИИ: %d", (int)(cd.sDmg * k)); snprintf(lines[n++], 64, "ГОБЛИН: ЗДОРОВЬЕ %d, УРОН %d", (int)(g.hp * k), (int)(g.dmg * k)); snprintf(lines[n++], 64, "РАДИУС: %.1f", cd.sR); snprintf(lines[n++], 64, "ЛЕТИТ КУДА УГОДНО"); return n; }
   if (cd.type == CT_SPELL) { if (cd.spell == SP_HEAL) snprintf(lines[n++], 64, "ЛЕЧЕНИЕ: %d", (int)(cd.sDmg * k)); else snprintf(lines[n++], 64, "УРОН: %d (ПО БАШНЯМ %d)", (int)(cd.sDmg * k), (int)(cd.sDmg * k * cd.sTowerK));
     snprintf(lines[n++], 64, "РАДИУС: %.1f", cd.sR); if (cd.sTime > 0) snprintf(lines[n++], 64, "ДЛИТСЯ: %.0f С", cd.sTime); return n; }
   const UnitT &u = UNITS[cd.unit];
   snprintf(lines[n++], 64, "ЗДОРОВЬЕ: %d", (int)(u.hp * k));
   if (u.shield > 0) snprintf(lines[n++], 64, "ЩИТ: %d", (int)(u.shield * k));
-  if (cd.unit == U_MEGA) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(182.4f * k)); snprintf(lines[n++], 64, "УРОН ПРЫЖКОМ: %d", (int)(227.8f * k)); }
-  if (cd.unit == U_ICEWIZ) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(39.1f * k)); snprintf(lines[n++], 64, "ЗАМЕДЛЕНИЕ: 2.5 С"); }
+  if (cd.unit == U_MEGA) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(UNITS[U_MEGA].dmg * 1.604f * k)); snprintf(lines[n++], 64, "УРОН ПРЫЖКОМ: %d", (int)(UNITS[U_MEGA].dmg * 2.003f * k)); }
+  if (cd.unit == U_ICEWIZ) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(UNITS[U_ICEWIZ].dmg * 0.94f * k)); snprintf(lines[n++], 64, "ЗАМЕДЛЕНИЕ: 2.5 С"); }
   if (u.dmg > 0) snprintf(lines[n++], 64, "УРОН: %d%s", (int)(u.dmg * k), u.splash > 0 ? " ПО ПЛОЩАДИ" : "");
   if (u.dmg > 0) snprintf(lines[n++], 64, "СКОРОСТЬ УДАРА: %.1f С", u.hitT);
   if (cd.type == CT_TROOP) snprintf(lines[n++], 64, "СКОРОСТЬ: %s", u.speed >= 1.9f ? "ОЧЕНЬ БЫСТРО" : (u.speed >= 1.3f ? "БЫСТРО" : (u.speed >= 0.95f ? "СРЕДНЕ" : (u.speed >= 0.65f ? "МЕДЛЕННО" : "ОЧЕНЬ МЕДЛЕННО"))));
@@ -3206,7 +3226,7 @@ int main(int argc, char **argv) {
   if (!gfxInit()) return 1;
   rotMode = false; LW = SW; LH = SH;
   computeSize(); if (!allocBuffers()) return 1;
-  srand((unsigned)time(NULL));
+  srand((unsigned)time(NULL)); balanceInit();
   if (!loadProfile()) { FILE *old = fopen(pth("bashni.sav"), "rb"); if (old) { fclose(old); rename(pth("bashni.sav"), pth("bashni.broken")); }   // нечитаемый файл не затираем
     newProfile(); saveProfile(); }
   dailyRefresh(); realPf = pf; gs = GS_START;

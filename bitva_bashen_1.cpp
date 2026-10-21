@@ -1098,7 +1098,7 @@ enum { CT_TROOP, CT_BUILD, CT_SPELL };
 enum { RA_COMMON, RA_RARE, RA_EPIC, RA_LEGEND, NRAR };
 static const char *RARN[NRAR] = {"ОБЫЧНАЯ", "РЕДКАЯ", "ЭПИЧЕСКАЯ", "ЛЕГЕНДАРНАЯ"};
 static const u32 RARC[NRAR] = {RGB(110, 160, 220), RGB(240, 150, 50), RGB(180, 80, 230), RGB(80, 220, 210)};
-enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL };
+enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL, SP_MAGEFALL };   // SP_MAGEFALL - огненный шар, из которого появляется маг огня
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
        C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, NCARD };
@@ -1405,13 +1405,14 @@ static bool playCard(int si, int slot, float x, float z) {
   int team = teamOf(si); Side &s = B.side[si], &ts = B.side[team]; int di = s.hand[slot], card = s.deck[di], lvl = s.lvl[di]; const Card &c = CARDS[card];
   if (s.elixir + 1e-4f < c.cost || !canPlace(team, card, x, z)) return false;
   s.elixir -= c.cost; s.cardsPlayed++;
-  if (c.type == CT_SPELL) {
-    Spell sp; memset(&sp, 0, sizeof sp); sp.kind = c.spell; sp.team = team; sp.lvl = lvl; sp.x = x; sp.z = z; sp.r = c.sR; sp.dmg = c.sDmg * lvlK(lvl); sp.towerK = c.sTowerK; sp.delay = c.sDelay; sp.time = c.sTime;
+  if (c.type == CT_SPELL || card == C_FIREMAGE) {
+    Spell sp; memset(&sp, 0, sizeof sp); sp.kind = card == C_FIREMAGE ? SP_MAGEFALL : c.spell; sp.team = team; sp.lvl = lvl; sp.x = x; sp.z = z; sp.r = c.sR; sp.dmg = c.sDmg * lvlK(lvl); sp.towerK = c.sTowerK; sp.delay = c.sDelay; sp.time = c.sTime;
     Unit *k = unitById(ts.towerId[0]); if (!k) k = unitById(ts.towerId[1]); if (!k) k = unitById(ts.towerId[2]);
     sp.sx = k ? k->x : 9.0f; sp.sz = k ? k->z : zOf(team, 3.0f); if (k) { k->atkAnim = 1.0f; k->face = atan2f(x - k->x, z - k->z); }
-    { float d = sqrtf((x - sp.sx) * (x - sp.sx) + (z - sp.sz) * (z - sp.sz)), v = sp.kind == SP_ROCKET ? 11.0f : (sp.kind == SP_FIREBALL ? 15.0f : (sp.kind == SP_ARROWS ? 17.0f : (sp.kind == SP_BARREL ? 10.0f : 0)));   // скорость полёта, клеток/с
+    { float d = sqrtf((x - sp.sx) * (x - sp.sx) + (z - sp.sz) * (z - sp.sz)), v = sp.kind == SP_ROCKET ? 11.0f : (sp.kind == SP_FIREBALL || sp.kind == SP_MAGEFALL ? 15.0f : (sp.kind == SP_ARROWS ? 17.0f : (sp.kind == SP_BARREL ? 10.0f : 0)));   // скорость полёта, клеток/с
       if (v > 0) sp.delay = fmaxv(0.35f, d / v); }
-    B.spells.push_back(sp); s.spells++;
+    if (sp.kind == SP_MAGEFALL) { sp.r = 1.0f; sp.dmg = 0; } else s.spells++;
+    B.spells.push_back(sp);
   } else {
     int n = imax(1, c.count); const UnitT &t = UNITS[c.unit];
     for (int i = 0; i < n; i++) {
@@ -1521,6 +1522,7 @@ static void updateSpells(float dt) {
   for (size_t i = 0; i < B.spells.size(); i++) { Spell &s = B.spells[i]; s.t += dt;
     if (!s.hit && s.t >= s.delay) { s.hit = true;
       switch (s.kind) {
+        case SP_MAGEFALL: spawnUnit(U_FIREMAGE, s.team, s.lvl, s.x, s.z, 0.35f); addFx(FX_SPLASH, s.team, s.x, s.z, 0.3f, 0.5f, 1.2f); addFx(FX_DEPLOY, s.team, s.x, s.z, 0, 0.6f, 0.9f); bEvent(BE_BOOM, s.team, s.x, s.z); break;   // шар упал - появился маг
         case SP_FIREBALL: splashAt(s.x, s.z, s.r, s.dmg, s.team, true, true, s.towerK, true); addFx(FX_BOOM, s.team, s.x, s.z, 0, 0.7f, s.r); bEvent(BE_BOOM, s.team, s.x, s.z); break;
         case SP_ARROWS: splashAt(s.x, s.z, s.r, s.dmg, s.team, true, true, s.towerK, false); bEvent(BE_HIT, s.team, s.x, s.z, PJ_ARROW); break;
         case SP_ROCKET: splashAt(s.x, s.z, s.r, s.dmg, s.team, true, true, s.towerK, true); addFx(FX_BOOM, s.team, s.x, s.z, 0, 1.0f, s.r * 1.5f); bEvent(BE_BOOM, s.team, s.x, s.z, 1); break;
@@ -2174,6 +2176,7 @@ static void drawSpells() {
   for (size_t i = 0; i < B.spells.size(); i++) { const Spell &s = B.spells[i]; float k = s.delay > 0 ? clampf(s.t / s.delay, 0, 1) : 1, after = s.t - s.delay;
     u32 grass = ARENAS[B.arena].grass;
     switch (s.kind) {
+      case SP_MAGEFALL:
       case SP_FIREBALL:
         if (!s.hit) { float x, y, z; spellFrom(s, s.x, s.z, k, 5.0f, x, y, z);
           for (int t = 6; t >= 1; t--) { float kk = fmaxv(0.0f, k - t * 0.035f), tx, ty, tz; spellFrom(s, s.x, s.z, kk, 5.0f, tx, ty, tz); GLOW(tx, ty, tz, 0.55f - t * 0.06f, t > 3 ? RGB(120, 110, 100) : RGB(255, 110 + t * 15, 30), 170 - t * 22); }

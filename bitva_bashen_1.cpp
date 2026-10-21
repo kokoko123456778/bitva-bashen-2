@@ -1399,6 +1399,7 @@ static bool canPlace(int team, int card, float x, float z) {
   return true;
 }
 static void cycleHand(Side &s, int slot) { int played = s.hand[slot]; s.hand[slot] = s.q[0]; for (int i = 0; i < 3; i++) s.q[i] = s.q[i + 1]; s.q[3] = played; }
+static void iceBurst(Unit &w);
 static bool playCard(int si, int slot, float x, float z) {
   if (B.over || slot < 0 || slot > 3 || si < 0 || si >= B.nSides) return false;
   int team = teamOf(si); Side &s = B.side[si], &ts = B.side[team]; int di = s.hand[slot], card = s.deck[di], lvl = s.lvl[di]; const Card &c = CARDS[card];
@@ -1422,7 +1423,8 @@ static bool playCard(int si, int slot, float x, float z) {
       else if (n >= 4) { ox = ((i & 1) ? 0.55f : -0.55f); oz = ((i & 2) ? 0.55f : -0.55f); }
       float ux = clampf(x + ox, 0.4f, AW - 0.4f), uz = clampf(z + oz, 0.4f, AL - 0.4f);
       if (!t.air && fabsf(uz - RIVER_Z) < RIVER_HW + 0.2f) uz = z;
-      spawnUnit(c.unit, team, lvl, ux, uz, 1.0f);
+      int nid = spawnUnit(c.unit, team, lvl, ux, uz, c.unit == U_ICEWIZ ? 0.3f : 1.0f);
+      if (c.unit == U_ICEWIZ) { Unit *w = unitById(nid); if (w) iceBurst(*w); }   // мороз - в момент постановки, пока маг ещё появляется
     }
     addFx(FX_DEPLOY, team, x, z, 0, 0.6f, t.radius + 0.5f);
   }
@@ -1452,6 +1454,10 @@ static const float ICEWIZ_SPAWN_DMG = 84.85f;                                 //
 static void slowArea(float x, float z, float r, int team, float T) {                 // замедление от льда
   for (size_t i = 0; i < B.units.size(); i++) { Unit &u = B.units[i]; if (!u.alive || u.team == team || UT(u).kind == UT_TOWER) continue;
     float dx = u.x - x, dz = u.z - z, rr = r + UT(u).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) u.slowT = fmaxv(u.slowT, T); }
+}
+static void iceBurst(Unit &w) {   // ледяной маг: сразу при появлении замораживает и бьёт всех вокруг
+ float r = 2.0f; splashAt(w.x, w.z, r, ICEWIZ_SPAWN_DMG * lvlK(w.lvl), w.team, true, true, 1.0f, false);   /* 200 урона на 10 ур. */
+      for (size_t q = 0; q < B.units.size(); q++) { Unit &e = B.units[q]; if (!e.alive || e.team == w.team) continue; float dx = e.x - w.x, dz = e.z - w.z, rr = r + UT(e).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) e.frozenT = fmaxv(e.frozenT, 2.0f); }   /* всё вокруг замерзает на 2 с */ addFx(FX_SPLASH, w.team, w.x, w.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, w.team, w.x, w.z, SP_FREEZE); 
 }
 static void killUnit(Unit &u) {
   if (!u.alive) return; u.alive = false; u.hp = 0;
@@ -1576,8 +1582,6 @@ static void updateUnit(Unit &u, float dt) {
   u.flash = fmaxv(0.0f, u.flash - dt); u.atkAnim = fmaxv(0.0f, u.atkAnim - dt * 3.0f); u.moving = false;
   if (u.deployT > 0) { u.deployT -= dt;
     if (u.deployT <= 0 && u.type == U_MEGA) { float r = 2.2f; splashAt(u.x, u.z, r, u.dmg * 1.604f, u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, r); bEvent(BE_BOOM, u.team, u.x, u.z); }   // удар при приземлении
-    if (u.deployT <= 0 && u.type == U_ICEWIZ) { float r = 2.0f; splashAt(u.x, u.z, r, ICEWIZ_SPAWN_DMG * lvlK(u.lvl), u.team, true, true, 1.0f, false);   /* 200 урона на 10 ур. */
-      for (size_t q = 0; q < B.units.size(); q++) { Unit &e = B.units[q]; if (!e.alive || e.team == u.team) continue; float dx = e.x - u.x, dz = e.z - u.z, rr = r + UT(e).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) e.frozenT = fmaxv(e.frozenT, 2.0f); }   /* всё вокруг замерзает на 2 с */ addFx(FX_SPLASH, u.team, u.x, u.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, u.team, u.x, u.z, SP_FREEZE); }   // холодный удар при появлении
     return; }
   float slowK = 1.0f; if (u.slowT > 0) { u.slowT -= dt; slowK = 0.65f; }
   if (u.jumpT > 0) {                                                          // мегарыцарь в прыжке: летит к цели и давит при приземлении

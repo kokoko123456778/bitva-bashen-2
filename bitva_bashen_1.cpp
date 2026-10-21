@@ -1131,7 +1131,7 @@ static Card CARDS[NCARD] = {
   {"ВОЛАР БЕБЕ",        7, CT_TROOP, RA_LEGEND, U_VOLAR,    1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И АТАКУЕТ ТОЛЬКО ЗДАНИЯ. ПРИ ГИБЕЛИ - 6 ЩЕНКОВ, ОНИ БЬЮТ ВСЕХ."},
   {"АРМИЯ СКЕЛЕТОВ",    3, CT_TROOP, RA_EPIC,   U_SKELETON, 17, 0, SP_NONE, 0, 0, 0, 0, 0, "ЦЕЛАЯ ТОЛПА: 17 СКЕЛЕТОВ СРАЗУ. ОКРУЖАЕТ И РАЗБИРАЕТ ОДИНОЧНЫХ ВРАГОВ, НО БОИТСЯ СТРЕЛ И ЗАЖИГАЛОК."},
   {"КОРОЛЕВСКИЕ НОВОБРАНЦЫ", 7, CT_TROOP, RA_COMMON, U_RECRUIT, 6, 2, SP_NONE, 0, 0, 0, 0, 0, "ШЕСТЬ ВОИНОВ С КОПЬЯМИ И ЩИТАМИ ВСТАЮТ ЦЕПЬЮ НА ВСЮ ШИРИНУ АРЕНЫ. ЩИТ ПРИНИМАЕТ УДАРЫ ПЕРВЫМ."},
-  {"ЛЕДЯНОЙ МАГ",       3, CT_TROOP, RA_LEGEND, U_ICEWIZ,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ПРИ ПОЯВЛЕНИИ БЬЁТ ХОЛОДОМ ВОКРУГ. ЕГО ЛЕДЯНЫЕ ШАРЫ ЗАМЕДЛЯЮТ ВРАГОВ НА 2.5 С."},
+  {"ЛЕДЯНОЙ МАГ",       3, CT_TROOP, RA_LEGEND, U_ICEWIZ,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ПРИ ПОЯВЛЕНИИ ЗАМОРАЖИВАЕТ ВСЁ ВОКРУГ НА 2 С И БЬЁТ ХОЛОДОМ. ЕГО ЛЕДЯНЫЕ ШАРЫ ЗАМЕДЛЯЮТ ВРАГОВ."},
   {"БОЧКА С ГОБЛИНАМИ", 3, CT_SPELL, RA_EPIC,   U_GOBLIN,   3, 1, SP_BARREL, 1.5f, 0, 0, 0, 0, "КОРОЛЬ БРОСАЕТ БОЧКУ КУДА УГОДНО - ДАЖЕ К ВРАЖЕСКОЙ БАШНЕ. ИЗ НЕЁ ВЫПРЫГИВАЮТ 3 ГОБЛИНА."},
   {"ВАРВАРЫ",           5, CT_TROOP, RA_COMMON, U_BARB,     5, 2, SP_NONE, 0, 0, 0, 0, 0, "ПЯТЬ КРЕПКИХ БОЙЦОВ С МЕЧАМИ. СИЛЬНЫ ПРОТИВ ТАНКОВ, НО БОЯТСЯ УРОНА ПО ПЛОЩАДИ."},
   {"ЭЛИТНЫЕ ВАРВАРЫ",   6, CT_TROOP, RA_COMMON, U_EBARB,    2, 3, SP_NONE, 0, 0, 0, 0, 0, "ДВА БЫСТРЫХ И ЗЛЫХ ВАРВАРА. БЕГУТ К БАШНЕ И БЬЮТ ОЧЕНЬ БОЛЬНО."},
@@ -1448,6 +1448,7 @@ static void splashAt(float x, float z, float r, float dmg, int team, bool air, b
     dealDmg(u, UT(u).kind == UT_TOWER ? dmg * towerK : dmg, team);
     if (knock && u.alive && UT(u).kind == UT_TROOP && UT(u).mass <= 6) { float l = sqrtf(dx * dx + dz * dz) + 0.01f; u.x += dx / l * 0.8f; u.z += dz / l * 0.8f; } }
 }
+static const float ICEWIZ_SPAWN_DMG = 84.85f;                                 // урон ледяного мага при появлении (x lvlK)
 static void slowArea(float x, float z, float r, int team, float T) {                 // замедление от льда
   for (size_t i = 0; i < B.units.size(); i++) { Unit &u = B.units[i]; if (!u.alive || u.team == team || UT(u).kind == UT_TOWER) continue;
     float dx = u.x - x, dz = u.z - z, rr = r + UT(u).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) u.slowT = fmaxv(u.slowT, T); }
@@ -1575,7 +1576,8 @@ static void updateUnit(Unit &u, float dt) {
   u.flash = fmaxv(0.0f, u.flash - dt); u.atkAnim = fmaxv(0.0f, u.atkAnim - dt * 3.0f); u.moving = false;
   if (u.deployT > 0) { u.deployT -= dt;
     if (u.deployT <= 0 && u.type == U_MEGA) { float r = 2.2f; splashAt(u.x, u.z, r, u.dmg * 1.604f, u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, r); bEvent(BE_BOOM, u.team, u.x, u.z); }   // удар при приземлении
-    if (u.deployT <= 0 && u.type == U_ICEWIZ) { float r = 2.5f; splashAt(u.x, u.z, r, u.dmg * 0.94f, u.team, true, true, 1.0f, false); slowArea(u.x, u.z, r, u.team, 2.5f); addFx(FX_SPLASH, u.team, u.x, u.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, u.team, u.x, u.z, SP_FREEZE); }   // холодный удар при появлении
+    if (u.deployT <= 0 && u.type == U_ICEWIZ) { float r = 2.0f; splashAt(u.x, u.z, r, ICEWIZ_SPAWN_DMG * lvlK(u.lvl), u.team, true, true, 1.0f, false);   /* 200 урона на 10 ур. */
+      for (size_t q = 0; q < B.units.size(); q++) { Unit &e = B.units[q]; if (!e.alive || e.team == u.team) continue; float dx = e.x - u.x, dz = e.z - u.z, rr = r + UT(e).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) e.frozenT = fmaxv(e.frozenT, 2.0f); }   /* всё вокруг замерзает на 2 с */ addFx(FX_SPLASH, u.team, u.x, u.z, 0.3f, 0.5f, r); bEvent(BE_SPELL, u.team, u.x, u.z, SP_FREEZE); }   // холодный удар при появлении
     return; }
   float slowK = 1.0f; if (u.slowT > 0) { u.slowT -= dt; slowK = 0.65f; }
   if (u.jumpT > 0) {                                                          // мегарыцарь в прыжке: летит к цели и давит при приземлении
@@ -2708,7 +2710,7 @@ static int cardStatLine(int c, int lvl, char lines[][64]) {
   snprintf(lines[n++], 64, "ЗДОРОВЬЕ: %d", (int)(u.hp * k));
   if (u.shield > 0) snprintf(lines[n++], 64, "ЩИТ: %d", (int)(u.shield * k));
   if (cd.unit == U_MEGA) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(UNITS[U_MEGA].dmg * 1.604f * k)); snprintf(lines[n++], 64, "УРОН ПРЫЖКОМ: %d", (int)(UNITS[U_MEGA].dmg * 2.003f * k)); }
-  if (cd.unit == U_ICEWIZ) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(UNITS[U_ICEWIZ].dmg * 0.94f * k)); snprintf(lines[n++], 64, "ЗАМЕДЛЕНИЕ: 2.5 С"); }
+  if (cd.unit == U_ICEWIZ) { snprintf(lines[n++], 64, "УРОН ПРИ ПОЯВЛЕНИИ: %d", (int)(ICEWIZ_SPAWN_DMG * k)); snprintf(lines[n++], 64, "ЗАМОРОЗКА ВОКРУГ: 2 С (2 КЛЕТКИ)"); snprintf(lines[n++], 64, "ЗАМЕДЛЕНИЕ ШАРАМИ: 2.5 С"); }
   if (u.dmg > 0) snprintf(lines[n++], 64, "УРОН: %d%s", (int)(u.dmg * k), u.splash > 0 ? " ПО ПЛОЩАДИ" : "");
   if (u.dmg > 0) snprintf(lines[n++], 64, "СКОРОСТЬ УДАРА: %.1f С", u.hitT);
   if (cd.type == CT_TROOP) snprintf(lines[n++], 64, "СКОРОСТЬ: %s", u.speed >= 1.9f ? "ОЧЕНЬ БЫСТРО" : (u.speed >= 1.3f ? "БЫСТРО" : (u.speed >= 0.95f ? "СРЕДНЕ" : (u.speed >= 0.65f ? "МЕДЛЕННО" : "ОЧЕНЬ МЕДЛЕННО"))));

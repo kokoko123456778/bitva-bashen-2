@@ -1063,7 +1063,7 @@ enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, 
 static UnitT UNITS[NUNIT] = {
   //  имя                модель      вид       hp     урон  удар  скор  дальн радиус обзор  сплеш снаряд возд  здан  по возд масса жизнь
   {"РЫЦАРЬ",            M_KNIGHT,   UT_TROOP, 1400,  160, 1.2f, 1.0f, 0.6f, 0.45f, 5.5f, 0,    0,     false, false, false, 6, 0, -1, 0, 0, 0, 0},
-  {"ЛУЧНИЦА",           M_ARCHER,   UT_TROOP, 250,   85,  1.0f, 1.0f, 5.0f, 0.35f, 5.5f, 0,    14,    false, false, true,  3, 0, -1, 0, 0, 0, 0},
+  {"ЛУЧНИЦА",           M_ARCHER,   UT_TROOP, 250,   93.5f,  1.0f, 1.0f, 5.0f, 0.35f, 5.5f, 0,    14,    false, false, true,  3, 0, -1, 0, 0, 0, 0},
   {"ГОБЛИН",            M_GOBLIN,   UT_TROOP, 170,   100, 1.1f, 1.6f, 0.5f, 0.35f, 5.5f, 0,    0,     false, false, false, 2, 0, -1, 0, 0, 0, 0},
   {"ВЕЛИКАН",           M_GIANT,    UT_TROOP, 3300,  210, 1.5f, 0.75f,0.7f, 0.75f, 7.5f, 0,    0,     false, true,  false, 18, 0, -1, 0, 0, 0, 0},
   {"МАГ ОГНЯ",          M_FIREMAGE, UT_TROOP, 550,   210, 1.4f, 1.0f, 5.5f, 0.4f,  5.5f, 1.5f, 9,     false, false, true,  4, 0, -1, 0, 0, 0, 0},
@@ -1075,7 +1075,7 @@ static UnitT UNITS[NUNIT] = {
   {"НЕКРОМАНТ",         M_NECRO,    UT_TROOP, 700,   90,  1.0f, 1.0f, 5.0f, 0.4f,  5.5f, 1.2f, 10,    false, false, true,  4, 0, U_SKELETON, 4, 7.0f, 0, 0},
   {"КОПЕЙЩИК",          M_LANCER,   UT_TROOP, 1300,  250, 1.5f, 1.0f, 1.4f, 0.5f,  5.5f, 0,    0,     false, false, false, 7, 0, -1, 0, 0, 0, 0},
   {"ЛЕТУЧАЯ МЫШЬ",      M_BAT,      UT_TROOP, 70,    70,  1.1f, 2.0f, 0.5f, 0.3f,  5.5f, 0,    0,     true,  false, true,  1, 0, -1, 0, 0, 0, 0},
-  {"ГНОМ-ПОДРЫВНИК",    M_BOMBER,   UT_TROOP, 300,   170, 1.8f, 1.0f, 4.5f, 0.35f, 5.0f, 1.5f, 7,     false, false, false, 3, 0, -1, 0, 0, 0, 0},
+  {"ГНОМ-ПОДРЫВНИК",    M_BOMBER,   UT_TROOP, 300,   187, 1.8f, 1.0f, 4.5f, 0.35f, 5.0f, 1.5f, 7,     false, false, false, 3, 0, -1, 0, 0, 0, 0},
   {"КОРОЛЬ ГОБЛИНОВ",   M_GOBKING,  UT_TROOP, 2600,  254.5f,1.8f, 0.75f,0.8f, 0.7f,  7.5f, 0,    0,     false, true,  false, 14, 0, U_GOBLIN, 4, 5.0f, 0, 0},
   {"ГОБЛИН-ДУДЕЦ",      M_DART,     UT_TROOP, 250,   100, 0.7f, 1.4f, 6.0f, 0.35f, 6.5f, 0,    18,    false, false, true,  2, 0, -1, 0, 0, 0, 0},
   {"ВОЛАР БЕБЕ",        M_VOLAR,    UT_TROOP, 2757,  148.5f,1.8f, 0.5f, 2.0f, 0.8f,  7.5f, 0,    9,     true,  true,  false, 16, 0, -1, 0, 0, 0, 0, U_PUP, 6},
@@ -1213,7 +1213,7 @@ typedef ProfileT<MAXCARDS> Profile;
 typedef ProfileT<23> ProfileV1;                                     // первая версия (23 карты)
 static_assert(NCARD <= MAXCARDS, "карт больше запаса");
 // ---- баланс: множители силы карт, подобраны на 24 000 боях ботов (цель - 49-52% побед) ----
-static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.300f, 1.579f, 1.000f};
+static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f};
 static void balanceInit() {
   static bool done = false; if (done) return; done = true;
   for (int c = 0; c < NCARD; c++) { float k = BAL_K[c]; if (fabsf(k - 1) < 1e-4f) continue; Card &cd = CARDS[c];
@@ -1334,7 +1334,7 @@ struct Side {
 };
 struct Battle {
   std::vector<Unit> units; std::vector<Proj> projs; std::vector<Spell> spells; std::vector<Fx> fx; std::vector<BEv> ev;
-  Side side[4]; int nSides; bool duo; float t, acc; bool over, overtime; int winner, nextId; int arena; unsigned rng;   // стороны: 0 и 2 - команда 0, 1 и 3 - команда 1 (2 на 2)
+  Side side[4]; int nSides; bool duo; float elixMul; float t, acc; bool over, overtime; int winner, nextId; int arena; unsigned rng;   // стороны: 0 и 2 - команда 0, 1 и 3 - команда 1 (2 на 2)
 };
 static Battle B;
 static float brand(float a, float b) { B.rng = B.rng * 1664525u + 1013904223u; return a + (b - a) * ((B.rng >> 8) & 0xFFFF) / 65535.0f; }
@@ -1372,7 +1372,7 @@ static void initSide(int si, const int *deck, const int *lvls, int kingLvl, bool
 static void startBattle(const int *deck0, const int *lvl0, int king0, const int *deck1, const int *lvl1, int king1, bool bot1, int arena, unsigned seed) {
   B.units.clear(); B.units.reserve(600); B.projs.clear(); B.spells.clear(); B.fx.clear(); B.ev.clear();
   B.t = 0; B.acc = 0; B.over = false; B.overtime = false; B.winner = -1; B.nextId = 0; B.arena = arena; B.rng = seed ? seed : 12345u;
-  B.nSides = 2; B.duo = false;
+  B.nSides = 2; B.duo = false; B.elixMul = 1.0f;
   initSide(0, deck0, lvl0, king0, false); initSide(1, deck1, lvl1, king1, bot1);
 }
 // 2 на 2: четыре колоды, башни у команды общие
@@ -1643,7 +1643,7 @@ static void updateUnit(Unit &u, float dt) {
 static void simStep(float dt) {
   if (B.over) return;
   B.t += dt;
-  for (int s = 0; s < B.nSides; s++) { float r = (doubleElixir() || B.overtime ? 2.0f : 1.0f) / ELIX_T; B.side[s].elixir = fminv(10.0f, B.side[s].elixir + r * dt); }
+  for (int s = 0; s < B.nSides; s++) { float r = (doubleElixir() || B.overtime ? 2.0f : 1.0f) * B.elixMul / ELIX_T; B.side[s].elixir = fminv(10.0f, B.side[s].elixir + r * dt); }
   for (size_t i = 0; i < B.units.size(); i++) { B.units[i].px = B.units[i].x; B.units[i].pz = B.units[i].z; }
   size_t n = B.units.size();
   for (size_t i = 0; i < n && i < B.units.size(); i++) if (B.units[i].alive) updateUnit(B.units[i], dt);
@@ -1733,10 +1733,18 @@ static void botThink(float dt) {
         if (cd.spell == SP_HEAL && lost > 700 && botTry(i, mx, mz)) return;                                           // лечим свою дерущуюся толпу
         if (cd.spell == SP_FREEZE && zOf(bot.team, mz) > 18.0f) { Unit *tw = NULL; float bd = 1e9f; for (int q = 0; q < 3; q++) { Unit *t2 = unitById(B.side[1 - bot.team].towerId[q]); if (t2) { float d2 = (t2->x - mx) * (t2->x - mx) + (t2->z - mz) * (t2->z - mz); if (d2 < bd) { bd = d2; tw = t2; } } }
           if (tw && bd < 36.0f && botTry(i, (tw->x + mx) * 0.5f, (tw->z + mz) * 0.5f)) return; } } } }        // замораживаем башню, пока наши её бьют
+  for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.unit != U_HOG || cd.type != CT_TROOP || cd.cost > s.elixir) continue;
+    int en = 1 - bot.team; float enEl = 0; for (int q = 0; q < B.nSides; q++) if (teamOf(q) == en) enEl = fmaxv(enEl, B.side[q].elixir);
+    int best = -1; float bestDef = 1e9f, bestTw = 1e9f;
+    for (int ln = 0; ln < 2; ln++) { Unit *tw = unitById(B.side[en].towerId[ln + 1]); float twh = tw ? tw->hp : 0, def = 0;
+      for (size_t k = 0; k < B.units.size(); k++) { const Unit &u = B.units[k]; if (!u.alive || u.team != en || UT(u).kind == UT_TOWER || UT(u).air) continue; if (fabsf(u.x - BRIDGE_X[ln]) < 5.5f && zOf(bot.team, u.z) > 13.0f) def += UT(u).kind == UT_BUILD ? 3.0f : 1.0f; }   // защитники на линии
+      if (def < bestDef || (def == bestDef && twh < bestTw)) { bestDef = def; bestTw = twh; best = ln; } }
+    bool push = (enEl < 2.5f && s.elixir >= 6.0f) || (bestDef == 0 && s.elixir >= 8.0f);                        // всадник бежит, когда врагу нечем ответить
+    if (best >= 0 && push && botTry(i, BRIDGE_X[best] + (best ? -0.4f : 0.4f), zOf(bot.team, 14.5f))) { bot.lastLane = best; return; } }
   bool go = s.elixir >= 9.5f || (s.elixir >= 7.0f && (rand() % 3) == 0) || (doubleElixir() && s.elixir >= 5.5f);
   if (!tankOut && go) {
     int best = -1; float bs = -1;
-    for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.cost > s.elixir || cd.type != CT_TROOP) continue; const UnitT &ut = UNITS[cd.unit];
+    for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.cost > s.elixir || cd.type != CT_TROOP || cd.unit == U_HOG) continue; const UnitT &ut = UNITS[cd.unit];   /* всадника ставим только по своему правилу */
       float sc = ut.hp * imax(1, cd.count) / 1000.0f + (ut.onlyBuild ? 3 : 0); if (sc > bs) { bs = sc; best = i; } }
     if (best >= 0) { const Card &cd = CARDS[botHandCard(best)]; const UnitT &ut = UNITS[cd.unit];
       float pz = (ut.speed >= 1.5f || s.elixir < 9) ? zOf(bot.team, 14.0f) : zOf(bot.team, 1.5f);
@@ -1747,7 +1755,7 @@ static void botThink(float dt) {
     for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.spell != SP_BARREL || cd.cost > s.elixir) continue;   // бочка с гоблинами - прямо к башне
       Unit *tw = unitById(B.side[1 - bot.team].towerId[lane + 1]); if (!tw) tw = unitById(B.side[1 - bot.team].towerId[0]);
       if (tw && botTry(i, tw->x + (tw->x < 9 ? 1.2f : -1.2f), tw->z + (bot.team == 0 ? -1.6f : 1.6f))) return; }
-    if (s.elixir >= 9.8f) for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.type == CT_TROOP && cd.cost <= s.elixir && botTry(i, lx, zOf(bot.team, 13.5f))) return; }   // не копим лишнее
+    if (s.elixir >= 9.8f) for (int i = 0; i < 4; i++) { const Card &cd = CARDS[botHandCard(i)]; if (cd.type == CT_TROOP && cd.unit != U_HOG && cd.cost <= s.elixir && botTry(i, lx, zOf(bot.team, 13.5f))) return; }   // не копим лишнее
   }
 
 }
@@ -2421,7 +2429,7 @@ static void fmtNum(char *b, int n, long long v) { char t[32]; snprintf(t, sizeof
 //  БОЙ
 // =====================================================================
 static const char *BOTN[] = {"СЭР ГРОМ", "ТЁМНЫЙ ЛОРД", "ВОЛЧИЙ КЛЫК", "ЛЕДИ ИСКРА", "БАРОН КАМЕНЬ", "ГРАФ ТУМАН", "РЫЖИЙ ВОЛК", "МАСТЕР ЩИТ", "КОРОЛЬ ОРЕХ", "ВЕДЬМА ЛУНА"};
-struct BattleInfo { bool net, vsBot, duo; char enemy[48]; int myTeam, mySide, mateSide; int trophyDelta; int chest; bool done; int stars; int goldWon; };
+struct BattleInfo { int mode; bool net, vsBot, duo; char enemy[48]; int myTeam, mySide, mateSide; int trophyDelta; int chest; bool done; int stars; int goldWon; };
 static Bot bots[3]; static int nBots = 0;                 // боты в бою (в 2 на 2 их до трёх)
 static BattleInfo BI;
 static int selCard = -1; static bool dragging = false; static float ghostX = 0, ghostZ = 0; static bool ghostOn = false;
@@ -2458,6 +2466,29 @@ static void startBotBattle() {
   memset(&BI, 0, sizeof BI); BI.vsBot = true; BI.myTeam = 0; BI.mySide = 0; BI.mateSide = -1; snprintf(BI.enemy, sizeof BI.enemy, "%s", BOTN[rand() % 10]);
   viewTeam = 0; selCard = -1; dragging = false; gs = GS_BATTLE; previewDirty = true; sfx(SFX_CLICK);
 }
+// ---- особые режимы: тройной эликсир, случайные колоды, турнир из 5 боёв ----
+enum { MODE_NORMAL = 0, MODE_TRIPLE = 3, MODE_RANDOM = 4, MODE_TOUR = 5 };
+static int tourStage = 0;                                       // 0 - турнир не начат, 1..5 - какой бой следующий
+static void tourLoad() { FILE *f = fopen(pth("bashni_tour.sav"), "rb"); if (f) { int v = 0; if (fread(&v, 4, 1, f) == 1) tourStage = clampi(v, 0, 5); fclose(f); } }
+static void tourSave() { FILE *f = fopen(pth("bashni_tour.sav"), "wb"); if (f) { fwrite(&tourStage, 4, 1, f); fclose(f); } }
+static void randomDeck(int arena, int *dk, int *lv, int lvlDefault, bool mine) {
+  int av[NCARD], n = cardsUnlocked(arena, av);
+  for (int i = 0; i < 8 && i < n; i++) { int j = i + rand() % (n - i); int t = av[i]; av[i] = av[j]; av[j] = t; dk[i] = av[i]; lv[i] = mine && pf.have[dk[i]] ? pf.lvl[dk[i]] : lvlDefault; }
+}
+static void startSpecial(int mode) {
+  int a = arenaOf(pf.trophies), avg = deckAvgLvl(); int dk[8], lv[8], my[8], md[8]; for (int i = 0; i < 8; i++) { md[i] = pf.deck[i]; my[i] = pf.lvl[pf.deck[i]]; }
+  int dif = clampi(a / 2 + (pf.trophies > 400 ? 1 : 0), 0, 3), kl = pf.kingLvl;
+  if (mode == MODE_RANDOM) { randomDeck(a, md, my, avg, true); randomDeck(a, dk, lv, avg, false); }
+  else if (mode == MODE_TOUR) { if (tourStage < 1) tourStage = 1; int st = tourStage; int bl = clampi(avg - 2 + st, 1, MAXLVL);   // с каждым боем соперник сильнее
+    makeBotDeck(imin(NARENA - 1, a + (st >= 4 ? 1 : 0)), dk, lv, bl); for (int i = 0; i < 8; i++) lv[i] = bl; dif = clampi(st - 2, 0, 3); kl = clampi(pf.kingLvl - 2 + st, 1, MAXLVL); }
+  else makeBotDeck(a, dk, lv, avg);
+  startBattle(md, my, pf.kingLvl, dk, lv, kl, true, a, (unsigned)rand() * 2654435761u + 7u);
+  if (mode == MODE_TRIPLE) B.elixMul = 3.0f;
+  botInit(1, dif); bots[0] = bot; nBots = 1;
+  memset(&BI, 0, sizeof BI); BI.mode = mode; BI.vsBot = true; BI.myTeam = 0; BI.mySide = 0; BI.mateSide = -1;
+  if (mode == MODE_TOUR) snprintf(BI.enemy, sizeof BI.enemy, "ТУРНИР %d/5: %s", tourStage, BOTN[rand() % 10]); else snprintf(BI.enemy, sizeof BI.enemy, "%s", BOTN[rand() % 10]);
+  viewTeam = 0; selCard = -1; dragging = false; gs = GS_BATTLE; previewDirty = true; sfx(SFX_CLICK);
+}
 static void setupDuo(int mySide, bool allyBot, unsigned seed, int arena, const int *mateDeck, const int *mateLvl, int mateKing) {
   int decks[4][8], lvls[4][8], avg = deckAvgLvl();
   for (int i = 0; i < 8; i++) { decks[mySide][i] = pf.deck[i]; lvls[mySide][i] = pf.lvl[pf.deck[i]]; }
@@ -2475,7 +2506,15 @@ static void startDuoBot() { setupDuo(0, true, (unsigned)rand() * 2654435761u + 3
 static void addCards(int c, int n) { if (!pf.have[c]) { pf.have[c] = true; n = imax(0, n - 1); } pf.cnt[c] += n; }
 static void finishBattle() {
   BI.done = true; int me = BI.myTeam, en = 1 - me; bool win = B.winner == me, lose = B.winner == en;
-  if (BI.duo) { if (win) { BI.goldWon = 15 + 10 * arenaOf(pf.trophies); pf.gold += BI.goldWon; questAdd(Q_WIN, 1); } pf.crowns = imin(10, pf.crowns + B.side[me].crowns); }
+  if (BI.mode == MODE_TOUR) {
+    if (win) { BI.goldWon = 40 * tourStage; pf.gold += BI.goldWon; questAdd(Q_WIN, 1);
+      if (tourStage >= 5) { BI.chest = -1; for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type < 0) { pf.slots[s].type = CH_LEGEND; pf.slots[s].opening = false; BI.chest = CH_LEGEND; break; }
+        if (BI.chest < 0) { pf.gems += 100; BI.stars = 100; } pf.gold += 500; BI.goldWon += 500; BI.trophyDelta = 99; tourStage = 0; }   // турнир пройден
+      else tourStage++; }
+    else { BI.trophyDelta = -tourStage; tourStage = 0; }                                    // проигрыш - турнир заканчивается
+    tourSave(); }
+  else if (BI.mode == MODE_TRIPLE || BI.mode == MODE_RANDOM) { if (win) { BI.goldWon = 20 + 10 * arenaOf(pf.trophies); pf.gold += BI.goldWon; questAdd(Q_WIN, 1); } pf.crowns = imin(10, pf.crowns + B.side[me].crowns); }
+  else if (BI.duo) { if (win) { BI.goldWon = 15 + 10 * arenaOf(pf.trophies); pf.gold += BI.goldWon; questAdd(Q_WIN, 1); } pf.crowns = imin(10, pf.crowns + B.side[me].crowns); }
   else if (!BI.net) {
     int a0 = arenaOf(pf.trophies);
     if (win) { BI.trophyDelta = 26 + rand() % 7; pf.wins++; if (B.side[me].crowns == 3) { pf.threeCrowns++; questAdd(Q_THREE, 1); } questAdd(Q_WIN, 1);
@@ -2546,7 +2585,13 @@ static void frameResult() {
   snprintf(b, sizeof b, "%d : %d", B.side[me].crowns, B.side[1 - me].crowns); drawTextSh(IW / 2, IH / 6 + fs * 36, b, fs * 3, RGB(255, 255, 255), 1);
   drawText(IW / 2, IH / 6 + fs * 62, "КОРОНЫ", fs, RGB(200, 210, 230), 1);
   int y = IH / 6 + fs * 80;
-  if (BI.duo) { drawTextSh(IW / 2, y, "БОЙ 2 НА 2 - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
+  if (BI.mode == MODE_TOUR) {
+    if (BI.trophyDelta == 99) { drawTextSh(IW / 2, y, "ТУРНИР ПРОЙДЕН!", fs * 2, RGB(255, 220, 90), 1); y += fs * 22; drawTextSh(IW / 2, y, BI.chest >= 0 ? "НАГРАДА: ЛЕГЕНДАРНЫЙ СУНДУК" : "НАГРАДА: 100 КРИСТАЛЛОВ", fs, RGB(120, 230, 220), 1); y += fs * 12; }
+    else if (win) { snprintf(b, sizeof b, "ТУРНИР: ПОБЕДА %d ИЗ 5. ДАЛЬШЕ БОЙ %d", tourStage - 1, tourStage); drawFit(IW / 2, y, b, colW - fs * 4, fs, RGB(255, 230, 150), 1); y += fs * 12; }
+    else { snprintf(b, sizeof b, "ТУРНИР ОКОНЧЕН НА БОЮ %d", -BI.trophyDelta); drawTextSh(IW / 2, y, b, fs, RGB(255, 160, 140), 1); y += fs * 12; }
+    if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
+  else if (BI.mode == MODE_TRIPLE || BI.mode == MODE_RANDOM) { drawTextSh(IW / 2, y, BI.mode == MODE_TRIPLE ? "ТРОЙНОЙ ЭЛИКСИР - КУБКИ НЕ МЕНЯЮТСЯ" : "СЛУЧАЙНЫЕ КОЛОДЫ - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
+  else if (BI.duo) { drawTextSh(IW / 2, y, "БОЙ 2 НА 2 - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
   else if (!BI.net) { snprintf(b, sizeof b, "КУБКИ %s%d   ВСЕГО %d", BI.trophyDelta >= 0 ? "+" : "", BI.trophyDelta, pf.trophies); drawTextSh(IW / 2, y, b, fs + 1, BI.trophyDelta >= 0 ? RGB(255, 220, 120) : RGB(255, 140, 120), 1); y += fs * 16;
     if (win) { if (BI.chest >= 0) { snprintf(b, sizeof b, "НАГРАДА: %s", CHESTS[BI.chest].name); drawTextSh(IW / 2, y, b, fs, CHESTS[BI.chest].col, 1); } else drawTextSh(IW / 2, y, "НЕТ МЕСТА ДЛЯ СУНДУКА", fs, RGB(255, 160, 140), 1); y += fs * 12;
       snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs, RGB(255, 220, 90), 1); y += fs * 12; }
@@ -2735,11 +2780,11 @@ static void menuBattle() {
   // панель внизу
   fillRect(0, modeY, IW, tabsTop - modeY, RGB(14, 16, 34));
   // выбор режима
-  { static const char *MN[3] = {"1 НА 1 С БОТОМ", "2 НА 2 С БОТОМ", "С ДРУГОМ (WI-FI)"}; int w = colW * 70 / 100, x = IW / 2 - w / 2, h = fs * 12;
+  { static const char *MN[6] = {"1 НА 1 С БОТОМ", "2 НА 2 С БОТОМ", "С ДРУГОМ (WI-FI)", "ТРОЙНОЙ ЭЛИКСИР", "СЛУЧАЙНЫЕ КОЛОДЫ", "ТУРНИР ИЗ 5 БОЁВ"}; int w = colW * 70 / 100, x = IW / 2 - w / 2, h = fs * 12;
     fillRect(x, modeY + fs, w, h, RGB(70, 50, 130)); fillRect(x, modeY + fs, w, imax(1, h / 4), RGB(100, 75, 170));
     snprintf(b, sizeof b, "РЕЖИМ: %s", MN[menuMode]); drawFit(IW / 2, modeY + fs * 4, b, w - fs * 26, fs, RGB(255, 255, 255), 1);
-    if (button(x, modeY + fs, fs * 12, h, "<", true, RGB(90, 70, 160))) { menuMode = (menuMode + 2) % 3; sfx(SFX_CLICK); }
-    if (button(x + w - fs * 12, modeY + fs, fs * 12, h, ">", true, RGB(90, 70, 160))) { menuMode = (menuMode + 1) % 3; sfx(SFX_CLICK); } }
+    if (button(x, modeY + fs, fs * 12, h, "<", true, RGB(90, 70, 160))) { menuMode = (menuMode + 5) % 6; sfx(SFX_CLICK); }
+    if (button(x + w - fs * 12, modeY + fs, fs * 12, h, ">", true, RGB(90, 70, 160))) { menuMode = (menuMode + 1) % 6; sfx(SFX_CLICK); } }
   // колода слева, БОЙ по центру, бесплатный сундук справа
   int sideW = colW * 22 / 100, midW = colW - sideW * 2 - fs * 8, x0 = colX + fs * 2;
   { bigButton(x0, btnY, sideW, btnH, RGB(60, 90, 170)); int ch = btnH - fs * 14, cw = imin(sideW * 45 / 100, ch * 5 / 6);
@@ -2748,8 +2793,8 @@ static void menuBattle() {
     if (hitR(x0, btnY, sideW, btnH)) { menuTab = 1; sfx(SFX_CLICK); return; } }
   { int x = x0 + sideW + fs * 4; bigButton(x, btnY, midW, btnH, RGB(240, 175, 40));
     drawTextSh(x + midW / 2, btnY + fs * 4, "БОЙ", fs * 2, RGB(255, 255, 255), 1);
-    static const char *SUB[3] = {"ПРОТИВ БОТА", "ТЫ И БОТ ПРОТИВ ДВУХ", "ПО WI-FI"}; drawText(x + midW / 2, btnY + btnH - fs * 9, SUB[menuMode], imax(1, fs - 1), RGB(90, 50, 10), 1);
-    if (hitR(x, btnY, midW, btnH)) { if (menuMode == 0) startBotBattle(); else if (menuMode == 1) startDuoBot(); else startLobby(); return; } }
+    char sb[48]; static const char *SUB[6] = {"ПРОТИВ БОТА", "ТЫ И БОТ ПРОТИВ ДВУХ", "ПО WI-FI", "ЭЛИКСИР В 3 РАЗА БЫСТРЕЕ", "КОЛОДЫ НАУГАД", ""}; if (menuMode == 5) snprintf(sb, sizeof sb, "БОЙ %d ИЗ 5", imax(1, tourStage)); else snprintf(sb, sizeof sb, "%s", SUB[menuMode]); drawText(x + midW / 2, btnY + btnH - fs * 9, sb, imax(1, fs - 1), RGB(90, 50, 10), 1);
+    if (hitR(x, btnY, midW, btnH)) { if (menuMode == 0) startBotBattle(); else if (menuMode == 1) startDuoBot(); else if (menuMode == 2) startLobby(); else startSpecial(menuMode); return; } }
   { int x = x0 + sideW + midW + fs * 8; long long left = pf.freeAt - nowSec(); bool ok = left <= 0;
     bigButton(x, btnY, sideW, btnH, ok ? RGB(60, 160, 80) : RGB(70, 80, 110));
     int bh = btnH - fs * 16, bw = imin(sideW * 6 / 10, bh * 4 / 3), bx = x + sideW / 2 - bw / 2, by = btnY + fs * 4;                                       // сундучок
@@ -2881,6 +2926,8 @@ static void menuQuests() {
 }
 static void frameMenu() {
   layoutCol(); dailyRefresh();
+  if (P.clicked && infoCard < 0) { int dx = P.cx - P.sx, dy = P.cy - P.sy;                 // свайп влево-вправо - соседняя вкладка
+    if (abs(dx) > IW / 5 && abs(dx) > abs(dy) * 2) { int nt = clampi(menuTab + (dx < 0 ? 1 : -1), 0, 3); if (nt != menuTab) { menuTab = nt; swapCard = -1; sfx(SFX_CLICK); } P.clicked = false; } }
   for (int y = 0; y < IH && menuTab != 2; y += fs * 4) { if (false) { if (y < previewY0()) fillRect(0, y, IW, previewY0() - y, RGB(34, 42, 66)); if (y + fs * 4 > previewY1()) fillRect(0, previewY1(), IW, y + fs * 4 - previewY1(), RGB(34, 42, 66)); continue; }
     fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? RGB(36, 45, 70) : RGB(34, 42, 66)); }
   if (menuTab == 2) menuBattle(); else if (menuTab == 1) menuDeck(); else if (menuTab == 0) menuShop(); else menuQuests();
@@ -3289,7 +3336,7 @@ int main(int argc, char **argv) {
   srand((unsigned)time(NULL)); balanceInit();
   if (!loadProfile()) { FILE *old = fopen(pth("bashni.sav"), "rb"); if (old) { fclose(old); rename(pth("bashni.sav"), pth("bashni.broken")); }   // нечитаемый файл не затираем
     newProfile(); saveProfile(); }
-  dailyRefresh(); realPf = pf; gs = GS_START;
+  dailyRefresh(); realPf = pf; gs = GS_START; tourLoad();
   genThumbs();
   audioInit();
   memset(&P, 0, sizeof P);

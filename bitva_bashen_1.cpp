@@ -1623,7 +1623,7 @@ static void updateUnit(Unit &u, float dt) {
     if (t.kind == UT_TROOP) { float gz = zOf(u.team, 28.0f); moveToward(u, u.x < 9 ? BRIDGE_X[0] : BRIDGE_X[1], gz, dt); }
     return; }
   float d = edgeDist(u, *tg);
-  if (u.type == U_MEGA && u.jumpCD <= 0 && !u.attacking && !isBuild(*tg) && d >= 2.5f && d <= 5.0f && (u.z - RIVER_Z) * (tg->z - RIVER_Z) >= 0) {   // прыжок на врага
+  if (u.type == U_MEGA && u.jumpCD <= 0 && !u.attacking && d >= 2.5f && d <= 5.0f && (u.z - RIVER_Z) * (tg->z - RIVER_Z) >= 0) {   // прыжок на врага
     u.jumpT = 0.8f; u.jumpCD = 3.0f; u.jx0 = u.x; u.jz0 = u.z; float dx = tg->x - u.x, dz = tg->z - u.z, l = sqrtf(dx * dx + dz * dz) + 1e-4f, back = UT(*tg).radius + t.radius * 0.6f;
     u.jx1 = tg->x - dx / l * back; u.jz1 = tg->z - dz / l * back; u.face = atan2f(dx, dz); return; }
   if (d <= t.range) {
@@ -2108,10 +2108,14 @@ static void drawTree(float x, float z, float s, int kind) {
   u32 lc = ARENAS[B.arena].deco;
   for (int k = 0; k < 3; k++) BX(x, (0.75f + k * 0.38f) * s, z, (0.5f - k * 0.14f) * s, 0.22f * s, (0.5f - k * 0.14f) * s, k * 0.4f, mixc(lc, RGB(0, 0, 0), k * 0.08f));
 }
+static bool onBridgeX(float x) { return fabsf(x - BRIDGE_X[0]) < BRIDGE_HW + 0.35f || fabsf(x - BRIDGE_X[1]) < BRIDGE_HW + 0.35f; }
 static void drawArena(bool placing, int placeCard) {
   const Arena &ar = ARENAS[clampi(B.arena, 0, NARENA - 1)];
   // дальний фон
-  GQ(-14, -14, AW + 14, AL + 14, -0.02f, mixc(ar.border, RGB(0, 0, 0), 0.25f));
+  u32 outer = ar.decoKind == 3 ? RGB(225, 235, 245) : (ar.decoKind == 4 ? RGB(55, 38, 34) : (ar.decoKind == 2 ? RGB(110, 100, 85) : mixc(ar.grass2, RGB(0, 30, 0), 0.3f)));
+  GQ(-14, -14, AW + 14, AL + 14, -0.03f, outer);
+  for (int k = 0; k < 26; k++) { unsigned h = hsh(k * 131u + 7u); float side = (k & 1) ? -1 : 1, px = side < 0 ? -1.2f - (h % 500) / 100.0f : AW + 1.2f + (h % 500) / 100.0f, pz = -3 + (h >> 10) % 38, rr = 0.6f + ((h >> 5) % 10) / 10.0f;   // пятна на земле вокруг
+    GQ(px - rr, pz - rr * 0.7f, px + rr, pz + rr * 0.7f, -0.025f, mixc(outer, k % 3 ? RGB(0, 0, 0) : RGB(255, 255, 255), 0.08f)); }
   // клетки травы 2x2
   // клетки травы 1x1 с заметной шахматкой
   u32 gA = mixc(ar.grass, RGB(255, 255, 230), 0.07f), gB = mixc(ar.grass2, RGB(0, 20, 0), 0.1f);
@@ -2120,7 +2124,9 @@ static void drawArena(bool placing, int placeCard) {
     if (placing && placeCard >= 0 && CARDS[placeCard].type != CT_SPELL) { float mz = zOf(viewTeam, z0 + 0.5f); bool ok = mz <= 15.0f;
       if (!ok && mz <= 21.5f) { int enemy = 1 - viewTeam; float wx = cx + 0.5f; if ((wx < 9 && !towerAlive(enemy, 1)) || (wx >= 9 && !towerAlive(enemy, 2))) ok = true; }
       if (!ok) c = mixc(c, RGB(200, 60, 50), 0.35f); }
-    GQ((float)cx, z0, cx + 1.0f, z1, 0, c); }
+    { unsigned th = hsh((unsigned)(cx * 73 + cz * 151 + 11)); c = mixc(c, (th & 1) ? RGB(255, 255, 220) : RGB(0, 0, 0), ((th >> 3) % 5) * 0.008f); }
+    GQ((float)cx, z0, cx + 1.0f, z1, 0, c);
+    GQ((float)cx, z0 + 0.9f, cx + 1.0f, z1, 0.0005f, mixc(c, RGB(255, 255, 255), 0.06f)); }   // светлая кромка клетки - объём
   // каменные площадки под башнями: плитка со швами
   { u32 st = mixc(ar.path, RGB(170, 165, 155), 0.5f), st2 = mixc(st, RGB(0, 0, 0), 0.12f), seam = mixc(st, RGB(0, 0, 0), 0.35f);
     for (int tm = 0; tm < 2; tm++) for (int k = 0; k < 3; k++) { float px = k == 0 ? 9.0f : BRIDGE_X[k - 1], pz = zOf(tm, k == 0 ? 3.0f : 6.5f), hr = k == 0 ? 2.5f : 2.0f;
@@ -2132,20 +2138,42 @@ static void drawArena(bool placing, int placeCard) {
   GQ(BRIDGE_X[0], 3.2f, BRIDGE_X[1], 4.2f, 0.004f, ar.path); GQ(BRIDGE_X[0], AL - 4.2f, BRIDGE_X[1], AL - 3.2f, 0.004f, ar.path);
   // река с волнами
   u32 water = B.arena == 4 ? RGB(240, 110, 30) : (B.arena == 3 ? RGB(120, 180, 220) : RGB(60, 140, 210));
-  GQ(-14, RIVER_Z - RIVER_HW, AW + 14, RIVER_Z + RIVER_HW, -0.08f, water);
-  for (int k = 0; k < 8; k++) { float wx = fmodf(k * 2.7f + gTime * 0.6f, AW + 4) - 2; GQ(wx, RIVER_Z - 0.2f + (k % 3) * 0.25f - 0.25f, wx + 1.2f, RIVER_Z - 0.1f + (k % 3) * 0.25f - 0.25f, -0.07f, mixc(water, RGB(255, 255, 255), 0.35f)); }
+  GQ(-14, RIVER_Z - RIVER_HW, AW + 14, RIVER_Z + RIVER_HW, -0.015f, water);
+  GQ(-14, RIVER_Z - RIVER_HW * 0.35f, AW + 14, RIVER_Z + RIVER_HW * 0.35f, -0.014f, mixc(water, RGB(0, 0, 40), 0.18f));    // глубина посередине
+  for (int k = 0; k < 8; k++) { float wx = fmodf(k * 2.7f + gTime * 0.6f, AW + 4) - 2; GQ(wx, RIVER_Z - 0.2f + (k % 3) * 0.25f - 0.25f, wx + 1.2f, RIVER_Z - 0.1f + (k % 3) * 0.25f - 0.25f, -0.012f, mixc(water, RGB(255, 255, 255), 0.35f)); }
+  for (int k = 0; k < 14; k++) { float wx = fmodf(k * 1.9f - gTime * 0.9f + 50, AW + 4) - 2; float wz = RIVER_Z + ((k * 7) % 5 - 2) * 0.2f; GQ(wx, wz, wx + 0.5f, wz + 0.06f, -0.011f, mixc(water, RGB(255, 255, 255), 0.55f)); }   // блики
   for (int s = -1; s <= 1; s += 2) GQ(-14, RIVER_Z + s * RIVER_HW - (s > 0 ? 0 : 0.18f), AW + 14, RIVER_Z + s * RIVER_HW + (s > 0 ? 0.18f : 0), 0.0f, mixc(ar.path, RGB(0, 0, 0), 0.25f));
+  // каменные берега
+  for (int sd = -1; sd <= 1; sd += 2) for (int k = 0; k < 24; k++) { float bx = k * 0.78f + ((k * 37) % 7) * 0.03f; if (onBridgeX(bx)) continue; float bz = RIVER_Z + sd * (RIVER_HW + 0.05f);
+    BX(bx, 0.05f, bz, 0.36f + (k % 3) * 0.03f, 0.06f, 0.14f, 0, mixc(ar.decoKind == 4 ? RGB(60, 45, 40) : RGB(140, 135, 128), RGB(0, 0, 0), (k % 4) * 0.06f)); }
   // мосты
   for (int s = 0; s < 2; s++) { float bx = BRIDGE_X[s];
     for (int k = 0; k < 6; k++) BX(bx, 0.03f, RIVER_Z - RIVER_HW - 0.3f + k * 0.52f, BRIDGE_HW, 0.06f, 0.24f, 0, k & 1 ? RGB(150, 105, 65) : RGB(135, 95, 58));
     for (int sd = -1; sd <= 1; sd += 2) { BX(bx + sd * (BRIDGE_HW + 0.05f), 0.32f, RIVER_Z, 0.06f, 0.05f, RIVER_HW + 0.4f, 0, RGB(110, 75, 45));
       for (int k = 0; k < 3; k++) BX(bx + sd * (BRIDGE_HW + 0.05f), 0.18f, RIVER_Z - RIVER_HW - 0.2f + k * (RIVER_HW + 0.2f), 0.07f, 0.18f, 0.07f, 0, RGB(100, 68, 40)); } }
   // ограда по краям
-  for (int sd = 0; sd < 2; sd++) { float bx = sd ? AW + 0.35f : -0.35f;
-    for (int k = 0; k < 16; k++) { float z = k * 2.0f + 1.0f; if (fabsf(z - RIVER_Z) < RIVER_HW + 0.5f) continue; BX(bx, 0.35f, z, 0.3f, 0.35f, 0.95f, 0, mixc(ar.border, RGB(255, 255, 255), (k & 1) * 0.06f)); BX(bx, 0.75f, z, 0.34f, 0.06f, 0.99f, 0, mixc(ar.border, RGB(0, 0, 0), 0.2f)); } }
-  for (int sd = 0; sd < 2; sd++) { float bz = sd ? AL + 0.35f : -0.35f; for (int k = 0; k < 9; k++) BX(k * 2.0f + 1.0f, 0.35f, bz, 0.95f, 0.35f, 0.3f, 0, mixc(ar.border, RGB(255, 255, 255), (k & 1) * 0.06f)); }
+  u32 wall = ar.decoKind == 3 ? RGB(205, 220, 235) : (ar.decoKind == 4 ? RGB(80, 62, 56) : (ar.decoKind == 2 ? RGB(150, 140, 125) : RGB(160, 155, 145)));
+  for (int sd = 0; sd < 2; sd++) { float bx = sd ? AW + 0.35f : -0.35f;                                     // каменная стена с зубцами по бокам
+    for (int k = 0; k < 32; k++) { float z = k + 0.5f; if (fabsf(z - RIVER_Z) < RIVER_HW + 0.3f) continue; u32 c = mixc(wall, RGB(0, 0, 0), ((k * 7) % 3) * 0.06f);
+      BX(bx, 0.3f, z, 0.32f, 0.3f, 0.49f, 0, c); if (k & 1) BX(bx, 0.7f, z, 0.3f, 0.1f, 0.35f, 0, mixc(c, RGB(255, 255, 255), 0.08f)); }
+    for (int k = 0; k < 4; k++) { float z = k < 2 ? 4.0f + k * 8.0f : AL - 4.0f - (k - 2) * 8.0f; int tm = z < RIVER_Z ? 0 : 1; u32 fc = teamCol(viewTeam == 0 ? tm : 1 - tm);   // флаги команд
+      BX(bx, 1.2f, z, 0.04f, 0.9f, 0.04f, 0, RGB(90, 70, 50)); float wv = sinf(gTime * 3 + k + sd) * 0.05f; BX(bx + (sd ? 0.3f : -0.3f), 1.75f + wv, z, 0.28f, 0.2f, 0.02f, 0, fc); BX(bx + (sd ? 0.3f : -0.3f), 1.57f + wv, z, 0.28f, 0.03f, 0.022f, 0, RGB(240, 210, 90)); } }
+  for (int sd = 0; sd < 2; sd++) { float bz = sd ? AL + 0.35f : -0.35f; for (int k = 0; k < 18; k++) { u32 c = mixc(wall, RGB(0, 0, 0), ((k * 5) % 3) * 0.06f); BX(k + 0.5f, 0.3f, bz, 0.49f, 0.3f, 0.32f, 0, c); if (k & 1) BX(k + 0.5f, 0.7f, bz, 0.35f, 0.1f, 0.3f, 0, mixc(c, RGB(255, 255, 255), 0.08f)); } }
+  for (int s2 = 0; s2 < 2; s2++) for (int e = -1; e <= 1; e += 2) { float tx = BRIDGE_X[s2] + (s2 ? 1 : -1) * (BRIDGE_HW + 0.5f), tz = RIVER_Z + e * (RIVER_HW + 0.55f);   // факелы у мостов
+    BX(tx, 0.45f, tz, 0.07f, 0.45f, 0.07f, 0, RGB(80, 60, 45)); BX(tx, 0.92f, tz, 0.12f, 0.04f, 0.12f, 0, RGB(60, 55, 50));
+    float fl = 0.06f * sinf(gTime * 13 + tx * 3 + tz); GLOW(tx, 1.08f + fl, tz, 0.22f, RGB(255, 140, 40), 200); GLOW(tx, 1.08f, tz, 0.55f, RGB(255, 180, 80), 45); }
+  // трава с цветами и камешками на клетках
+  for (int k = 0; k < 90; k++) { unsigned h = hsh(k * 2654435761u + B.arena * 97u); float px = 0.3f + (h % 1740) / 100.0f, pz = 0.3f + ((h >> 11) % 3140) / 100.0f;
+    if (fabsf(pz - RIVER_Z) < RIVER_HW + 0.4f) continue; if (fabsf(px - BRIDGE_X[0]) < 0.8f || fabsf(px - BRIDGE_X[1]) < 0.8f) continue;
+    bool nearT = false; for (int tm = 0; tm < 2; tm++) { if (fabsf(px - 9) < 2.8f && fabsf(pz - zOf(tm, 3.0f)) < 2.8f) nearT = true; for (int q = 0; q < 2; q++) if (fabsf(px - BRIDGE_X[q]) < 2.3f && fabsf(pz - zOf(tm, 6.5f)) < 2.3f) nearT = true; } if (nearT) continue;
+    int kind = (h >> 24) % 10; u32 c;
+    if (ar.decoKind == 3) c = kind < 6 ? RGB(250, 252, 255) : RGB(170, 210, 240);                          // снег и льдинки
+    else if (ar.decoKind == 4) { c = kind < 3 ? RGB(255, 120, 30) : RGB(40, 30, 28); if (kind < 3) GLOW(px, 0.05f, pz, 0.12f, RGB(255, 120, 30), 60); }   // угли
+    else if (ar.decoKind == 2) c = kind < 4 ? RGB(230, 225, 210) : RGB(95, 88, 76);                          // косточки и камешки
+    else c = kind < 2 ? RGB(250, 245, 240) : (kind < 4 ? RGB(250, 215, 60) : (kind < 5 ? RGB(230, 90, 120) : mixc(ar.grass, RGB(0, 40, 0), 0.25f)));   // ромашки, лютики, тюльпаны, кустики травы
+    if (kind >= 5 && ar.decoKind != 4) BX(px, 0.05f, pz, 0.05f, 0.05f, 0.02f, k, c); else GQ(px - 0.07f, pz - 0.07f, px + 0.07f, pz + 0.07f, 0.004f, c); }
   // украшения вокруг
-  for (int k = 0; k < 18; k++) { unsigned h = hsh(k * 31u + B.arena * 7u); float side = (k & 1) ? -1 : 1, x = side < 0 ? -2.0f - (h % 300) / 100.0f : AW + 2.0f + (h % 300) / 100.0f, z = (k / 2) * 3.6f + ((h >> 9) % 100) / 100.0f;
+  for (int k = 0; k < 30; k++) { unsigned h = hsh(k * 31u + B.arena * 7u); float side = (k & 1) ? -1 : 1, x = side < 0 ? -2.0f - (h % 300) / 100.0f : AW + 2.0f + (h % 300) / 100.0f, z = (k / 2) * 2.3f - 1.0f + ((h >> 9) % 100) / 100.0f;
     drawTree(x, z, 0.9f + ((h >> 4) & 7) / 14.0f, ar.decoKind == 5 ? 0 : ar.decoKind); }
   if (ar.decoKind == 5) for (int sd = 0; sd < 2; sd++) for (int k = 0; k < 5; k++) { float x = sd ? AW + 1.5f : -1.5f, z = 3.0f + k * 6.5f; BX(x, 1.2f, z, 0.5f, 1.2f, 0.5f, 0, RGB(170, 165, 155)); BX(x, 2.6f, z, 0.25f, 0.2f, 0.4f, 0, sd ? COL_EN : COL_ME); }
 }

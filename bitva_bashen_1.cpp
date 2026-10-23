@@ -1429,7 +1429,7 @@ static bool canPlace(int team, int card, float x, float z) {
   if (x >= 9.0f && !towerAlive(enemy, 2)) maxZ = 21.5f;
   if (lz > maxZ) return false;
   if (fabsf(z - RIVER_Z) < RIVER_HW + 0.2f) return false;
-  for (size_t i = 0; i < B.units.size(); i++) { const Unit &u = B.units[i]; if (!u.alive || UT(u).kind != UT_TOWER) continue; float r = UT(u).radius + 0.3f; if (fabsf(u.x - x) < r && fabsf(u.z - z) < r) return false; }
+  for (size_t i = 0; i < B.units.size(); i++) { const Unit &u = B.units[i]; if (!u.alive || UT(u).kind != UT_TOWER) continue; float r = UT(u).radius + 0.3f, ddx = u.x - x, ddz = u.z - z; if (u.type == U_PRINCESS ? ddx * ddx + ddz * ddz < r * r : (fabsf(ddx) < r && fabsf(ddz) < r)) return false; }
   return true;
 }
 static const float COLL_T = 9.0f;                                   // сборник эликсира: 1 эликсир раз в 9 с (в двойной эликсир - вдвое чаще)
@@ -1623,6 +1623,24 @@ static void updateSpells(float dt) {
 
 // ---- движение ----
 static bool onBridge(float x) { return fabsf(x - BRIDGE_X[0]) < BRIDGE_HW || fabsf(x - BRIDGE_X[1]) < BRIDGE_HW; }
+// обход препятствий: если на прямом пути башня или здание, боец заранее сворачивает и идёт по касательной к их кругу
+static void steerAround(const Unit &u, float gx, float gz, float &dx, float &dz, float l) {
+  float ux = dx / l, uz = dz / l, bestT = 1e9f, bestR = 0; int best = -1; const float ur = UT(u).radius;
+  for (size_t i = 0; i < B.units.size(); i++) { const Unit &o = B.units[i];
+    if (!o.alive || o.id == u.id || UT(o).kind == UT_TROOP || UT(o).air) continue;
+    float R = UT(o).radius + ur + 0.15f, gox = gx - o.x, goz = gz - o.z;
+    if (gox * gox + goz * goz < (R + 0.3f) * (R + 0.3f)) continue;               // идём к самой башне - не обходим
+    float ox = o.x - u.x, oz = o.z - u.z, tt = ox * ux + oz * uz;
+    if (tt <= 0 || tt - R > l) continue;                                           // позади или дальше цели
+    float cr = ux * oz - uz * ox; if (fabsf(cr) >= R) continue;                   // прямой путь проходит мимо
+    if (tt < bestT) { bestT = tt; best = (int)i; bestR = R; } }
+  if (best < 0) return;
+  const Unit &o = B.units[best]; float ox = o.x - u.x, oz = o.z - u.z, dc = sqrtf(ox * ox + oz * oz) + 1e-4f, cr = ux * oz - uz * ox;
+  float sgn = fabsf(cr) > 0.05f ? (cr < 0 ? 1.0f : -1.0f) : ((u.id & 1) ? 1.0f : -1.0f);   // обходим с той стороны, где уже ближе
+  float a = (asinf(fminv(1.0f, bestR / dc)) + (dc < bestR + 0.1f ? 0.15f : 0.0f)) * sgn;  // вплотную - чуть наружу
+  float hx = ox / dc, hz = oz / dc, cs = cosf(a), sn = sinf(a);
+  dx = (hx * cs - hz * sn) * l; dz = (hx * sn + hz * cs) * l;
+}
 static void moveToward(Unit &u, float tx, float tz, float dt) {
   const UnitT &t = UT(u); float sp = t.speed * (u.charging ? 2.0f : 1.0f) * (u.slowT > 0 ? 0.65f : 1.0f);
   float gx = tx, gz = tz;
@@ -1634,6 +1652,7 @@ static void moveToward(Unit &u, float tx, float tz, float dt) {
     else { gx = bx + clampf(u.x - bx, -0.4f, 0.4f); gz = RIVER_Z - sd * (RIVER_HW + 0.8f); } }
   float dx = gx - u.x, dz = gz - u.z, l = sqrtf(dx * dx + dz * dz);
   if (l < 1e-4f) return;
+  if (!t.air) steerAround(u, gx, gz, dx, dz, l);
   float st = fminv(l, sp * dt); u.x += dx / l * st; u.z += dz / l * st; u.chargeDist += st;
   u.face = atan2f(dx, dz); u.moving = true;
 }
@@ -1877,6 +1896,26 @@ static bool screenToArena(int sx, int sy, float &wx, float &wz) {
 // ---- примитивы в мировых координатах боя ----
 static void BX(float x, float y, float z, float hx, float hy, float hz, float yaw, u32 col) { drawBox(RP(x, y, z), v3(hx, hy, hz), RY(yaw), col, true); }
 static void BXF(float x, float y, float z, float hx, float hy, float hz, float yaw, u32 col) { drawBox(RP(x, y, z), v3(hx, hy, hz), RY(yaw), col, false); }
+// вертикальный цилиндр: центр, радиус, полувысота, число граней (до 24)
+static void CYL(float x, float y, float z, float r, float hh, int N, u32 col) {
+  if (gDry) return; N = clampi(N, 6, 24); V3 c = RP(x, y, z), ring[24], p[4], cap[24], up = v3(0, hh, 0);
+  for (int i = 0; i < N; i++) { float a = 6.2831853f * (i + 0.5f) / N; ring[i] = v3(cosf(a) * r, 0, sinf(a) * r); }
+  for (int i = 0; i < N; i++) { int j = (i + 1) % N; p[0] = c + ring[i] - up; p[1] = c + ring[j] - up; p[2] = c + ring[j] + up; p[3] = c + ring[i] + up; faceN(p, 4, vnorm(ring[i] + ring[j]), col, true); }
+  for (int i = 0; i < N; i++) cap[i] = c + ring[i] + up; faceN(cap, N, v3(0, 1, 0), col, true);
+}
+// круг на земле из N граней
+static void DISCN(float x, float z, float r, float y, int N, u32 col) {
+  if (gLight < 0.999f) col = shadec(col, gLight); N = clampi(N, 3, 24); V3 a = RP(x, 0, z), vv[24];
+  for (int i = 0; i < N; i++) { float t = 6.2831853f * i / N; vv[i] = toView(v3(a.x + cosf(t) * r, y, a.z + sinf(t) * r)); }
+  drawPolyView(vv, N, col);
+}
+// кусок кольца на земле (плитка круглой площадки)
+static void RINGSEG(float x, float z, float r0, float r1, float a0, float a1, float y, u32 col) {
+  if (gLight < 0.999f) col = shadec(col, gLight); V3 a = RP(x, 0, z), vv[4];
+  vv[0] = toView(v3(a.x + cosf(a0) * r0, y, a.z + sinf(a0) * r0)); vv[1] = toView(v3(a.x + cosf(a0) * r1, y, a.z + sinf(a0) * r1));
+  vv[2] = toView(v3(a.x + cosf(a1) * r1, y, a.z + sinf(a1) * r1)); vv[3] = toView(v3(a.x + cosf(a1) * r0, y, a.z + sinf(a1) * r0));
+  drawPolyView(vv, 4, col);
+}
 static void GQ(float x0, float z0, float x1, float z1, float y, u32 col) { V3 a = RP(x0, 0, z0), b = RP(x1, 0, z1); groundQuad(fminv(a.x, b.x), fminv(a.z, b.z), fmaxv(a.x, b.x), fmaxv(a.z, b.z), y, col); }
 static void DISC(float x, float z, float r, float y, u32 col) { V3 a = RP(x, 0, z); discOct(a.x, a.z, r, y, col); }
 static void GLOW(float x, float y, float z, float r, u32 col, int a) {
@@ -2233,13 +2272,14 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       BX(x + 0.45f, y + 1.55f, z - 0.2f, 0.07f, 0.25f, 0.07f, 0, FZ(RGB(90, 80, 75)));
       LP(x, z, yaw, 0.0f, 0.58f, dx, dz); BX(dx, y + 0.8f, dz, 0.24f, 0.08f, 0.01f, yaw, FZ(tc)); } break;
     case M_PRINCESS: { u32 st = FZ(RGB(175, 170, 160)), sd = FZ(RGB(140, 135, 128));
-      BX(x, y + 1.2f, z, 1.2f, 1.2f, 1.2f, 0, st); BX(x, y + 1.2f, z, 1.0f, 1.21f, 1.0f, 0.785f, st);
-      BX(x, y + 0.2f, z, 1.3f, 0.2f, 1.3f, 0, sd);
-      for (int k = 0; k < 8; k++) { float a = k * 0.785f; BX(x + sinf(a) * 1.15f, y + 2.55f, z + cosf(a) * 1.15f, 0.22f, 0.18f, 0.22f, a, st); }
-      BX(x, y + 2.42f, z, 1.25f, 0.05f, 1.25f, 0, sd);
-      // флаги и полосы цвета команды
-      BX(x, y + 1.7f, z + 1.21f * (viewTeam == 0 ? 1 : 1), 0.4f, 0.35f, 0.02f, 0, FZ(tc));
-      BX(x + 0.9f, y + 3.4f, z + 0.9f, 0.025f, 0.7f, 0.025f, 0, FZ(RGB(100, 80, 60))); BX(x + 0.9f + 0.18f, y + 3.85f, z + 0.9f, 0.18f, 0.12f, 0.01f, 0, FZ(tc));
+      CYL(x, y + 0.2f, z, 1.4f, 0.2f, 20, sd);                                   // круглое основание
+      CYL(x, y + 1.3f, z, 1.22f, 1.1f, 20, st);                                  // круглый корпус
+      CYL(x, y + 0.9f, z, 1.24f, 0.035f, 20, sd); CYL(x, y + 1.9f, z, 1.24f, 0.035f, 20, sd);   // каменные пояса
+      CYL(x, y + 2.42f, z, 1.32f, 0.06f, 20, sd);                                 // карниз
+      for (int k = 0; k < 10; k++) { float a = k * 0.6283f; BX(x + sinf(a) * 1.2f, y + 2.64f, z + cosf(a) * 1.2f, 0.2f, 0.16f, 0.13f, a, st); }   // зубцы по кругу
+      // флаг-полотно цвета команды, изогнутое по стене
+      for (int k = -1; k <= 1; k++) { float a = k * 0.3f; BX(x + sinf(a) * 1.24f, y + 1.4f, z + cosf(a) * 1.24f, 0.19f, 0.36f, 0.02f, a, FZ(tc)); }
+      BX(x + 0.75f, y + 3.4f, z + 0.75f, 0.025f, 0.7f, 0.025f, 0, FZ(RGB(100, 80, 60))); BX(x + 0.75f + 0.18f, y + 3.85f, z + 0.75f, 0.18f, 0.12f, 0.01f, 0, FZ(tc));
       gHair = FZ(RGB(240, 200, 90)); humanoid(x, y + 2.47f, z, yaw, 1.0f, FZ(RGB(250, 215, 185)), FZ(RGB(230, 120, 170)), FZ(RGB(180, 90, 140)), FZ(tc), 0, atk, WP_BOW, HT_CROWN, 0, false); gHair = 0;
       if (life01 < 0) { /* развалины */ } } break;
     case M_KING: { u32 st = FZ(RGB(180, 175, 165)), sd = FZ(RGB(145, 140, 132));
@@ -2430,6 +2470,9 @@ static void drawArena(bool placing, int placeCard) {
   // каменные площадки под башнями: плитка со швами
   { u32 st = mixc(ar.path, RGB(170, 165, 155), 0.5f), st2 = mixc(st, RGB(0, 0, 0), 0.12f), seam = mixc(st, RGB(0, 0, 0), 0.35f);
     for (int tm = 0; tm < 2; tm++) for (int k = 0; k < 3; k++) { float px = k == 0 ? 9.0f : BRIDGE_X[k - 1], pz = zOf(tm, k == 0 ? 3.0f : 6.5f), hr = k == 0 ? 2.5f : 2.0f;
+      if (k > 0) { DISCN(px, pz, hr + 0.1f, 0.002f, 24, seam);                   // башня принцессы: круглая площадка, плитка кольцом
+        for (int sg = 0; sg < 24; sg++) { float a0 = sg * 0.2618f + 0.02f, a1 = (sg + 1) * 0.2618f - 0.02f; RINGSEG(px, pz, 1.52f, hr, a0, a1, 0.003f, (sg & 1) ? st : st2); }
+        DISCN(px, pz, 1.46f, 0.003f, 24, st2); continue; }
       GQ(px - hr - 0.08f, pz - hr - 0.08f, px + hr + 0.08f, pz + hr + 0.08f, 0.002f, seam);
       for (int iz = 0; iz < (int)(hr * 2); iz++) for (int ix = 0; ix < (int)(hr * 2); ix++) GQ(px - hr + ix + 0.04f, pz - hr + iz + 0.04f, px - hr + ix + 0.96f, pz - hr + iz + 0.96f, 0.003f, ((ix + iz) & 1) ? st : st2); } }
   // дорожки: от башен к мостам
@@ -2628,7 +2671,7 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
   // юниты и башни (тени - тёмные круги)
   for (size_t i = 0; i < B.units.size(); i++) { const Unit &u = B.units[i]; const UnitT &t = UT(u);
     float x = u.px + (u.x - u.px) * alpha, z = u.pz + (u.z - u.pz) * alpha;
-    if (!u.alive) { if (t.kind == UT_TOWER) { BX(x, 0.25f, z, t.radius * 0.9f, 0.25f, t.radius * 0.9f, 0.3f, RGB(110, 105, 100)); BX(x + 0.4f, 0.55f, z - 0.3f, 0.5f, 0.3f, 0.4f, 0.7f, RGB(130, 125, 118)); } continue; }
+    if (!u.alive) { if (t.kind == UT_TOWER) { if (u.type == U_PRINCESS) CYL(x, 0.25f, z, t.radius * 0.9f, 0.25f, 16, RGB(110, 105, 100)); else BX(x, 0.25f, z, t.radius * 0.9f, 0.25f, t.radius * 0.9f, 0.3f, RGB(110, 105, 100)); BX(x + 0.4f, 0.55f, z - 0.3f, 0.5f, 0.3f, 0.4f, 0.7f, RGB(130, 125, 118)); } continue; }
     DISC(x, z, t.radius * (t.kind == UT_TOWER ? 1.0f : 0.9f), 0.012f, mixc(ARENAS[B.arena].grass, RGB(0, 0, 0), 0.35f));
     float y = t.air ? 2.0f + sinf(gTime * 3 + u.id) * 0.15f : 0;
     if (u.pullT > 0) STREAK(x, 0.9f, z, u.jx0, 1.4f, u.jz0, RGB(150, 150, 160), imax(2, (int)(focal / 120.0f)));   // натянутая цепь медного голема

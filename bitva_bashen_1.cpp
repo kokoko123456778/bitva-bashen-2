@@ -1060,7 +1060,7 @@ static const float AW = 18.0f, AL = 32.0f, RIVER_Z = 16.0f, RIVER_HW = 1.0f;
 static const float BRIDGE_X[2] = {3.5f, 14.5f}; static const float BRIDGE_HW = 1.1f;
 
 // ---- модели (как рисовать) ----
-enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, M_XBOW, M_BULL, M_GOLEM, M_NECRO, M_LANCER, M_BAT, M_BOMBER, M_GOBKING, M_DART, M_VOLAR, M_PUP, M_RECRUIT, M_ICEWIZ, M_BARB, M_EBARB, M_HOG, M_MEGA, M_STRONG, M_CGOLEM, M_FSPIRIT, M_ISPIRIT, M_SPARKY, M_ESPIRIT, M_IGIANT,
+enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, M_XBOW, M_BULL, M_GOLEM, M_NECRO, M_LANCER, M_BAT, M_BOMBER, M_GOBKING, M_DART, M_VOLAR, M_PUP, M_RECRUIT, M_ICEWIZ, M_BARB, M_EBARB, M_HOG, M_MEGA, M_STRONG, M_CGOLEM, M_FSPIRIT, M_ISPIRIT, M_SPARKY, M_ESPIRIT, M_IGIANT, M_TROJAN,
        M_CANNON, M_ATOWER, M_HUT, M_INFERNO, M_COLLECTOR, M_FURNACE, M_ICEROCK, M_PRINCESS, M_KING, NMODEL };
 
 // ---- юниты: войска, здания и башни ----
@@ -1068,7 +1068,7 @@ enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, 
 // sight - на каком расстоянии замечает врага; splash - радиус урона по площади; projV - скорость снаряда (0 - удар вблизи)
 enum { UT_TROOP, UT_BUILD, UT_TOWER };
 struct UnitT { const char *name; int model, kind; float hp, dmg, hitT, speed, range, radius, sight, splash, projV; bool air, onlyBuild, canAir; float mass, lifeT; int spawnU, spawnN; float spawnT, deathDmg, deathR; int deathU, deathN; float shield; };   // deathN > 0: при гибели распадается на deathN юнитов deathU
-enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ, U_BARB, U_EBARB, U_HOG, U_MEGA, U_STRONG, U_CGOLEM, U_FSPIRIT, U_ISPIRIT, U_SPARKY, U_ESPIRIT, U_IGIANT,
+enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ, U_BARB, U_EBARB, U_HOG, U_MEGA, U_STRONG, U_CGOLEM, U_FSPIRIT, U_ISPIRIT, U_SPARKY, U_ESPIRIT, U_IGIANT, U_TROJAN,
        U_CANNON, U_ATOWER, U_HUT, U_INFERNO, U_COLLECTOR, U_FURNACE, U_ICEROCK, U_PRINCESS, U_KING, NUNIT };
 static UnitT UNITS[NUNIT] = {
   //  имя                модель      вид       hp     урон  удар  скор  дальн радиус обзор  сплеш снаряд возд  здан  по возд масса жизнь
@@ -1103,6 +1103,7 @@ static UnitT UNITS[NUNIT] = {
   {"СПАРКИ",            M_SPARKY,   UT_TROOP, 848.2f,424.1f,2.0f, 0.7f, 4.5f, 0.6f,  6.0f, 1.8f, 12,    false, false, false, 16, 0, -1, 0, 0, 0, 0},   // ракетная тележка: на 10 ур. 2000 здоровья, ракета 1000 по площади, раз в 2 с
   {"ЭЛЕКТРОДУХ",        M_ESPIRIT,  UT_TROOP, 480,   85,  0.5f, 1.8f, 2.3f, 0.32f, 6.0f, 0,    0,     false, false, true,  2, 0, -1, 0, 0, 0, 0},   // прыгает на врага, молния цепью по 9 целям, оглушает
   {"ЛЕДЯНОЙ ВЕЛИКАН",   M_IGIANT,   UT_TROOP, 3300,  210, 1.5f, 1.0f, 0.7f, 0.75f, 7.5f, 0,    0,     false, true,  false, 18, 0, -1, 0, 0, 0, 0},   // как великан + ледяная аура: всё вокруг на 2 клетки медленнее на 45%
+  {"ТРОЯНСКИЙ КОНЬ",    M_TROJAN,   UT_TROOP, 636.2f,120, 1.0f, 1.0f, 0.6f, 0.75f, 7.5f, 0,    0,     false, true,  false, 14, 0, -1, 0, 0, 0, 0},   // едет к зданиям, таранит и разваливается: выходят 3 варвара и элитный варвар
   {"ПУШКА",             M_CANNON,   UT_BUILD, 800,   150, 0.8f, 0,    5.5f, 0.6f,  5.5f, 0,    18,    false, false, false, 99, 30, -1, 0, 0, 0, 0},
   {"БАШНЯ ЛУЧНИКОВ",    M_ATOWER,   UT_BUILD, 1100,  100, 0.9f, 0,    7.0f, 0.7f,  7.0f, 0,    16,    false, false, true,  99, 40, -1, 0, 0, 0, 0},
   {"ГОБЛИНСКАЯ ХИЖИНА", M_HUT,      UT_BUILD, 900,   0,   1.0f, 0,    0,    0.8f,  0,    0,    0,     false, false, false, 99, 40, U_GOBLIN, 1, 5.0f, 0, 0},
@@ -1122,7 +1123,7 @@ static const u32 RARC[NRAR] = {RGB(170, 220, 255), RGB(90, 200, 70), RGB(235, 90
 enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL, SP_MAGEFALL };   // SP_MAGEFALL - огненный шар, из которого появляется маг огня
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
-       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, C_STRONG, C_CGOLEM, C_INFERNO, C_COLLECTOR, C_FSPIRIT, C_ISPIRIT, C_FURNACE, C_ICEROCK, C_SPARKY, C_ESPIRIT, C_IGIANT, NCARD };
+       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, C_STRONG, C_CGOLEM, C_INFERNO, C_COLLECTOR, C_FSPIRIT, C_ISPIRIT, C_FURNACE, C_ICEROCK, C_SPARKY, C_ESPIRIT, C_IGIANT, C_TROJAN, NCARD };
 static Card CARDS[NCARD] = {
   {"РЫЦАРЬ",            3, CT_TROOP, RA_COMMON, U_KNIGHT,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "КРЕПКИЙ БОЕЦ С МЕЧОМ. ДЕРЖИТ УДАР И БЬЁТ ВБЛИЗИ."},
   {"ЛУЧНИЦЫ",           3, CT_TROOP, RA_COMMON, U_ARCHER,   2, 0, SP_NONE, 0, 0, 0, 0, 0, "ДВЕ ЛУЧНИЦЫ. СТРЕЛЯЮТ ИЗДАЛЕКА, ДОСТАЮТ ЛЕТАЮЩИХ."},
@@ -1169,6 +1170,7 @@ static Card CARDS[NCARD] = {
   {"СПАРКИ",            6, CT_TROOP, RA_LEGEND, U_SPARKY,   1, 4, SP_NONE, 0, 0, 0, 0, 0, "РАКЕТНАЯ ТЕЛЕЖКА. МЕДЛЕННО КАТИТСЯ И РАЗ В 2 СЕКУНДЫ ЗАПУСКАЕТ РАКЕТУ: ОГРОМНЫЙ УРОН ПО ПЛОЩАДИ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
   {"ЭЛЕКТРОДУХ",        1, CT_TROOP, RA_COMMON, U_ESPIRIT,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-МОЛНИЯ. ПРЫГАЕТ НА ВРАГА, И МОЛНИЯ ЦЕПЬЮ БЬЁТ ДО 9 ВРАГОВ ПОДРЯД И ОГЛУШАЕТ ИХ. БЬЁТ И ЛЕТАЮЩИХ."},
   {"ЛЕДЯНОЙ ВЕЛИКАН",   5, CT_TROOP, RA_EPIC,   U_IGIANT,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ЗДОРОВЬЕ И УДАР КАК У ВЕЛИКАНА. ВОКРУГ НЕГО ЛЕДЯНОЙ ХОЛОД: ВСЕ ВРАГИ В 2 КЛЕТКАХ ХОДЯТ И БЬЮТ НА 45% МЕДЛЕННЕЕ."},
+  {"ТРОЯНСКИЙ КОНЬ",    6, CT_TROOP, RA_EPIC,   U_TROJAN,   1, 5, SP_NONE, 0, 0, 0, 0, 0, "ДЕРЕВЯННЫЙ КОНЬ НА КОЛЁСАХ. ЕДЕТ К ЗДАНИЯМ И БАШНЯМ, ТАРАНИТ ИХ И РАЗВАЛИВАЕТСЯ. ИЗНУТРИ ВЫХОДЯТ 3 ВАРВАРА И ЭЛИТНЫЙ ВАРВАР - ДАЖЕ ЕСЛИ КОНЯ СЛОМАЮТ."},
 };
 static const int START_DECK[8] = {C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON};
 
@@ -1255,7 +1257,7 @@ typedef ProfileBaseT<MAXCARDS> ProfileV2;                           // прош�
 typedef ProfileBaseT<23> ProfileV1;                                 // первая версия (23 карты)
 static_assert(NCARD <= MAXCARDS, "карт больше запаса");
 // ---- баланс: множители силы карт, подобраны на 24 000 боях ботов (цель - 49-52% побед) ----
-static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.269f};
+static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.269f, 1.000f};
 static void balanceInit() {   // МЕДНЫЙ ГОЛЕМ и ИНФЕРНО: +20% здоровья и урона (по боям ботов они были слабейшими)
   static bool done = false; if (done) return; done = true;
   for (int c = 0; c < NCARD; c++) { float k = BAL_K[c]; if (fabsf(k - 1) < 1e-4f) continue; Card &cd = CARDS[c];
@@ -1597,6 +1599,8 @@ static void killUnit(Unit &u) {
     if (B.over) bEvent(BE_END, B.winner, 0, 0, 0);
   } else {
     if (!isSpirit(u.type)) addFx(FX_DEATH, u.team, u.x, u.z, u.y, 0.6f, t.radius); bEvent(BE_DEATH, u.team, u.x, u.z, u.type);   // у духов вместо дыма - свой взрыв
+    if (u.type == U_TROJAN) { static const float OX[4] = {-0.45f, 0.45f, -0.45f, 0.0f}, OZ[4] = {0.35f, 0.35f, -0.35f, -0.1f}; float cs = cosf(u.face), sn = sinf(u.face), ux = u.x, uz = u.z; int tm = u.team, lv = u.lvl;   // из коня: 3 варвара и элитный варвар (копии - список бойцов может сдвинуться)
+      for (int k = 0; k < 4; k++) { float ox = OX[k] * cs + OZ[k] * sn, oz = -OX[k] * sn + OZ[k] * cs; spawnUnit(k < 3 ? U_BARB : U_EBARB, tm, lv, clampf(ux + ox, 0.5f, AW - 0.5f), clampf(uz + oz, 0.5f, AL - 0.5f), 0.2f); } }
     if (t.deathN > 0) { for (int k = 0; k < t.deathN; k++) { float a = k * 6.2832f / t.deathN; spawnUnit(t.deathU, u.team, u.lvl, clampf(u.x + cosf(a) * 0.7f, 0.5f, AW - 0.5f), clampf(u.z + sinf(a) * 0.7f, 0.5f, AL - 0.5f), 0.15f); }
       addFx(FX_BOOM, u.team, u.x, u.z, u.y, 0.6f, 1.2f); bEvent(BE_BOOM, u.team, u.x, u.z); }                // распался на щенков
     if (t.deathDmg > 0) { splashAt(u.x, u.z, t.deathR, t.deathDmg * lvlK(u.lvl), u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, t.deathR); bEvent(BE_BOOM, u.team, u.x, u.z); }
@@ -1775,7 +1779,8 @@ static void updateUnit(Unit &u, float dt) {
     u.jumpDur = 0; u.jumpH = 0; u.jumpT = 0.8f; u.jumpCD = 3.0f; u.jx0 = u.x; u.jz0 = u.z; float dx = tg->x - u.x, dz = tg->z - u.z, l = sqrtf(dx * dx + dz * dz) + 1e-4f, back = UT(*tg).radius + t.radius * 0.6f;
     u.jx1 = tg->x - dx / l * back; u.jz1 = tg->z - dz / l * back; u.face = atan2f(dx, dz); return; }
   if (d <= t.range) {
-    if (isSpirit(u.type)) { if (u.jumpT <= 0) spiritLeap(u, *tg); return; }   // духи не бьют, а прыгают на врага
+    if (isSpirit(u.type)) { if (u.jumpT <= 0) spiritLeap(u, *tg); return; }
+    if (u.type == U_TROJAN) { dealDmg(*tg, u.dmg, u.team); addFx(FX_BOOM, u.team, (u.x + tg->x) * 0.5f, (u.z + tg->z) * 0.5f, 0.6f, 0.5f, 1.0f); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); u.hp = 0; killUnit(u); return; }   // троянский конь: таранит и разваливается   // духи не бьют, а прыгают на врага
     if (!u.attacking) { u.attacking = true; u.atkCD = fmaxv(u.atkCD, t.hitT * 0.35f); }
     u.face = atan2f(tg->x - u.x, tg->z - u.z);
     if (u.type == U_INFERNO) { if (u.target != u.infTg) { u.infTg = u.target; u.infT = 0; } u.infT += dt; }   // тот же враг - луч разогревается
@@ -2150,6 +2155,25 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       gNoWarp--;
       for (int k = 0; k < 4; k++) PART(-0.09f + k * 0.06f, 0.96f, 0.02f, 0.022f, 0.035f + (k & 1) * 0.02f, 0.022f, ice);           // ледяная корона-сосульки на голове
     } break;
+    case M_TROJAN: { s = 1.0f * US; u32 wd = FZ(RGB(176, 124, 72)), wdD = FZ(RGB(128, 86, 48)), wdL = FZ(RGB(204, 154, 98)), iron = FZ(RGB(86, 88, 100)), tire = FZ(RGB(70, 46, 28)), mane = FZ(RGB(92, 58, 32));   // троянский конь: деревянный конь на тележке
+      float wr = walk * 0.8f, bob = fabsf(sinf(walk)) * 0.015f;
+      { float cy = cosf(RY(yaw)), sy = sinf(RY(yaw)); V3 axw = v3(cy, 0, -sy), azw = v3(sy, 0, cy);           // 4 колеса, крутятся на ходу
+        for (int k = 0; k < 4; k++) { float wx = (k & 1) ? 0.36f : -0.36f, wz = (k & 2) ? 0.42f : -0.42f, px, pz; LP(x, z, yaw, wx * s, wz * s, px, pz); V3 c = RP(px, y + 0.17f * s, pz);
+          drawWheel(c, axw, v3(0, 1, 0), azw, 0.17f * s, 0.06f * s, tire); drawWheel(c + axw * (wx > 0 ? 0.065f * s : -0.065f * s), axw, v3(0, 1, 0), azw, 0.07f * s, 0.01f * s, iron);
+          PART(wx * 1.2f, 0.17f + sinf(wr) * 0.1f, wz + cosf(wr) * 0.1f, 0.006f, 0.02f, 0.02f, wdD); } }
+      PART(0, 0.26f, 0, 0.32f, 0.05f, 0.56f, wdD); PART(0, 0.26f, 0, 0.33f, 0.018f, 0.57f, FZ(tc));             // тележка и полоса цвета команды
+      for (int k = 0; k < 4; k++) PART((k & 1) ? 0.16f : -0.16f, 0.46f + bob, (k & 2) ? 0.34f : -0.34f, 0.06f, 0.14f, 0.06f, wdD);   // ноги
+      PART(0, 0.73f + bob, 0, 0.21f, 0.15f, 0.42f, wd);                                                       // туловище
+      for (int k = 0; k < 4; k++) PART(0, 0.73f + bob, -0.3f + k * 0.2f, 0.215f, 0.155f, 0.012f, wdD);        // доски
+      PART(0, 0.89f + bob, 0, 0.17f, 0.02f, 0.3f, FZ(tc)); PART(0, 0.86f + bob, 0, 0.22f, 0.05f, 0.31f, mixc(FZ(tc), RGB(255, 255, 255), 0.25f));   // попона цвета команды
+      PART(0.216f, 0.7f + bob, 0.05f, 0.006f, 0.08f, 0.1f, wdL); PART(0.218f, 0.7f + bob, 0.05f, 0.004f, 0.06f, 0.075f, FZ(RGB(40, 26, 16)));   // люк сбоку, там варвары
+      PART(0, 1.0f + bob, 0.36f, 0.09f, 0.2f, 0.09f, wd); PART(0, 1.06f + bob, 0.37f, 0.095f, 0.012f, 0.095f, wdD);   // шея
+      PART(0, 1.2f + bob, 0.46f, 0.1f, 0.1f, 0.18f, wd); PART(0, 1.16f + bob, 0.62f, 0.085f, 0.08f, 0.06f, wdL);     // голова и морда
+      PART(-0.06f, 1.34f + bob, 0.38f, 0.025f, 0.05f, 0.025f, wdD); PART(0.06f, 1.34f + bob, 0.38f, 0.025f, 0.05f, 0.025f, wdD);   // уши
+      PART(-0.101f, 1.23f + bob, 0.52f, 0.004f, 0.025f, 0.025f, RGB(20, 16, 14)); PART(0.101f, 1.23f + bob, 0.52f, 0.004f, 0.025f, 0.025f, RGB(20, 16, 14));   // глаза
+      for (int k = 0; k < 4; k++) PART(0, 1.0f + bob + k * 0.07f, 0.27f - k * 0.02f, 0.03f, 0.05f, 0.03f, mane);   // грива
+      PART(0, 0.78f + bob, -0.46f, 0.03f, 0.03f, 0.06f, mane); PART(0, 0.68f + bob, -0.52f, 0.025f, 0.1f, 0.025f, mane);   // хвост
+      PART(0, 0.27f, 0.6f, 0.07f, 0.05f, 0.06f, iron); } break;                                              // окованный таранный нос
     case M_ESPIRIT: { s = 0.95f * US; float bob = fabsf(sinf(walk * 2.6f)) * 0.06f, lg = sinf(walk * 2.6f) * 0.07f; u32 eb = FZ(RGB(70, 140, 245)), ew = FZ(RGB(200, 230, 255)), ey = FZ(RGB(255, 230, 70));   // электродух: синий шарик с молниями
       float bl = (fmodf(gTime * 0.7f + x * 0.29f + z * 0.41f, 3.4f) < 0.12f) ? 0.2f : 1.0f, mo = atk > 0.3f ? 0.07f : 0.03f, fl = fmodf(gTime * 9 + x, 1.0f) < 0.5f ? 1.0f : 0.0f;
       PART(-0.1f, 0.06f, lg, 0.06f, 0.06f, 0.07f, FZ(RGB(50, 100, 200))); PART(0.1f, 0.06f, -lg, 0.06f, 0.06f, 0.07f, FZ(RGB(50, 100, 200)));
@@ -2473,7 +2497,7 @@ static void drawIceAura(float x, float z) {                       // круг х
 }
 static float modelTop(int model) { return modelTop0(model) * (model < M_CANNON ? 1.35f : 1.0f) + (model < M_CANNON ? 0.12f : 0.0f); }
 static float modelTop0(int model) {
-  switch (model) { case M_IGIANT: return 2.3f; case M_ESPIRIT: return 0.8f; case M_GIANT: return 2.2f; case M_GOLEM: return 1.95f; case M_PRINCESS: return 4.6f; case M_KING: return 4.3f; case M_ATOWER: return 3.7f; case M_INFERNO: return 2.6f; case M_FSPIRIT: return 0.8f; case M_ISPIRIT: return 0.8f; case M_COLLECTOR: return 1.9f; case M_FURNACE: return 2.0f; case M_ICEROCK: return 2.5f; case M_HUT: return 1.7f; case M_CANNON: return 0.95f;
+  switch (model) { case M_TROJAN: return 1.9f; case M_IGIANT: return 2.3f; case M_ESPIRIT: return 0.8f; case M_GIANT: return 2.2f; case M_GOLEM: return 1.95f; case M_PRINCESS: return 4.6f; case M_KING: return 4.3f; case M_ATOWER: return 3.7f; case M_INFERNO: return 2.6f; case M_FSPIRIT: return 0.8f; case M_ISPIRIT: return 0.8f; case M_COLLECTOR: return 1.9f; case M_FURNACE: return 2.0f; case M_ICEROCK: return 2.5f; case M_HUT: return 1.7f; case M_CANNON: return 0.95f;
     case M_BULL: return 1.25f; case M_GOBKING: return 1.75f; case M_DART: return 0.95f; case M_VOLAR: return 0.8f; case M_PUP: return 0.35f; case M_ICEWIZ: return 1.45f; case M_HOG: return 1.55f; case M_MEGA: return 2.0f; case M_STRONG: return 1.9f; case M_CGOLEM: return 2.0f; case M_DRAGON: return 0.7f; case M_BAT: return 0.35f; case M_GOBLIN: return 0.85f; case M_BOMBER: return 0.85f; case M_SKELETON: return 0.85f; default: return 1.35f; }
 }
 
@@ -3731,6 +3755,7 @@ static int cardStatLine(int c, int lvl, char lines[][64]) {
   if (cd.unit == U_ISPIRIT) snprintf(lines[n++], 64, "ВЗРЫВ %d И ЗАМОРОЗКА НА %.0f С", (int)(u.dmg * k), SPIRIT_FREEZE);
   if (cd.unit == U_ESPIRIT) { snprintf(lines[n++], 64, "МОЛНИЯ: %d КАЖДОЙ ЦЕЛИ", (int)(u.dmg * k)); snprintf(lines[n++], 64, "ЦЕПЬ ДО %d ВРАГОВ, ОГЛУШЕНИЕ %.1f С", ESP_CHAIN, ESP_STUN); }
   if (cd.unit == U_IGIANT) snprintf(lines[n++], 64, "АУРА ХОЛОДА: 2 КЛЕТКИ, ВСЕ МЕДЛЕННЕЕ НА 45%%");
+  if (cd.unit == U_TROJAN) { snprintf(lines[n++], 64, "УДАР ТАРАНОМ: %d", (int)(u.dmg * k)); snprintf(lines[n++], 64, "ВНУТРИ: 3 ВАРВАРА И ЭЛИТНЫЙ ВАРВАР"); }
   if (cd.unit == U_ICEROCK) snprintf(lines[n++], 64, "ВЫПУСКАЕТ ЛЕДЯНОГО ДУХА КАЖДЫЕ %.0f С", UNITS[U_ICEROCK].spawnT);
   if (cd.unit == U_FURNACE) snprintf(lines[n++], 64, "ВЫПУСКАЕТ ОГНЕННОГО ДУХА КАЖДЫЕ %.0f С", UNITS[U_FURNACE].spawnT);
   if (cd.unit == U_COLLECTOR) { snprintf(lines[n++], 64, "ЭЛИКСИР: +1 КАЖДЫЕ %.0f С", COLL_T); snprintf(lines[n++], 64, "ПРИ ГИБЕЛИ: +1 ЭЛИКСИР"); }

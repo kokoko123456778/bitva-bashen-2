@@ -811,6 +811,11 @@ static void rasterTriT(const float *a0, const float *b0, const float *c0, const 
 }
 static void drawPolyViewG(const V3 *in, const float (*cin)[3], int n) {
   if (gDry) return;
+  if (gGL) {                                                       // видеокарта: цвет в каждой вершине, переходы она сгладит сама
+    if (n < 3) return; bool any = false; for (int i = 0; i < n; i++) if (in[i].z > gNearZ) { any = true; break; } if (!any) return;
+    for (int i = 1; i + 1 < n; i++) { int id[3] = {0, i, i + 1};
+      for (int k = 0; k < 3; k++) { const V3 &v = in[id[k]]; GV g; g.x = v.x; g.y = v.y; g.z = v.z; g.r = (unsigned char)clampi((int)cin[id[k]][0], 0, 255); g.g = (unsigned char)clampi((int)cin[id[k]][1], 0, 255); g.b = (unsigned char)clampi((int)cin[id[k]][2], 0, 255); g.a = 255; gVerts.push_back(g); } }
+    return; }
   if (n == 3 && in[0].z >= 0.3f && in[1].z >= 0.3f && in[2].z >= 0.3f) {      // целый треугольник перед камерой: без отсечения
     float vt3[3][6];
     float zs3 = (in[0].z + in[1].z + in[2].z) * (1.0f / 3.0f);
@@ -1055,7 +1060,7 @@ static const float AW = 18.0f, AL = 32.0f, RIVER_Z = 16.0f, RIVER_HW = 1.0f;
 static const float BRIDGE_X[2] = {3.5f, 14.5f}; static const float BRIDGE_HW = 1.1f;
 
 // ---- модели (как рисовать) ----
-enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, M_XBOW, M_BULL, M_GOLEM, M_NECRO, M_LANCER, M_BAT, M_BOMBER, M_GOBKING, M_DART, M_VOLAR, M_PUP, M_RECRUIT, M_ICEWIZ, M_BARB, M_EBARB, M_HOG, M_MEGA, M_STRONG, M_CGOLEM, M_FSPIRIT, M_ISPIRIT,
+enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, M_XBOW, M_BULL, M_GOLEM, M_NECRO, M_LANCER, M_BAT, M_BOMBER, M_GOBKING, M_DART, M_VOLAR, M_PUP, M_RECRUIT, M_ICEWIZ, M_BARB, M_EBARB, M_HOG, M_MEGA, M_STRONG, M_CGOLEM, M_FSPIRIT, M_ISPIRIT, M_SPARKY, M_ESPIRIT, M_IGIANT,
        M_CANNON, M_ATOWER, M_HUT, M_INFERNO, M_COLLECTOR, M_FURNACE, M_ICEROCK, M_PRINCESS, M_KING, NMODEL };
 
 // ---- юниты: войска, здания и башни ----
@@ -1063,7 +1068,7 @@ enum { M_KNIGHT, M_ARCHER, M_GOBLIN, M_GIANT, M_FIREMAGE, M_DRAGON, M_SKELETON, 
 // sight - на каком расстоянии замечает врага; splash - радиус урона по площади; projV - скорость снаряда (0 - удар вблизи)
 enum { UT_TROOP, UT_BUILD, UT_TOWER };
 struct UnitT { const char *name; int model, kind; float hp, dmg, hitT, speed, range, radius, sight, splash, projV; bool air, onlyBuild, canAir; float mass, lifeT; int spawnU, spawnN; float spawnT, deathDmg, deathR; int deathU, deathN; float shield; };   // deathN > 0: при гибели распадается на deathN юнитов deathU
-enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ, U_BARB, U_EBARB, U_HOG, U_MEGA, U_STRONG, U_CGOLEM, U_FSPIRIT, U_ISPIRIT,
+enum { U_KNIGHT, U_ARCHER, U_GOBLIN, U_GIANT, U_FIREMAGE, U_DRAGON, U_SKELETON, U_XBOW, U_BULL, U_GOLEM, U_NECRO, U_LANCER, U_BAT, U_BOMBER, U_GOBKING, U_DART, U_VOLAR, U_PUP, U_RECRUIT, U_ICEWIZ, U_BARB, U_EBARB, U_HOG, U_MEGA, U_STRONG, U_CGOLEM, U_FSPIRIT, U_ISPIRIT, U_SPARKY, U_ESPIRIT, U_IGIANT,
        U_CANNON, U_ATOWER, U_HUT, U_INFERNO, U_COLLECTOR, U_FURNACE, U_ICEROCK, U_PRINCESS, U_KING, NUNIT };
 static UnitT UNITS[NUNIT] = {
   //  имя                модель      вид       hp     урон  удар  скор  дальн радиус обзор  сплеш снаряд возд  здан  по возд масса жизнь
@@ -1095,6 +1100,9 @@ static UnitT UNITS[NUNIT] = {
   {"МЕДНЫЙ ГОЛЕМ",      M_CGOLEM,   UT_TROOP, 1272.5f,212.05f,1.5f,0.8f, 1.1f, 0.85f, 6.0f, 0,    0,     false, false, false, 30, 0, -1, 0, 0, 0, 0},   // бьёт одну цель или по площади, притягивает врагов
   {"ОГНЕННЫЙ ДУХ",      M_FSPIRIT,  UT_TROOP, 480,   190, 0.5f, 2.0f, 2.3f, 0.32f, 6.0f, 0,    0,     false, false, true,  2, 0, -1, 0, 0, 0, 0},   // подбегает, взрывается огнём; здоровья хватает дойти до башни
   {"ЛЕДЯНОЙ ДУХ",       M_ISPIRIT,  UT_TROOP, 480,   95,  0.5f, 1.8f, 2.3f, 0.32f, 6.0f, 0,    0,     false, false, true,  2, 0, -1, 0, 0, 0, 0},   // подбегает, взрывается льдом и замораживает
+  {"СПАРКИ",            M_SPARKY,   UT_TROOP, 848.2f,424.1f,2.0f, 0.7f, 4.5f, 0.6f,  6.0f, 1.8f, 12,    false, false, false, 16, 0, -1, 0, 0, 0, 0},   // ракетная тележка: на 10 ур. 2000 здоровья, ракета 1000 по площади, раз в 2 с
+  {"ЭЛЕКТРОДУХ",        M_ESPIRIT,  UT_TROOP, 480,   85,  0.5f, 1.8f, 2.3f, 0.32f, 6.0f, 0,    0,     false, false, true,  2, 0, -1, 0, 0, 0, 0},   // прыгает на врага, молния цепью по 9 целям, оглушает
+  {"ЛЕДЯНОЙ ВЕЛИКАН",   M_IGIANT,   UT_TROOP, 3300,  210, 1.5f, 1.0f, 0.7f, 0.75f, 7.5f, 0,    0,     false, true,  false, 18, 0, -1, 0, 0, 0, 0},   // как великан + ледяная аура: всё вокруг на 2 клетки медленнее на 45%
   {"ПУШКА",             M_CANNON,   UT_BUILD, 800,   150, 0.8f, 0,    5.5f, 0.6f,  5.5f, 0,    18,    false, false, false, 99, 30, -1, 0, 0, 0, 0},
   {"БАШНЯ ЛУЧНИКОВ",    M_ATOWER,   UT_BUILD, 1100,  100, 0.9f, 0,    7.0f, 0.7f,  7.0f, 0,    16,    false, false, true,  99, 40, -1, 0, 0, 0, 0},
   {"ГОБЛИНСКАЯ ХИЖИНА", M_HUT,      UT_BUILD, 900,   0,   1.0f, 0,    0,    0.8f,  0,    0,    0,     false, false, false, 99, 40, U_GOBLIN, 1, 5.0f, 0, 0},
@@ -1114,7 +1122,7 @@ static const u32 RARC[NRAR] = {RGB(170, 220, 255), RGB(90, 200, 70), RGB(235, 90
 enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL, SP_MAGEFALL };   // SP_MAGEFALL - огненный шар, из которого появляется маг огня
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
-       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, C_STRONG, C_CGOLEM, C_INFERNO, C_COLLECTOR, C_FSPIRIT, C_ISPIRIT, C_FURNACE, C_ICEROCK, NCARD };
+       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, C_STRONG, C_CGOLEM, C_INFERNO, C_COLLECTOR, C_FSPIRIT, C_ISPIRIT, C_FURNACE, C_ICEROCK, C_SPARKY, C_ESPIRIT, C_IGIANT, NCARD };
 static Card CARDS[NCARD] = {
   {"РЫЦАРЬ",            3, CT_TROOP, RA_COMMON, U_KNIGHT,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "КРЕПКИЙ БОЕЦ С МЕЧОМ. ДЕРЖИТ УДАР И БЬЁТ ВБЛИЗИ."},
   {"ЛУЧНИЦЫ",           3, CT_TROOP, RA_COMMON, U_ARCHER,   2, 0, SP_NONE, 0, 0, 0, 0, 0, "ДВЕ ЛУЧНИЦЫ. СТРЕЛЯЮТ ИЗДАЛЕКА, ДОСТАЮТ ЛЕТАЮЩИХ."},
@@ -1131,9 +1139,9 @@ static Card CARDS[NCARD] = {
   {"ГНОМ-ПОДРЫВНИК",    3, CT_TROOP, RA_COMMON, U_BOMBER,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "КИДАЕТ БОМБЫ ПО ТОЛПЕ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
   {"БАШНЯ ЛУЧНИКОВ",    4, CT_BUILD, RA_RARE,   U_ATOWER,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. ДАЛЕКО СТРЕЛЯЕТ ПО ВСЕМ, И ПО ЛЕТАЮЩИМ."},
   {"ЗАМОРОЗКА",         4, CT_SPELL, RA_EPIC,   -1,         0, 3, SP_FREEZE, 3.0f, 90, 1.0f, 0, 4.0f, "ВСЁ В КРУГУ ЗАМИРАЕТ НА 4 СЕКУНДЫ."},
-  {"ДРАКОНЧИК",         4, CT_TROOP, RA_EPIC,   U_DRAGON,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И ДЫШИТ ОГНЁМ ПО ПЛОЩАДИ."},
+  {"ДРАКОНЧИК",         4, CT_TROOP, RA_EPIC,   U_DRAGON,   1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И ДЫШИТ ОГНЁМ ПО ПЛОЩАДИ."},
   {"АРБАЛЕТЧИК",        4, CT_TROOP, RA_RARE,   U_XBOW,     1, 3, SP_NONE, 0, 0, 0, 0, 0, "МЕТКИЙ И ДАЛЬНОБОЙНЫЙ. СИЛЬНЫЙ УРОН ПО ОДНОЙ ЦЕЛИ."},
-  {"МАГ ОГНЯ",          4, CT_TROOP, RA_LEGEND, U_FIREMAGE, 1, 4, SP_NONE, 0, 0, 0, 0, 0, "ОГНЕННЫЕ ШАРЫ ПО ПЛОЩАДИ. ПРОТИВ ТОЛПЫ И ЛЕТАЮЩИХ."},
+  {"МАГ ОГНЯ",          5, CT_TROOP, RA_LEGEND, U_FIREMAGE, 1, 4, SP_NONE, 0, 0, 0, 0, 0, "ОГНЕННЫЕ ШАРЫ ПО ПЛОЩАДИ. ПРОТИВ ТОЛПЫ И ЛЕТАЮЩИХ."},
   {"РАКЕТА",            6, CT_SPELL, RA_LEGEND, -1,         0, 4, SP_ROCKET, 2.0f, 2025, 0.2f, 1.0f, 0, "ЛЕТИТ С КОРОЛЕВСКОЙ БАШНИ. ОГРОМНЫЙ УРОН В НЕБОЛЬШОМ КРУГЕ."},
   {"ГОБЛИНСКАЯ ХИЖИНА", 5, CT_BUILD, RA_RARE,   U_HUT,      1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 5 СЕКУНД ВЫПУСКАЕТ ГОБЛИНА."},
   {"КАМЕННЫЙ ГОЛЕМ",    8, CT_TROOP, RA_EPIC,   U_GOLEM,    1, 5, SP_NONE, 0, 0, 0, 0, 0, "САМЫЙ КРЕПКИЙ. ИДЁТ К ЗДАНИЯМ, ПРИ ГИБЕЛИ ВЗРЫВАЕТСЯ."},
@@ -1158,6 +1166,9 @@ static Card CARDS[NCARD] = {
   {"ЛЕДЯНОЙ ДУХ",       1, CT_TROOP, RA_COMMON, U_ISPIRIT,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-СНЕЖОК. ПРЫГАЕТ НА ВРАГА, ВЗРЫВАЕТСЯ ЛЬДОМ И ЗАМОРАЖИВАЕТ ВСЕХ ВОКРУГ. БЬЁТ И ЛЕТАЮЩИХ."},
   {"ПЕЧЬ",              5, CT_BUILD, RA_RARE,   U_FURNACE,  1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 4 СЕКУНДЫ ВЫПУСКАЕТ ОГНЕННОГО ДУХА, КОТОРЫЙ БЕЖИТ К БАШНЕ И ВЗРЫВАЕТСЯ. ЖИВЁТ 50 СЕКУНД."},
   {"ЛЕДЯНАЯ СКАЛА",     5, CT_BUILD, RA_RARE,   U_ICEROCK,  1, 3, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 4 СЕКУНДЫ ВЫПУСКАЕТ ЛЕДЯНОГО ДУХА, КОТОРЫЙ ПРЫГАЕТ НА ВРАГА И ЗАМОРАЖИВАЕТ. ЖИВЁТ 50 СЕКУНД."},
+  {"СПАРКИ",            6, CT_TROOP, RA_LEGEND, U_SPARKY,   1, 4, SP_NONE, 0, 0, 0, 0, 0, "РАКЕТНАЯ ТЕЛЕЖКА. МЕДЛЕННО КАТИТСЯ И РАЗ В 2 СЕКУНДЫ ЗАПУСКАЕТ РАКЕТУ: ОГРОМНЫЙ УРОН ПО ПЛОЩАДИ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
+  {"ЭЛЕКТРОДУХ",        1, CT_TROOP, RA_COMMON, U_ESPIRIT,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-МОЛНИЯ. ПРЫГАЕТ НА ВРАГА, И МОЛНИЯ ЦЕПЬЮ БЬЁТ ДО 9 ВРАГОВ ПОДРЯД И ОГЛУШАЕТ ИХ. БЬЁТ И ЛЕТАЮЩИХ."},
+  {"ЛЕДЯНОЙ ВЕЛИКАН",   5, CT_TROOP, RA_EPIC,   U_IGIANT,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ЗДОРОВЬЕ И УДАР КАК У ВЕЛИКАНА. ВОКРУГ НЕГО ЛЕДЯНОЙ ХОЛОД: ВСЕ ВРАГИ В 2 КЛЕТКАХ ХОДЯТ И БЬЮТ НА 45% МЕДЛЕННЕЕ."},
 };
 static const int START_DECK[8] = {C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON};
 
@@ -1189,17 +1200,23 @@ static const int XP_UP[MAXLVL] = {0, 4, 10, 25, 50, 100, 200, 400, 800, 1600};  
 static const int KING_XP[MAXLVL] = {0, 20, 70, 150, 300, 600, 1100, 2000, 3500, 6000}; // опыт для уровня короля
 
 // ---- сундуки ----
-enum { CH_WOOD, CH_SILVER, CH_GOLD, CH_MAGIC, CH_LEGEND, CH_FREE, CH_CROWN, NCHEST };
-struct ChestT { const char *name; int unlockMin, cards, gold, gems, minRare, minEpic, legendPct; u32 col, col2; };
+enum { CH_WOOD, CH_SILVER, CH_GOLD, CH_MAGIC, CH_LEGEND, CH_FREE, CH_CROWN, CH_GIANT, CH_EPIC, CH_LIGHTNING, CH_ROYAL, NCHEST };
+struct ChestT { const char *name, *shortN; int unlockMin, cards, gold, gems, minRare, minEpic, legendPct; u32 col, col2, band; };
 static const ChestT CHESTS[NCHEST] = {
-  {"ДЕРЕВЯННЫЙ СУНДУК",   5,   6,   25,  0, 0, 0, 0,   RGB(150, 100, 60), RGB(110, 70, 40)},
-  {"СЕРЕБРЯНЫЙ СУНДУК",   20,  14,  60,  0, 1, 0, 1,   RGB(200, 205, 215), RGB(130, 135, 150)},
-  {"ЗОЛОТОЙ СУНДУК",      60,  36,  180, 2, 3, 0, 3,   RGB(240, 200, 60), RGB(180, 130, 30)},
-  {"МАГИЧЕСКИЙ СУНДУК",   180, 90,  500, 4, 12, 2, 10, RGB(170, 80, 230), RGB(110, 40, 170)},
-  {"ЛЕГЕНДАРНЫЙ СУНДУК",  360, 1,   0,   0, 0, 0, 100, RGB(80, 220, 210), RGB(30, 140, 150)},
-  {"БЕСПЛАТНЫЙ СУНДУК",   0,   4,   20,  1, 0, 0, 0,   RGB(120, 200, 110), RGB(70, 140, 60)},
-  {"СУНДУК КОРОН",        0,   24,  200, 5, 2, 0, 2,   RGB(80, 140, 240), RGB(40, 80, 170)},
+  //  название                         коротко         мин.   карт серебро крист редк эпич лег%  цвет крышки        цвет корпуса       оковка
+  {"ДЕРЕВЯННЫЙ СУНДУК",               "ДЕРЕВЯННЫЙ",    5,     6,   25,  0, 0,  0,  0,   RGB(160, 108, 62), RGB(122, 80, 46),  RGB(96, 98, 110)},
+  {"СЕРЕБРЯНЫЙ СУНДУК",               "СЕРЕБРЯНЫЙ",    20,    14,  60,  0, 1,  0,  1,   RGB(150, 104, 62), RGB(118, 80, 48),  RGB(222, 228, 240)},
+  {"ЗОЛОТОЙ СУНДУК",                  "ЗОЛОТОЙ",       60,    36,  180, 2, 3,  0,  3,   RGB(150, 70, 50),  RGB(116, 52, 38),  RGB(255, 214, 80)},
+  {"МАГИЧЕСКИЙ СУНДУК",               "МАГИЧЕСКИЙ",    180,   90,  500, 4, 12, 2,  10,  RGB(150, 70, 220), RGB(100, 40, 160), RGB(255, 205, 90)},
+  {"ЛЕГЕНДАРНЫЙ СУНДУК",              "ЛЕГЕНДАРНЫЙ",   360,   1,   0,   0, 0,  0,  100, RGB(60, 200, 196), RGB(28, 128, 140), RGB(250, 230, 150)},
+  {"БЕСПЛАТНЫЙ СУНДУК",               "БЕСПЛАТНЫЙ",    0,     4,   20,  1, 0,  0,  0,   RGB(110, 190, 100),RGB(70, 140, 60),  RGB(210, 214, 224)},
+  {"СУНДУК КОРОН",                    "КОРОН",         0,     24,  200, 5, 2,  0,  2,   RGB(70, 130, 235), RGB(40, 80, 170),  RGB(250, 214, 90)},
+  {"ГИГАНТСКИЙ СУНДУК",               "ГИГАНТСКИЙ",    720,   160, 900, 0, 24, 1,  3,   RGB(214, 120, 46), RGB(150, 82, 34),  RGB(82, 84, 96)},     // гора обычных и редких карт и серебра
+  {"ЭПИЧЕСКИЙ СУНДУК",                "ЭПИЧЕСКИЙ",     480,   10,  0,   0, 0,  10, 0,   RGB(232, 90, 170), RGB(150, 40, 110), RGB(255, 210, 110)},   // только эпические карты
+  {"СУНДУК МОЛНИЙ",                   "МОЛНИЙ",        480,   40,  300, 3, 6,  1,  3,   RGB(66, 70, 110),  RGB(40, 42, 70),   RGB(255, 222, 60)},    // 3 молнии: можно заменить выпавшие карты
+  {"КОРОЛЕВСКИЙ ЛЕГЕНДАРНЫЙ СУНДУК",  "КОРОЛЕВСКИЙ",   1440,  1,   0,   0, 0,  0,  100, RGB(70, 50, 160),  RGB(44, 30, 110),  RGB(255, 215, 90)},    // легендарная карта на выбор из двух
 };
+static const int CHEST_PRICE[NCHEST] = {0, 0, 120, 360, 900, 0, 0, 450, 600, 300, 1500};   // в магазине за кристаллы
 static const int CHEST_CYCLE[16] = {CH_WOOD, CH_WOOD, CH_SILVER, CH_WOOD, CH_SILVER, CH_GOLD, CH_WOOD, CH_SILVER, CH_WOOD, CH_SILVER, CH_GOLD, CH_SILVER, CH_WOOD, CH_MAGIC, CH_SILVER, CH_GOLD};
 static const int NSLOT = 4;
 
@@ -1231,13 +1248,15 @@ template <int N> struct ProfileBaseT {
   int arenaSeen; bool soundOn;
 };
 template <int N> struct ProfileT : ProfileBaseT<N> { int rating, ratingBest; long long ratingWeek; };   // рейтинг Легендарной арены: сбрасывается каждую неделю
-typedef ProfileT<MAXCARDS> Profile;
+template <int N> struct ProfileR : ProfileT<N> { unsigned char roadClaimed[64]; };   // дорога кубков: какие награды уже забраны
+typedef ProfileR<MAXCARDS> Profile;
+typedef ProfileT<MAXCARDS> ProfileV3;                              // версия до дороги кубков
 typedef ProfileBaseT<MAXCARDS> ProfileV2;                           // прошлая версия сохранения (без рейтинга)
 typedef ProfileBaseT<23> ProfileV1;                                 // первая версия (23 карты)
 static_assert(NCARD <= MAXCARDS, "карт больше запаса");
 // ---- баланс: множители силы карт, подобраны на 24 000 боях ботов (цель - 49-52% побед) ----
-static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f};
-static void balanceInit() {
+static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.269f};
+static void balanceInit() {   // МЕДНЫЙ ГОЛЕМ и ИНФЕРНО: +20% здоровья и урона (по боям ботов они были слабейшими)
   static bool done = false; if (done) return; done = true;
   for (int c = 0; c < NCARD; c++) { float k = BAL_K[c]; if (fabsf(k - 1) < 1e-4f) continue; Card &cd = CARDS[c];
     if (c == C_HUT) { UNITS[U_HUT].hp *= k; UNITS[U_HUT].spawnT /= k; continue; }
@@ -1245,6 +1264,8 @@ static void balanceInit() {
     if (cd.type == CT_SPELL) { if (cd.spell == SP_FREEZE) cd.sTime *= k; cd.sDmg *= k; continue; }
     UnitT &u = UNITS[cd.unit]; u.hp *= k; u.dmg *= k; u.shield *= k;
     if (c == C_VOLAR) { UNITS[U_PUP].hp *= k; UNITS[U_PUP].dmg *= k; } }
+  UNITS[U_FIREMAGE].hp *= 0.7f;   // маг огня: -30% здоровья (по боям ботов выигрывал 88%)
+  UNITS[U_ICEWIZ].hp *= 1.1f; UNITS[U_INFERNO].hp *= 1.1f;   // ледяной маг и инферно: +10% здоровья (по боям ботов были слабейшими)
 }
 
 static Profile pf;
@@ -1302,6 +1323,7 @@ static bool loadProfileFrom(const char *fn) {
   unsigned m = 0; int sz = 0; bool ok = fread(&m, 4, 1, f) == 1 && fread(&sz, 4, 1, f) == 1 && m == SAVE_MAGIC;
   if (ok && sz == (int)sizeof pf) { static Profile t; ok = fread(&t, sizeof t, 1, f) == 1; unsigned cs = 0; if (ok && fread(&cs, 4, 1, f) == 1 && cs != profSum(t)) ok = false;   // повреждённый файл не берём
     if (ok) pf = t; }
+  else if (ok && sz == (int)sizeof(ProfileV3)) { static ProfileV3 o3; ok = fread(&o3, sizeof o3, 1, f) == 1; if (ok) { memset(&pf, 0, sizeof pf); memcpy(&pf, &o3, sizeof o3); } }   // до дороги кубков: награды не забраны
   else if (ok && sz == (int)sizeof(ProfileV2)) { static ProfileV2 o2; ok = fread(&o2, sizeof o2, 1, f) == 1; if (ok) { memset(&pf, 0, sizeof pf); memcpy(&pf, &o2, sizeof o2); } }   // сохранение до рейтинга: поля те же, рейтинг с нуля
   else if (ok && sz == (int)sizeof(ProfileV1)) { static ProfileV1 o; ok = fread(&o, sizeof o, 1, f) == 1;           // старое сохранение: переносим поля
     if (ok) { memset(&pf, 0, sizeof pf); memcpy(pf.name, o.name, sizeof pf.name); pf.gold = o.gold; pf.gems = o.gems; pf.trophies = o.trophies; pf.bestTrophies = o.bestTrophies; pf.kingLvl = o.kingLvl; pf.kingXp = o.kingXp;
@@ -1322,13 +1344,24 @@ static long long localDayNum(long long t) { time_t tt = (time_t)t; struct tm *lt
 static long long weekOf(long long t) { return (localDayNum(t) + 3) / 7; }   // 1 января 1970 - четверг, поэтому +3: неделя меняется в понедельник
 static long long weekLeftSec() { time_t tt = (time_t)nowSec(); struct tm *lt = localtime(&tt); long long dn = localDayNum(nowSec()), sec = lt ? lt->tm_hour * 3600 + lt->tm_min * 60 + lt->tm_sec : 0; return (7 - (dn + 3) % 7) * 86400 - sec; }
 static bool weekJustReset = false;
+// положить сундук в свободную ячейку; нет места - вернёт false
+static bool grantChest(int type) { for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type < 0) { pf.slots[s].type = type; pf.slots[s].opening = false; return true; } return false; }
+// какой сундук выпал за победу: обычно по кругу, иногда редкий
+static int rollWinChest() { int t = CHEST_CYCLE[pf.chestN % 16], r = rand() % 1000;
+  if (r < 4) t = CH_ROYAL; else if (r < 20) t = CH_GIANT; else if (r < 36) t = CH_EPIC; else if (r < 56) t = CH_LIGHTNING; else if (r < 66) t = CH_LEGEND;   // 0.4% / 1.6% / 1.6% / 2% / 1%
+  return t; }
+static int topRankAt(int tr);
+static int weekRewardChest = -1, weekRewardRank = 0, weekRewardGems = 0;
 static void dailyRefresh() {
   long long d = dayOf(nowSec());
   if (pf.questDay != d) newQuests();
   if (pf.shopDay != d) newShop();
   if (pf.crownDay != d) { pf.crownDay = d; pf.crowns = 0; }
   long long w = weekOf(nowSec());                                                  // новая неделя - рейтинг с нуля
-  if (pf.ratingWeek != w) { if (pf.ratingWeek != 0 && pf.rating > 0) weekJustReset = true; pf.rating = 0; pf.ratingBest = 0; pf.ratingWeek = w; }
+  if (pf.ratingWeek != w) { if (pf.ratingWeek != 0 && pf.rating > 0) { weekJustReset = true;
+      int rk = topRankAt(pf.rating); if (rk <= 100) { int t = rk <= 10 ? CH_ROYAL : (rk <= 50 ? CH_GIANT : CH_LIGHTNING);   // награда за место в ТОП-100 прошлой недели
+        weekRewardRank = rk; weekRewardChest = t; weekRewardGems = 0; if (!grantChest(t)) { weekRewardGems = rk <= 10 ? 300 : 120; pf.gems += weekRewardGems; } } }
+    pf.rating = 0; pf.ratingBest = 0; pf.ratingWeek = w; }
 }
 static int kingTowerLvl() { return pf.kingLvl; }
 static void devMaxOut() {                                         // все карты есть и прокачаны до максимума
@@ -1354,10 +1387,10 @@ struct Unit {
   int id, type, team, lvl; float x, z, px, pz, y, hp, maxhp, dmg, atkCD, deployT, frozenT, stunT, spawnCD, chargeDist, face, anim, atkAnim, flash, slowT, shield, jumpT, jumpCD, jumpDur, jumpH, jx0, jz0, jx1, jz1, pullT, pullX, pullZ, infT;
   int target, infTg, owner; bool alive, attacking, charging, moving;
 };
-enum { PJ_ARROW, PJ_BOLT, PJ_FIRE, PJ_BOMB, PJ_CANNON, PJ_DARK, PJ_DART, PJ_LAVA, PJ_ICE };
+enum { PJ_ARROW, PJ_BOLT, PJ_FIRE, PJ_BOMB, PJ_CANNON, PJ_DARK, PJ_DART, PJ_LAVA, PJ_ICE, PJ_SPARK };
 struct Proj { int kind, team, target; float x, z, y, px, pz, py, tx, tz, ty, v, dmg, splash; bool canAir, canGround, arc, dead; float sx, sz, sy, t, T, arcH; };
 struct Spell { int kind, team, lvl; float x, z, r, dmg, towerK, delay, time, t, sx, sz; bool hit; };
-enum { FX_HIT, FX_BOOM, FX_DEATH, FX_DEPLOY, FX_TOWERDOWN, FX_ZAP, FX_SPLASH, FX_HEALP, FX_FIREBURST, FX_ICEBURST, FX_TRAIL };   // взрыв огненного духа, ледяной взрыв, огненный/ледяной след прыжка
+enum { FX_HIT, FX_BOOM, FX_DEATH, FX_DEPLOY, FX_TOWERDOWN, FX_ZAP, FX_SPLASH, FX_HEALP, FX_FIREBURST, FX_ICEBURST, FX_TRAIL, FX_CHAIN };   // FX_CHAIN: молния электродуха от (x,z) к (y,r)   // взрыв огненного духа, ледяной взрыв, огненный/ледяной след прыжка
 struct Fx { int kind, team; float x, z, y, t, T, r; };
 enum { BE_PLAY = 1, BE_HIT, BE_SHOOT, BE_BOOM, BE_TOWER, BE_DEATH, BE_END, BE_SPELL };
 struct BEv { int type, team, a; float x, z; };
@@ -1493,6 +1526,7 @@ static void splashAt(float x, float z, float r, float dmg, int team, bool air, b
     dealDmg(u, UT(u).kind == UT_TOWER ? dm * towerK : dm, team);
     if (knock && u.alive && UT(u).kind == UT_TROOP && UT(u).mass <= 6) { float l = sqrtf(dx * dx + dz * dz) + 0.01f; u.x += dx / l * 0.8f; u.z += dz / l * 0.8f; } }
 }
+static const float IGIANT_AURA = 2.0f;                                         // радиус ледяной ауры ледяного великана
 static const float ICEWIZ_SPAWN_DMG = 84.85f;                                 // урон ледяного мага при появлении (x lvlK)
 static const float MEGA_JUMP_K = 0.68f;                                       // прыжок мегарыцаря = 68% его удара
 static void lineSplash(const Unit &u, float len, float halfW, float dmg) {     // силач: удар полосой вперёд по направлению взгляда
@@ -1508,7 +1542,23 @@ static float infMul(float t) { return t >= INF_T3 ? INF_M3 : (t >= INF_T2 ? INF_
 static const float CG_SPLASH_STEP = 0.10f, CG_SPLASH_K = 0.6f, CG_PULL_R = 8.0f, CG_PULL_T = 5.0f;      // медный голем: удар по площади = 60% (300 из 500), цепь на 8 клеток раз в 5 с
 // ---- духи (огненный и ледяной): подбегают к цели и взрываются ----
 static const float SPIRIT_R_FIRE = 1.4f, SPIRIT_R_ICE = 1.7f, SPIRIT_FREEZE = 2.0f;
+static const int ESP_CHAIN = 9; static const float ESP_JUMP = 4.0f, ESP_STUN = 0.5f;   // электродух: до 9 целей, прыжок молнии до 4 клеток, оглушение 0.5 с
+static bool isSpirit(int t) { return t == U_FSPIRIT || t == U_ISPIRIT || t == U_ESPIRIT; }
+static void dealDmg(Unit &u, float d, int team);
+static void electroChain(Unit &u, int firstId) {             // молния: от цели к ближайшему ещё не задетому врагу, и так до 9 раз
+  int hit[ESP_CHAIN]; int n = 0; float px = u.x, pz = u.z; Unit *cur = unitById(firstId);
+  while (n < ESP_CHAIN) {
+    if (!cur) { float best = 1e9f; for (size_t i = 0; i < B.units.size(); i++) { Unit &e = B.units[i]; if (!e.alive || e.team == u.team || e.deployT > 0) continue;
+        bool was = false; for (int k = 0; k < n; k++) if (hit[k] == e.id) was = true; if (was) continue;
+        float dx = e.x - px, dz = e.z - pz, d = dx * dx + dz * dz, lim = ESP_JUMP + UT(e).radius * 0.5f; if (d <= lim * lim && d < best) { best = d; cur = &e; } }
+      if (!cur) break; }
+    hit[n++] = cur->id; addFx(FX_CHAIN, u.team, px, pz, cur->x, 0.35f, cur->z);
+    float cx = cur->x, cz = cur->z; int cid = cur->id;
+    if (UT(*cur).kind != UT_TOWER) cur->stunT = fmaxv(cur->stunT, ESP_STUN);
+    dealDmg(*cur, u.dmg, u.team); px = cx; pz = cz; cur = NULL; (void)cid; }
+}
 static void spiritBlast(Unit &u) {
+  if (u.type == U_ESPIRIT) { electroChain(u, u.target); addFx(FX_TRAIL, u.team, u.x, u.z, 0, 0.35f, 2.0f); bEvent(BE_BOOM, u.team, u.x, u.z); killUnit(u); return; }
   bool ice = u.type == U_ISPIRIT; float r = ice ? SPIRIT_R_ICE : SPIRIT_R_FIRE;
   splashAt(u.x, u.z, r, u.dmg, u.team, true, true, 1.0f, false);   // урон по земле и воздуху, башням тоже
   if (ice) for (size_t q = 0; q < B.units.size(); q++) { Unit &e = B.units[q]; if (!e.alive || e.team == u.team) continue; float dx = e.x - u.x, dz = e.z - u.z, rr = r + UT(e).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) e.frozenT = fmaxv(e.frozenT, SPIRIT_FREEZE); }
@@ -1546,7 +1596,7 @@ static void killUnit(Unit &u) {
     addFx(FX_TOWERDOWN, u.team, u.x, u.z, 0, 1.5f, 2.5f); bEvent(BE_TOWER, u.team, u.x, u.z, u.type);
     if (B.over) bEvent(BE_END, B.winner, 0, 0, 0);
   } else {
-    if (u.type != U_FSPIRIT && u.type != U_ISPIRIT) addFx(FX_DEATH, u.team, u.x, u.z, u.y, 0.6f, t.radius); bEvent(BE_DEATH, u.team, u.x, u.z, u.type);   // у духов вместо дыма - свой взрыв
+    if (!isSpirit(u.type)) addFx(FX_DEATH, u.team, u.x, u.z, u.y, 0.6f, t.radius); bEvent(BE_DEATH, u.team, u.x, u.z, u.type);   // у духов вместо дыма - свой взрыв
     if (t.deathN > 0) { for (int k = 0; k < t.deathN; k++) { float a = k * 6.2832f / t.deathN; spawnUnit(t.deathU, u.team, u.lvl, clampf(u.x + cosf(a) * 0.7f, 0.5f, AW - 0.5f), clampf(u.z + sinf(a) * 0.7f, 0.5f, AL - 0.5f), 0.15f); }
       addFx(FX_BOOM, u.team, u.x, u.z, u.y, 0.6f, 1.2f); bEvent(BE_BOOM, u.team, u.x, u.z); }                // распался на щенков
     if (t.deathDmg > 0) { splashAt(u.x, u.z, t.deathR, t.deathDmg * lvlK(u.lvl), u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, t.deathR); bEvent(BE_BOOM, u.team, u.x, u.z); }
@@ -1574,10 +1624,10 @@ static int findTarget(const Unit &u) {
 // ---- снаряды ----
 static void shoot(Unit &u, Unit &tg) {
   const UnitT &t = UT(u); Proj p; memset(&p, 0, sizeof p);
-  p.kind = u.type == U_FIREMAGE || u.type == U_DRAGON ? PJ_FIRE : (u.type == U_BOMBER ? PJ_BOMB : (u.type == U_CANNON ? PJ_CANNON : (u.type == U_XBOW ? PJ_BOLT : (u.type == U_NECRO ? PJ_DARK : (u.type == U_DART ? PJ_DART : (u.type == U_VOLAR || u.type == U_PUP ? PJ_LAVA : (u.type == U_ICEWIZ ? PJ_ICE : PJ_ARROW)))))));
+  p.kind = u.type == U_FIREMAGE || u.type == U_DRAGON ? PJ_FIRE : (u.type == U_BOMBER ? PJ_BOMB : (u.type == U_CANNON ? PJ_CANNON : (u.type == U_XBOW ? PJ_BOLT : (u.type == U_NECRO ? PJ_DARK : (u.type == U_DART ? PJ_DART : (u.type == U_VOLAR || u.type == U_PUP ? PJ_LAVA : (u.type == U_ICEWIZ ? PJ_ICE : (u.type == U_SPARKY ? PJ_SPARK : PJ_ARROW))))))));
   p.team = u.team; p.target = tg.id; p.dmg = u.dmg; p.splash = t.splash; p.canAir = t.canAir; p.canGround = true; p.arc = true;
-  p.arcH = p.kind == PJ_BOMB ? 2.5f : (p.kind == PJ_ARROW ? 0.9f : (p.kind == PJ_FIRE ? 0.6f : (p.kind == PJ_CANNON ? 0.25f : (p.kind == PJ_DART ? 0.3f : 0.35f))));   // снаряды летят дугой
-  float h0 = u.type == U_PRINCESS ? 4.2f : (u.type == U_KING ? 4.8f : (u.type == U_ATOWER ? 3.4f : (t.air ? u.y : 1.0f)));
+  p.arcH = p.kind == PJ_SPARK ? 1.6f : p.kind == PJ_BOMB ? 2.5f : (p.kind == PJ_ARROW ? 0.9f : (p.kind == PJ_FIRE ? 0.6f : (p.kind == PJ_CANNON ? 0.25f : (p.kind == PJ_DART ? 0.3f : 0.35f))));   // снаряды летят дугой
+  float h0 = u.type == U_SPARKY ? 1.7f : u.type == U_PRINCESS ? 4.2f : (u.type == U_KING ? 4.8f : (u.type == U_ATOWER ? 3.4f : (t.air ? u.y : 1.0f)));
   p.x = p.sx = u.x; p.z = p.sz = u.z; p.y = p.sy = h0; p.tx = tg.x; p.tz = tg.z; p.ty = UT(tg).air ? tg.y : 0.8f; p.v = t.projV;
   float d = sqrtf((p.tx - p.x) * (p.tx - p.x) + (p.tz - p.z) * (p.tz - p.z)); p.T = fmaxv(0.12f, d / p.v); p.t = 0;
   B.projs.push_back(p); bEvent(BE_SHOOT, u.team, u.x, u.z, p.kind);
@@ -1594,6 +1644,11 @@ static void updateProjs(float dt) {
   B.projs.erase(std::remove_if(B.projs.begin(), B.projs.end(), [](const Proj &p){ return p.dead; }), B.projs.end());
 }
 // ---- заклинания ----
+// заморозка: замерзают все враги, которых круг хоть немного задевает (с учётом размера бойца), - наземные, летающие, здания и башни
+static void freezeArea(const Spell &s, float T) {
+  for (size_t k = 0; k < B.units.size(); k++) { Unit &u = B.units[k]; if (!u.alive || u.team == s.team) continue;
+    float dx = u.x - s.x, dz = u.z - s.z, rr = s.r + UT(u).radius; if (dx * dx + dz * dz < rr * rr) u.frozenT = fmaxv(u.frozenT, T); }
+}
 static void updateSpells(float dt) {
   for (size_t i = 0; i < B.spells.size(); i++) { Spell &s = B.spells[i]; s.t += dt;
     if (!s.hit && s.t >= s.delay) { s.hit = true;
@@ -1606,7 +1661,7 @@ static void updateSpells(float dt) {
           for (size_t k = 0; k < B.units.size(); k++) { Unit &u = B.units[k]; if (u.alive && u.team != s.team && (u.x - s.x) * (u.x - s.x) + (u.z - s.z) * (u.z - s.z) < s.r * s.r) { u.stunT = 0.5f; u.atkCD = fmaxv(u.atkCD, UT(u).hitT * 0.5f); } }
           bEvent(BE_BOOM, s.team, s.x, s.z, 2); break;
         case SP_FREEZE: splashAt(s.x, s.z, s.r, s.dmg, s.team, true, true, s.towerK, false);
-          for (size_t k = 0; k < B.units.size(); k++) { Unit &u = B.units[k]; if (u.alive && u.team != s.team && (u.x - s.x) * (u.x - s.x) + (u.z - s.z) * (u.z - s.z) < s.r * s.r) u.frozenT = s.time; }
+          freezeArea(s, s.time);
           bEvent(BE_SPELL, s.team, s.x, s.z, SP_FREEZE); break;
         case SP_HEAL: bEvent(BE_SPELL, s.team, s.x, s.z, SP_HEAL); break;
         case SP_BARREL: { const Card &bc = CARDS[C_BARREL];                                          // бочка разбилась - гоблины выскакивают
@@ -1616,6 +1671,7 @@ static void updateSpells(float dt) {
           if (s.dmg > 0) splashAt(s.x, s.z, s.r, s.dmg, s.team, false, true, s.towerK, false);
           addFx(FX_BOOM, s.team, s.x, s.z, 0, 0.5f, 1.0f); bEvent(BE_BOOM, s.team, s.x, s.z); } break;
       } }
+    if (s.kind == SP_FREEZE && s.hit && s.t < s.time) freezeArea(s, s.time - s.t);   // всё время действия: кто зайдёт в круг - тоже замерзает
     if (s.kind == SP_HEAL && s.t < s.time) for (size_t k = 0; k < B.units.size(); k++) { Unit &u = B.units[k]; if (u.alive && u.team == s.team && (u.x - s.x) * (u.x - s.x) + (u.z - s.z) * (u.z - s.z) < s.r * s.r) healUnit(u, s.dmg / s.time * dt); }
   }
   B.spells.erase(std::remove_if(B.spells.begin(), B.spells.end(), [](const Spell &s){ return s.hit && s.t > fmaxv(s.delay, s.time) + 0.6f; }), B.spells.end());
@@ -1642,7 +1698,7 @@ static void steerAround(const Unit &u, float gx, float gz, float &dx, float &dz,
   dx = (hx * cs - hz * sn) * l; dz = (hx * sn + hz * cs) * l;
 }
 static void moveToward(Unit &u, float tx, float tz, float dt) {
-  const UnitT &t = UT(u); float sp = t.speed * (u.charging ? 2.0f : 1.0f) * (u.slowT > 0 ? 0.65f : 1.0f);
+  const UnitT &t = UT(u); float sp = t.speed * (u.charging ? 2.0f : 1.0f) * (u.slowT > 0 ? 0.55f : 1.0f);
   float gx = tx, gz = tz;
   bool jumper = riverJumper(u.type);                                       // бык перепрыгивает реку, как кабан в CR
   if (!t.air && !jumper && (u.z - RIVER_Z) * (tz - RIVER_Z) < 0) {                // нужна переправа
@@ -1680,12 +1736,14 @@ static void updateUnit(Unit &u, float dt) {
   if (u.deployT > 0) { u.deployT -= dt;
     if (u.deployT <= 0 && u.type == U_MEGA) { float r = 2.2f; splashAt(u.x, u.z, r, u.dmg * 1.604f, u.team, false, true, 1.0f, true); addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.7f, r); bEvent(BE_BOOM, u.team, u.x, u.z); }   // удар при приземлении
     return; }
-  float slowK = 1.0f; if (u.slowT > 0) { u.slowT -= dt; slowK = 0.65f; }
+  float slowK = 1.0f; if (u.slowT > 0) { u.slowT -= dt; slowK = 0.55f; }   // лёд ледяного мага: ход и атака на 45% медленнее
   if (u.pullT > 0) { u.pullT -= dt; float k = fminv(1.0f, dt * 9.0f); u.x += (u.pullX - u.x) * k; u.z += (u.pullZ - u.z) * k; u.moving = false; return; }   // тянут цепью
   if (u.type == U_CGOLEM) { u.spawnCD -= dt; if (u.spawnCD <= 0) { u.spawnCD = CG_PULL_T; copperPull(u); } }
+  if (u.type == U_IGIANT && u.deployT <= 0) for (size_t i = 0; i < B.units.size(); i++) { Unit &e = B.units[i]; if (!e.alive || e.team == u.team) continue;   // аура: все враги в 2 клетках, и башни тоже, - на 45% медленнее
+    float dx = e.x - u.x, dz = e.z - u.z, rr = IGIANT_AURA + UT(e).radius * 0.5f; if (dx * dx + dz * dz <= rr * rr) e.slowT = fmaxv(e.slowT, 0.2f); }
   if (u.jumpT > 0) {                                                          // мегарыцарь в прыжке: летит к цели и давит при приземлении
     float jd = u.jumpDur > 0 ? u.jumpDur : 0.8f; u.jumpT -= dt; float k = clampf(1.0f - u.jumpT / jd, 0, 1); u.x = u.jx0 + (u.jx1 - u.jx0) * k; u.z = u.jz0 + (u.jz1 - u.jz0) * k; u.moving = false;
-    if (u.type == U_FSPIRIT || u.type == U_ISPIRIT) { addFx(FX_TRAIL, u.team, u.x, u.z, sinf(k * 3.14159f) * u.jumpH, 0.3f, u.type == U_ISPIRIT ? 1.0f : 0.0f); if (u.jumpT <= 0) spiritBlast(u); return; }   // приземлился - взрыв
+    if (isSpirit(u.type)) { addFx(FX_TRAIL, u.team, u.x, u.z, sinf(k * 3.14159f) * u.jumpH, 0.3f, u.type == U_ISPIRIT ? 1.0f : (u.type == U_ESPIRIT ? 2.0f : 0.0f)); if (u.jumpT <= 0) spiritBlast(u); return; }   // приземлился - взрыв
     if (u.jumpT <= 0) { splashAt(u.x, u.z, 2.0f, u.dmg * MEGA_JUMP_K, u.team, false, true, 1.0f, true);   /* приземление: 68% от обычного удара по всем вокруг */ addFx(FX_BOOM, u.team, u.x, u.z, 0, 0.6f, 2.0f); bEvent(BE_BOOM, u.team, u.x, u.z); u.atkCD = t.hitT * 0.5f; }
     return; }
   if (u.jumpCD > 0) u.jumpCD -= dt;
@@ -1717,7 +1775,7 @@ static void updateUnit(Unit &u, float dt) {
     u.jumpDur = 0; u.jumpH = 0; u.jumpT = 0.8f; u.jumpCD = 3.0f; u.jx0 = u.x; u.jz0 = u.z; float dx = tg->x - u.x, dz = tg->z - u.z, l = sqrtf(dx * dx + dz * dz) + 1e-4f, back = UT(*tg).radius + t.radius * 0.6f;
     u.jx1 = tg->x - dx / l * back; u.jz1 = tg->z - dz / l * back; u.face = atan2f(dx, dz); return; }
   if (d <= t.range) {
-    if (u.type == U_FSPIRIT || u.type == U_ISPIRIT) { if (u.jumpT <= 0) spiritLeap(u, *tg); return; }   // духи не бьют, а прыгают на врага
+    if (isSpirit(u.type)) { if (u.jumpT <= 0) spiritLeap(u, *tg); return; }   // духи не бьют, а прыгают на врага
     if (!u.attacking) { u.attacking = true; u.atkCD = fmaxv(u.atkCD, t.hitT * 0.35f); }
     u.face = atan2f(tg->x - u.x, tg->z - u.z);
     if (u.type == U_INFERNO) { if (u.target != u.infTg) { u.infTg = u.target; u.infT = 0; } u.infT += dt; }   // тот же враг - луч разогревается
@@ -1924,7 +1982,49 @@ static void GLOW(float x, float y, float z, float r, u32 col, int a) {
 }
 // локальная точка относительно юнита: ox вправо, oz вперёд по взгляду
 static inline void LP(float x, float z, float yaw, float ox, float oz, float &rx, float &rz) { float cs = cosf(yaw), sn = sinf(yaw); rx = x + cs * ox + sn * oz; rz = z - sn * ox + cs * oz; }
-#define PART(ox, oy, oz, hx, hy, hz, col) { float _x, _z; LP(x, z, yaw, (ox) * s, (oz) * s, _x, _z); BX(_x, y + (oy) * s, _z, (hx) * s, (hy) * s, (hz) * s, yaw, col); }
+// ---- красивые бойцы ----
+// Warp - мультяшные пропорции: голова (и всё, что на ней) крупнее, тело плотнее. Режим y - для человечков и големов, режим z - для зверей (голова спереди).
+struct Warp { float yTh, py, pz, H, xLim, zLim; float zTh, zpy, zpz, zH; float fat; };
+static Warp gWarp;                                   // нули - без изменений
+static int gNoWarp = 0;                              // оружие в руках не раздуваем вместе с головой
+static float gSqY = 1, gSqXZ = 1, gHop = 0;          // анимация: сжатие-растяжение и подпрыгивание при шаге (в долях модели)
+static bool gNiceParts = false;                      // плавный свет и тёмный контур (только у бойцов)
+static float gMoveK = 0;                             // идёт ли боец (ставится перед отрисовкой)
+static const float OUTLINE_E = 0.018f;               // толщина контура в клетках
+static const u32 OUTLINE_C = RGB(22, 18, 28);
+static void warpPart(float &ox, float &oy, float &oz, float &hx, float &hy, float &hz) {
+  if (!gNoWarp) {
+    if (gWarp.zH > 0 && oz >= gWarp.zTh) { float k = gWarp.zH; ox *= k; oy = gWarp.zpy + (oy - gWarp.zpy) * k; oz = gWarp.zpz + (oz - gWarp.zpz) * k; hx *= k; hy *= k; hz *= k; }
+    else if (gWarp.H > 0 && oy >= gWarp.yTh && fabsf(ox) <= gWarp.xLim && fabsf(oz - gWarp.pz) <= gWarp.zLim) { float k = gWarp.H; ox *= k; oy = gWarp.py + (oy - gWarp.py) * k; oz = gWarp.pz + (oz - gWarp.pz) * k; hx *= k; hy *= k; hz *= k; }
+    else if (gWarp.fat > 0) { ox *= gWarp.fat; oz *= gWarp.fat; hx *= gWarp.fat; hz *= gWarp.fat; }   // тело плотнее, нашивки и пояса остаются снаружи
+  }
+  ox *= gSqXZ; oz *= gSqXZ; hx *= gSqXZ; hz *= gSqXZ; oy = oy * gSqY + gHop; hy *= gSqY;
+}
+// тёмный контур: чуть увеличенная коробка, у которой рисуются только задние грани - снаружи силуэта остаётся тонкая тёмная кайма
+static void drawBoxOutline(V3 c, V3 h, float yaw, float e) {
+  float cs = cosf(yaw), sn = sinf(yaw); V3 ax = v3(cs, 0, -sn), ay = v3(0, 1, 0), az = v3(sn, 0, cs);
+  V3 ex = ax * (h.x + e), ey = ay * (h.y + e), ez = az * (h.z + e);
+  quadFace(c + ey, ex, ez, ay * -1.0f, OUTLINE_C, false); quadFace(c - ey, ex, ez, ay, OUTLINE_C, false);
+  quadFace(c + ex, ey, ez, ax * -1.0f, OUTLINE_C, false); quadFace(c - ex, ey, ez, ax, OUTLINE_C, false);
+  quadFace(c + ez, ex, ey, az * -1.0f, OUTLINE_C, false); quadFace(c - ez, ex, ey, az, OUTLINE_C, false);
+}
+// коробка с плавным светом: нормали в углах скошены наружу, поэтому грани светлеют к верху и мягко темнеют к краям - выглядит округлой
+static void drawBoxSmooth(V3 c, V3 h, float yaw, u32 col) {
+  float cs = cosf(yaw), sn = sinf(yaw); V3 A[3] = {v3(cs, 0, -sn), v3(0, 1, 0), v3(sn, 0, cs)}; float H3[3] = {h.x, h.y, h.z};
+  static const int F[5][3] = {{1, 0, 2}, {0, 1, 2}, {0, 1, 2}, {2, 0, 1}, {2, 0, 1}}; static const float FS[5] = {1, 1, -1, 1, -1};   // верх, бока, перед и зад (низ не виден)
+  for (int f = 0; f < 5; f++) { int na = F[f][0], ua = F[f][1], va = F[f][2]; V3 n = A[na] * FS[f], u = A[ua], v = A[va];
+    V3 cc = c + n * H3[na], p[4], nv[4]; static const float SU[4] = {-1, 1, 1, -1}, SV[4] = {-1, -1, 1, 1};
+    for (int k = 0; k < 4; k++) { p[k] = cc + u * (H3[ua] * SU[k]) + v * (H3[va] * SV[k]); nv[k] = vnorm(n + (u * SU[k] + v * SV[k]) * 0.55f); }
+    faceSmooth(p, nv, 4, n, col); }
+}
+static void partDraw(float x, float y, float z, float yaw, float s, float ox, float oy, float oz, float hx, float hy, float hz, u32 col) {
+  warpPart(ox, oy, oz, hx, hy, hz);
+  float _x, _z; LP(x, z, yaw, ox * s, oz * s, _x, _z); V3 c = RP(_x, y + oy * s, _z), h = v3(hx * s, hy * s, hz * s); float yw = RY(yaw);
+  if (!gNiceParts) { drawBox(c, h, yw, col, true); return; }
+  if (fminv(hx, fminv(hy, hz)) * s >= 0.045f) drawBoxOutline(c, h, yw, OUTLINE_E);   // мелочь (глаза, нашивки) без контура, иначе зальётся тёмным
+  if (fminv(h.x, fminv(h.y, h.z)) >= 0.012f) drawBoxSmooth(c, h, yw, col); else drawBox(c, h, yw, col, true);
+}
+#define PART(ox, oy, oz, hx, hy, hz, col) partDraw(x, y, z, yaw, s, (ox), (oy), (oz), (hx), (hy), (hz), (col))
 
 // ---- человечек: ноги, туловище, голова, руки, оружие и шапка ----
 enum { WP_NONE, WP_SWORD, WP_BOW, WP_STAFF, WP_SPEAR, WP_XBOW, WP_DAGGER, WP_BOMB, WP_CLUB, WP_SCEPTER, WP_PIPE };
@@ -1935,7 +2035,7 @@ static u32 gPads = 0;          // не 0 - наплечники этого цв�
 static u32 gBrow = 0;          // не 0 - цвет бровей (иначе тёмные)
 static bool gShieldOn = true;  // щит новобранца ещё цел
 static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u32 body, u32 leg, u32 team, float walk, float atk, int weapon, int hat, u32 wcol, bool shield) {
-  float sw = sinf(walk) * 0.09f, sw2 = -sw;
+  float sw = sinf(walk) * 0.11f, sw2 = -sw;
   PART(-0.09f, 0.17f, sw, 0.055f, 0.17f, 0.06f, leg); PART(0.09f, 0.17f, sw2, 0.055f, 0.17f, 0.06f, leg);
   PART(-0.09f, 0.025f, sw + 0.03f, 0.06f, 0.025f, 0.08f, RGB(60, 45, 35)); PART(0.09f, 0.025f, sw2 + 0.03f, 0.06f, 0.025f, 0.08f, RGB(60, 45, 35));
   bool girl = gHair != 0;
@@ -1958,13 +2058,13 @@ static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u3
     PART(-0.05f, 0.82f, fz, 0.032f, 0.03f, 0.003f, RGB(25, 22, 28)); PART(0.05f, 0.82f, fz, 0.032f, 0.03f, 0.003f, RGB(25, 22, 28));
     PART(-0.05f, 0.82f, fz + 0.002f, 0.013f, 0.013f, 0.003f, gEyes); PART(0.05f, 0.82f, fz + 0.002f, 0.013f, 0.013f, 0.003f, gEyes); }
   else { float fz = 0.121f; u32 br = gBrow ? gBrow : mixc(skin, RGB(30, 20, 15), 0.7f);   // лицо: белки, зрачки, брови, нос, рот
-    PART(-0.05f, 0.82f, fz, 0.026f, 0.026f, 0.003f, RGB(250, 250, 250)); PART(0.05f, 0.82f, fz, 0.026f, 0.026f, 0.003f, RGB(250, 250, 250));
-    PART(-0.045f, 0.815f, fz + 0.002f, 0.014f, 0.017f, 0.003f, RGB(25, 25, 35)); PART(0.045f, 0.815f, fz + 0.002f, 0.014f, 0.017f, 0.003f, RGB(25, 25, 35));
+    PART(-0.05f, 0.815f, fz, 0.03f, 0.03f, 0.003f, RGB(250, 250, 250)); PART(0.05f, 0.815f, fz, 0.03f, 0.03f, 0.003f, RGB(250, 250, 250));   // большие мультяшные глаза
+    PART(-0.045f, 0.81f, fz + 0.002f, 0.017f, 0.021f, 0.003f, RGB(25, 25, 35)); PART(0.045f, 0.81f, fz + 0.002f, 0.017f, 0.021f, 0.003f, RGB(25, 25, 35));
     PART(-0.052f, 0.862f, fz, 0.032f, 0.008f, 0.004f, br); PART(0.052f, 0.862f, fz, 0.032f, 0.008f, 0.004f, br);
     PART(0, 0.78f, fz + 0.012f, 0.016f, 0.022f, 0.014f, mixc(skin, RGB(120, 60, 40), 0.18f));
     PART(0, 0.735f, fz, 0.035f, 0.007f, 0.003f, mixc(skin, RGB(90, 30, 30), 0.6f)); }
   // руки: правая с оружием выносится вперёд при ударе
-  float a = atk;  float raZ = 0.04f + a * 0.18f, raY = 0.5f + a * 0.12f;
+  float a = atk;  float raZ = 0.04f + a * 0.18f + (a < 0.05f ? sw * 0.5f : 0.0f), raY = 0.5f + a * 0.12f;   // без удара правая рука тоже машет
   PART(0.23f, raY, raZ, 0.05f, 0.14f, 0.05f, body); PART(0.23f, raY - 0.16f, raZ + 0.02f, 0.045f, 0.04f, 0.045f, skin);
   PART(-0.23f, 0.5f, 0.04f - sw * 0.5f, 0.05f, 0.14f, 0.05f, body); PART(-0.23f, 0.34f, 0.06f - sw * 0.5f, 0.045f, 0.04f, 0.045f, skin);
   PART(-0.23f, 0.4f, 0.04f - sw * 0.5f, 0.054f, 0.02f, 0.054f, mixc(body, RGB(0, 0, 0), 0.3f)); PART(0.23f, raY - 0.1f, raZ, 0.054f, 0.02f, 0.054f, mixc(body, RGB(0, 0, 0), 0.3f));   // манжеты
@@ -1972,6 +2072,7 @@ static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u3
   if (gPads) { PART(-0.23f, 0.65f, 0.03f, 0.075f, 0.04f, 0.075f, gPads); PART(0.23f, raY + 0.15f, raZ - 0.01f, 0.075f, 0.04f, 0.075f, gPads);
     PART(-0.23f, 0.69f, 0.03f, 0.06f, 0.012f, 0.06f, mixc(gPads, RGB(255, 255, 255), 0.3f)); PART(0.23f, raY + 0.19f, raZ - 0.01f, 0.06f, 0.012f, 0.06f, mixc(gPads, RGB(255, 255, 255), 0.3f)); }
   float hx = 0.23f, hy = raY - 0.16f, hz = raZ + 0.06f;
+  gNoWarp++;
   switch (weapon) {
     case WP_SWORD: PART(hx, hy + 0.25f - a * 0.1f, hz + a * 0.15f, 0.018f, 0.22f, 0.035f, RGB(215, 220, 230)); PART(hx, hy + 0.03f, hz, 0.06f, 0.015f, 0.025f, RGB(140, 110, 50)); break;
     case WP_CLUB: PART(hx, hy + 0.12f, hz + 0.02f + a * 0.15f, 0.03f, 0.1f, 0.03f, RGB(100, 70, 40)); PART(hx, hy + 0.3f, hz + 0.04f + a * 0.2f, 0.055f, 0.1f, 0.055f, RGB(125, 88, 52)); break;   // рукоять в кулаке, утолщение сверху
@@ -1987,6 +2088,7 @@ static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u3
     case WP_BOMB: PART(hx, hy + 0.06f + a * 0.2f, hz + a * 0.1f, 0.08f, 0.08f, 0.08f, RGB(30, 30, 34)); PART(hx, hy + 0.16f + a * 0.2f, hz + a * 0.1f, 0.012f, 0.03f, 0.012f, RGB(255, 200, 60)); break;
   }
   if (shield) { PART(-0.29f, 0.48f, 0.12f, 0.03f, 0.15f, 0.13f, team); PART(-0.31f, 0.48f, 0.12f, 0.005f, 0.06f, 0.05f, RGB(230, 210, 120)); }
+  gNoWarp--;
   switch (hat) {
     case HT_HELM: PART(0, 0.88f, -0.005f, 0.13f, 0.07f, 0.13f, RGB(170, 175, 185)); PART(0, 0.79f, 0.123f, 0.1f, 0.012f, 0.004f, RGB(60, 60, 66)); PART(0, 1.0f, -0.03f, 0.02f, 0.06f, 0.08f, team); break;
     case HT_HOOD: PART(0, 0.86f, -0.02f, 0.135f, 0.1f, 0.12f, mixc(body, RGB(0, 0, 0), 0.15f)); break;
@@ -2003,16 +2105,63 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
   u32 skin = RGB(240, 200, 160);
   #define FZ(c) (frozen ? mixc((c), RGB(170, 220, 255), 0.55f) : (flash > 0 ? mixc((c), RGB(255, 255, 255), 0.35f) : (c)))
   float s = 1, US = model < M_CANNON ? 1.35f : 1.0f;            // войска крупнее: на телефоне их лучше видно
+  memset(&gWarp, 0, sizeof gWarp); gNoWarp = 0; gSqY = gSqXZ = 1; gHop = 0;
+  switch (model) {
+    case M_KNIGHT: case M_ARCHER: case M_GOBLIN: case M_SKELETON: case M_XBOW: case M_LANCER: case M_NECRO: case M_FIREMAGE: case M_GOBKING: case M_DART: case M_RECRUIT: case M_ICEWIZ:
+    case M_BARB: case M_EBARB: case M_BOMBER: case M_PRINCESS: case M_KING: case M_ATOWER:
+      gWarp.yTh = 0.66f; gWarp.py = 0.8f; gWarp.H = 1.4f; gWarp.xLim = 0.2f; gWarp.zLim = 0.3f; gWarp.fat = 1.12f; break;      // мультяшно: голова в 1.4 раза больше
+    case M_GIANT: case M_IGIANT: case M_MEGA: case M_STRONG:
+      gWarp.yTh = 0.66f; gWarp.py = 0.8f; gWarp.H = 1.28f; gWarp.xLim = 0.2f; gWarp.zLim = 0.3f; gWarp.fat = 1.15f; break;     // здоровяки: голова поменьше, тело мощнее
+    case M_GOLEM: case M_CGOLEM: gWarp.yTh = 0.96f; gWarp.py = 1.06f; gWarp.pz = 0.04f; gWarp.H = 1.3f; gWarp.xLim = 0.2f; gWarp.zLim = 0.3f; gWarp.fat = 1.05f; break;
+    case M_BULL: gWarp.zTh = 0.45f; gWarp.zpy = 0.6f; gWarp.zpz = 0.52f; gWarp.zH = 1.3f; break;
+    case M_HOG: gWarp.zTh = 0.4f; gWarp.zpy = 0.48f; gWarp.zpz = 0.46f; gWarp.zH = 1.3f; break;
+    case M_DRAGON: gWarp.zTh = 0.45f; gWarp.zpy = 0.26f; gWarp.zpz = 0.56f; gWarp.zH = 1.3f; break;
+    case M_BAT: gWarp.zTh = 0.12f; gWarp.zpy = 0.1f; gWarp.zpz = 0.15f; gWarp.zH = 1.35f; break;
+    case M_PUP: gWarp.zTh = 0.2f; gWarp.zpy = 0.12f; gWarp.zpz = 0.26f; gWarp.zH = 1.3f; break;
+    case M_VOLAR: gWarp.zTh = 0.4f; gWarp.zpy = 0.16f; gWarp.zpz = 0.5f; gWarp.zH = 1.15f; break;
+    default: break;
+  }
+  bool troop = model < M_CANNON; gNiceParts = troop;
+  if (troop) {                                                    // живая анимация: шаг вприпрыжку, дыхание на месте, сжатие при ударе
+    bool air = model == M_DRAGON || model == M_BAT || model == M_VOLAR || model == M_PUP;
+    float ph = x * 1.7f + z * 2.3f;
+    if (gMoveK > 0.5f && !air) { gHop = fabsf(sinf(walk)) * 0.06f; gSqY = 1.0f + 0.035f * cosf(walk * 2.0f); }
+    else gSqY = 1.0f + 0.022f * sinf(gTime * 2.6f + ph);
+    if (atk > 0) gSqY *= 1.0f - 0.1f * atk;                     // в момент удара боец приседает и пружинит обратно
+    gSqXZ = 1.0f / sqrtf(gSqY); }
   switch (model) {
     case M_KNIGHT: s = 1.25f * US; gPads = FZ(RGB(185, 190, 200)); gBrow = RGB(110, 70, 40); humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(150, 155, 165)), FZ(RGB(90, 90, 100)), FZ(tc), walk, atk, WP_SWORD, HT_HELM, 0, true); gPads = 0; gBrow = 0;
       PART(0, 0.42f, -0.125f, 0.16f, 0.26f, 0.012f, FZ(td)); PART(0, 0.36f, 0.118f, 0.03f, 0.022f, 0.004f, FZ(RGB(230, 200, 80))); break;   // плащ и пряжка
     case M_ARCHER: s = 1.05f * US; gHair = FZ(RGB(200, 90, 40)); humanoid(x, y, z, yaw, s, FZ(RGB(250, 215, 185)), FZ(RGB(90, 150, 80)), FZ(RGB(70, 100, 60)), FZ(tc), walk, atk, WP_BOW, HT_NONE, 0, false); gHair = 0;
       PART(0.0f, 0.95f, -0.05f, 0.05f, 0.02f, 0.05f, FZ(RGB(240, 230, 120)));   // заколка
-      PART(0.12f, 0.55f, -0.17f, 0.045f, 0.14f, 0.045f, FZ(RGB(120, 80, 45))); for (int k = 0; k < 3; k++) PART(0.1f + k * 0.02f, 0.72f, -0.17f, 0.008f, 0.04f, 0.008f, FZ(RGB(240, 240, 240))); break;   // колчан
+      PART(0.12f, 0.55f, -0.17f, 0.045f, 0.14f, 0.045f, FZ(RGB(120, 80, 45))); gNoWarp++; for (int k = 0; k < 3; k++) PART(0.1f + k * 0.02f, 0.72f, -0.17f, 0.008f, 0.04f, 0.008f, FZ(RGB(240, 240, 240))); gNoWarp--; break;   // колчан
     case M_GOBLIN: s = 0.8f * US; humanoid(x, y, z, yaw, s, FZ(RGB(110, 180, 80)), FZ(RGB(120, 90, 60)), FZ(RGB(90, 70, 50)), FZ(tc), walk, atk, WP_DAGGER, HT_EARS, 0, false);
       PART(-0.23f, 0.87f, -0.01f, 0.04f, 0.018f, 0.015f, FZ(RGB(100, 170, 70))); PART(0.23f, 0.87f, -0.01f, 0.04f, 0.018f, 0.015f, FZ(RGB(100, 170, 70)));   // кончики ушей
       PART(0, 0.78f, 0.15f, 0.025f, 0.03f, 0.03f, FZ(RGB(95, 160, 65))); PART(-0.03f, 0.725f, 0.124f, 0.008f, 0.014f, 0.004f, RGB(250, 250, 240)); PART(0.03f, 0.725f, 0.124f, 0.008f, 0.014f, 0.004f, RGB(250, 250, 240));
       PART(0, 0.9f, -0.005f, 0.124f, 0.025f, 0.124f, FZ(tc)); break;   // нос, клыки, повязка
+    case M_IGIANT: { s = 2.1f * US; u32 ice = FZ(RGB(150, 210, 245)), iceD = FZ(RGB(95, 160, 215)), snow = FZ(RGB(235, 248, 255));   // ледяной великан: голубая кожа, снежная шуба, ледяные шипы
+      humanoid(x, y, z, yaw, s, FZ(RGB(165, 205, 235)), FZ(RGB(225, 238, 250)), FZ(RGB(120, 160, 200)), FZ(tc), walk, atk, WP_CLUB, HT_NONE, 0, false);
+      PART(0, 0.905f, -0.01f, 0.125f, 0.035f, 0.125f, snow);                                                                        // седые ледяные волосы
+      PART(0, 0.725f, 0.118f, 0.1f, 0.045f, 0.012f, snow); PART(0, 0.68f, 0.118f, 0.06f, 0.03f, 0.012f, snow);   // снежная борода
+      gNoWarp++;
+      PART(-0.23f, 0.66f, 0.0f, 0.075f, 0.05f, 0.075f, snow); PART(0.23f, 0.66f, 0.0f, 0.075f, 0.05f, 0.075f, snow);              // снег на плечах
+      for (int k = 0; k < 3; k++) { PART(-0.24f + k * 0.012f, 0.74f + k * 0.04f, -0.03f + k * 0.02f, 0.025f - k * 0.006f, 0.05f, 0.025f - k * 0.006f, k ? ice : iceD);   // ледяные шипы
+        PART(0.24f - k * 0.012f, 0.74f + k * 0.04f, -0.03f + k * 0.02f, 0.025f - k * 0.006f, 0.05f, 0.025f - k * 0.006f, k ? ice : iceD); }
+      gNoWarp--;
+      for (int k = 0; k < 4; k++) PART(-0.09f + k * 0.06f, 0.96f, 0.02f, 0.022f, 0.035f + (k & 1) * 0.02f, 0.022f, ice);           // ледяная корона-сосульки на голове
+    } break;
+    case M_ESPIRIT: { s = 0.95f * US; float bob = fabsf(sinf(walk * 2.6f)) * 0.06f, lg = sinf(walk * 2.6f) * 0.07f; u32 eb = FZ(RGB(70, 140, 245)), ew = FZ(RGB(200, 230, 255)), ey = FZ(RGB(255, 230, 70));   // электродух: синий шарик с молниями
+      float bl = (fmodf(gTime * 0.7f + x * 0.29f + z * 0.41f, 3.4f) < 0.12f) ? 0.2f : 1.0f, mo = atk > 0.3f ? 0.07f : 0.03f, fl = fmodf(gTime * 9 + x, 1.0f) < 0.5f ? 1.0f : 0.0f;
+      PART(-0.1f, 0.06f, lg, 0.06f, 0.06f, 0.07f, FZ(RGB(50, 100, 200))); PART(0.1f, 0.06f, -lg, 0.06f, 0.06f, 0.07f, FZ(RGB(50, 100, 200)));
+      PART(0, 0.3f + bob, 0, 0.22f, 0.22f, 0.2f, eb); PART(0, 0.14f, 0, 0.225f, 0.03f, 0.205f, FZ(tc));
+      PART(0, 0.3f + bob, 0.203f, 0.185f, 0.17f, 0.004f, ew);
+      PART(-0.085f, 0.385f + bob, 0.208f, 0.065f, 0.08f * bl, 0.005f, RGB(255, 255, 255)); PART(0.085f, 0.385f + bob, 0.208f, 0.065f, 0.08f * bl, 0.005f, RGB(255, 255, 255));
+      PART(-0.08f, 0.38f + bob, 0.214f, 0.034f, 0.052f * bl, 0.004f, RGB(20, 40, 110)); PART(0.08f, 0.38f + bob, 0.214f, 0.034f, 0.052f * bl, 0.004f, RGB(20, 40, 110));
+      PART(-0.1f, 0.49f + bob, 0.208f, 0.045f, 0.011f, 0.004f, FZ(RGB(30, 70, 170))); PART(0.1f, 0.47f + bob, 0.208f, 0.045f, 0.011f, 0.004f, FZ(RGB(30, 70, 170)));   // озорные брови
+      PART(0, 0.225f + bob, 0.209f, 0.08f, mo, 0.005f, RGB(30, 50, 120));
+      PART(-0.04f, 0.58f + bob, 0, 0.02f, 0.06f, 0.02f, ey); PART(0.0f, 0.62f + bob, 0, 0.02f, 0.06f, 0.02f, ey); PART(0.05f, 0.6f + bob, 0, 0.02f, 0.05f, 0.02f, ey);   // молния-хохолок
+      PART(-0.24f, 0.36f + bob, 0, 0.03f, 0.045f, 0.02f, ey); PART(0.24f, 0.26f + bob, 0, 0.03f, 0.045f, 0.02f, ey);                    // искры по бокам
+      GLOW(x, y + (0.3f + bob) * s, z, 0.42f * s, RGB(120, 180, 255), (int)(70 + 60 * fl)); } break;
     case M_GIANT: s = 2.1f * US; humanoid(x, y, z, yaw, s, FZ(RGB(230, 180, 130)), FZ(RGB(150, 110, 70)), FZ(RGB(110, 80, 55)), FZ(tc), walk, atk, WP_CLUB, HT_NONE, 0, false);
       PART(0, 0.9f, 0, 0.125f, 0.035f, 0.125f, FZ(RGB(170, 110, 60)));     // волосы
       PART(0, 0.72f, 0.1f, 0.1f, 0.035f, 0.025f, FZ(RGB(150, 95, 55))); PART(0, 0.36f, 0.12f, 0.04f, 0.03f, 0.005f, FZ(RGB(220, 190, 90)));   // щетина, бляха
@@ -2068,6 +2217,23 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       float fl = sinf(gTime * 14.0f + x * 3) * 0.045f, f2 = sinf(gTime * 11.0f + z * 2) * 0.04f;                                                                                 // язычки пламени на голове
       PART(0, 0.62f + bob, 0, 0.12f, 0.11f + fl, 0.11f, fy); PART(0, 0.8f + bob + fl, 0, 0.07f, 0.1f + fl, 0.07f, FZ(RGB(255, 235, 120))); PART(-0.12f, 0.66f + bob, 0, 0.05f, 0.09f + f2, 0.05f, fo); PART(0.12f, 0.66f + bob, 0, 0.05f, 0.08f - f2, 0.05f, fo);
       GLOW(x, y + 0.45f * s, z, 0.5f * s, RGB(255, 140, 40), 80); } break;
+    case M_SPARKY: { s = 1.0f * US; u32 met = FZ(RGB(96, 100, 116)), metd = FZ(RGB(58, 60, 72)), wood = FZ(RGB(150, 100, 58)), tire = FZ(RGB(38, 34, 32)), brass = FZ(RGB(220, 180, 80));
+      float rec = -atk * 0.1f, loaded = atk < 0.3f ? 1.0f : 0.0f, wr = walk * 0.8f;                       // отдача при выстреле, ракеты в трубах, пока перезарядка не началась
+      { float cy = cosf(RY(yaw)), sy = sinf(RY(yaw)); V3 axw = v3(cy, 0, -sy), azw = v3(sy, 0, cy);           // круглые колёса с латунным колпаком и спицей, крутятся на ходу
+        for (int k = 0; k < 4; k++) { float wx = (k & 1) ? 0.38f : -0.38f, wz = (k & 2) ? 0.3f : -0.3f, px, pz; LP(x, z, yaw, wx * s, wz * s, px, pz); V3 c = RP(px, y + 0.19f * s, pz);
+          drawWheel(c, axw, v3(0, 1, 0), azw, 0.19f * s, 0.07f * s, tire); drawWheel(c + axw * (wx > 0 ? 0.075f * s : -0.075f * s), axw, v3(0, 1, 0), azw, 0.09f * s, 0.01f * s, brass);
+          PART(wx * 1.22f, 0.19f + sinf(wr) * 0.06f, wz + cosf(wr) * 0.06f, 0.006f, 0.025f, 0.025f, metd); } }
+      PART(0, 0.3f, 0, 0.34f, 0.08f, 0.46f, metd); PART(0, 0.4f, 0, 0.35f, 0.025f, 0.47f, FZ(tc));             // рама и полоса цвета команды
+      PART(0, 0.58f, -0.1f, 0.3f, 0.16f, 0.3f, wood); for (int k = 0; k < 3; k++) PART(0, 0.48f + k * 0.1f, -0.1f, 0.305f, 0.012f, 0.305f, FZ(RGB(110, 72, 40)));   // ящик с боезапасом
+      PART(0.2f, 0.8f, -0.36f, 0.04f, 0.14f, 0.04f, metd); PART(0.2f, 0.96f, -0.36f, 0.055f, 0.025f, 0.055f, met);     // выхлопная труба
+      PART(0, 0.78f, 0.02f, 0.09f, 0.05f, 0.09f, met);                                                          // поворотная опора
+      PART(0, 0.98f, 0.08f + rec, 0.26f, 0.16f, 0.26f, met); PART(0, 1.15f, 0.08f + rec, 0.265f, 0.015f, 0.265f, FZ(tc));   // пусковая установка
+      PART(-0.27f, 0.98f, 0.08f + rec, 0.012f, 0.12f, 0.22f, metd); PART(0.27f, 0.98f, 0.08f + rec, 0.012f, 0.12f, 0.22f, metd);
+      for (int r = 0; r < 2; r++) for (int c = 0; c < 2; c++) { float tx = c ? 0.115f : -0.115f, ty = r ? 1.055f : 0.905f;             // 4 трубы, в них красные головки ракет
+        PART(tx, ty, 0.34f + rec, 0.075f, 0.062f, 0.012f, FZ(RGB(18, 16, 20)));
+        if (loaded > 0) PART(tx, ty, 0.345f + rec, 0.04f, 0.04f, 0.012f, FZ(RGB(225, 55, 45))); }
+      PART(-0.17f, 1.22f, -0.1f, 0.02f, 0.06f, 0.02f, metd); { float gx, gz; LP(x, z, yaw, -0.17f * s, -0.1f * s, gx, gz); GLOW(gx, y + 1.32f * s, gz, 0.07f, RGB(255, 120, 40), (int)(150 + 100 * sinf(gTime * 6 + x))); }   // сигнальный огонёк
+      if (atk > 0.6f) GLOW(x + sinf(yaw) * 0.45f * s, y + 0.98f * s, z + cosf(yaw) * 0.45f * s, 0.35f * atk, RGB(255, 190, 80), (int)(220 * atk)); } break;   // вспышка пуска
     case M_ISPIRIT: { s = 0.95f * US; float bob = fabsf(sinf(walk * 2.6f)) * 0.06f, lg = sinf(walk * 2.6f) * 0.07f; u32 ib = FZ(RGB(140, 205, 252)), iw = FZ(RGB(225, 245, 255));   // ледяной дух: как в Clash Royale - голубой снежок с большими глазами и милой улыбкой
       float bl = (fmodf(gTime * 0.7f + x * 0.29f + z * 0.41f, 3.4f) < 0.12f) ? 0.2f : 1.0f, mo = atk > 0.3f ? 0.07f : 0.028f;
       PART(-0.1f, 0.06f, lg, 0.06f, 0.06f, 0.07f, FZ(RGB(110, 170, 225))); PART(0.1f, 0.06f, -lg, 0.06f, 0.06f, 0.07f, FZ(RGB(110, 170, 225)));
@@ -2100,7 +2266,7 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       PART(0, 0.88f, -0.02f, 0.14f, 0.08f, 0.125f, ice); PART(0, 0.98f, -0.06f, 0.08f, 0.05f, 0.08f, ice); PART(0, 1.06f, -0.1f, 0.035f, 0.04f, 0.035f, ice);   // острый голубой капюшон
       PART(0, 0.66f, 0.12f, 0.085f, 0.1f, 0.02f, FZ(RGB(240, 248, 255))); PART(0, 0.55f, 0.125f, 0.05f, 0.04f, 0.015f, FZ(RGB(240, 248, 255)));          // длинная белая борода
       PART(0, 0.36f, 0.135f, 0.13f, 0.02f, 0.004f, ice); PART(0, 0.5f, 0.112f, 0.06f, 0.06f, 0.004f, FZ(tc));
-      { float hx2 = 0.23f, hy2 = 0.5f + atk * 0.12f - 0.16f + 0.7f, hz2 = 0.04f + atk * 0.18f + 0.06f; for (int k = 0; k < 3; k++) { float a = k * 2.094f + gTime * 2; PART(hx2 + cosf(a) * 0.07f, hy2 + 0.04f, hz2 + sinf(a) * 0.07f, 0.02f, 0.05f, 0.02f, RGB(200, 245, 255)); } } } break;   // осколки льда кружат у кристалла
+      gNoWarp++; { float hx2 = 0.23f, hy2 = 0.5f + atk * 0.12f - 0.16f + 0.7f, hz2 = 0.04f + atk * 0.18f + 0.06f; for (int k = 0; k < 3; k++) { float a = k * 2.094f + gTime * 2; PART(hx2 + cosf(a) * 0.07f, hy2 + 0.04f, hz2 + sinf(a) * 0.07f, 0.02f, 0.05f, 0.02f, RGB(200, 245, 255)); } } gNoWarp--; } break;   // осколки льда кружат у кристалла
     case M_BARB: { s = 1.2f * US; gBrow = RGB(110, 70, 30);                                              // варвар: голый торс, меховая жилетка, борода, широкий меч
       humanoid(x, y, z, yaw, s, FZ(skin), FZ(RGB(225, 180, 140)), FZ(RGB(110, 80, 55)), FZ(tc), walk, atk, WP_SWORD, HT_NONE, 0, false); gBrow = 0;
       PART(0, 0.52f, -0.02f, 0.175f, 0.14f, 0.1f, FZ(RGB(120, 85, 50))); PART(0, 0.52f, 0.08f, 0.06f, 0.14f, 0.035f, FZ(RGB(225, 180, 140)));    // меховая жилетка, открытая грудь
@@ -2295,12 +2461,19 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
       { float cx2, cz2; LP(x + 0.5f, z, yaw, 0, 0.3f - atk * 0.1f, cx2, cz2); BX(cx2, y + 2.95f, cz2, 0.18f, 0.18f, 0.5f, yaw, FZ(RGB(50, 50, 56))); BX(x + 0.5f, y + 2.75f, z, 0.32f, 0.12f, 0.32f, 0, FZ(RGB(110, 80, 50))); } } break;
   }
   #undef FZ
+  memset(&gWarp, 0, sizeof gWarp); gNoWarp = 0; gSqY = gSqXZ = 1; gHop = 0; gNiceParts = false;
   (void)life01;
 }
 static float modelTop0(int model);
-static float modelTop(int model) { return modelTop0(model) * (model < M_CANNON ? 1.35f : 1.0f); }
+static void drawIceAura(float x, float z) {                       // круг холода ледяного великана на земле: радиус ауры и кружащие снежинки
+  float pulse = 0.5f + 0.5f * sinf(gTime * 2.2f + x);
+  DISC(x, z, IGIANT_AURA, 0.012f, mixc(ARENAS[B.arena].grass, RGB(190, 230, 255), 0.35f + 0.1f * pulse));
+  DISC(x, z, IGIANT_AURA * 0.92f, 0.014f, mixc(ARENAS[B.arena].grass, RGB(170, 215, 250), 0.18f + 0.06f * pulse));
+  for (int k = 0; k < 8; k++) { float a = k * 0.785f + gTime * 0.4f, rr = IGIANT_AURA * (0.55f + 0.4f * fmodf(k * 0.37f + gTime * 0.15f, 1.0f)); GLOW(x + cosf(a) * rr, 0.25f + 0.2f * sinf(gTime * 3 + k), z + sinf(a) * rr, 0.09f, RGB(225, 245, 255), 170); }
+}
+static float modelTop(int model) { return modelTop0(model) * (model < M_CANNON ? 1.35f : 1.0f) + (model < M_CANNON ? 0.12f : 0.0f); }
 static float modelTop0(int model) {
-  switch (model) { case M_GIANT: return 2.2f; case M_GOLEM: return 1.95f; case M_PRINCESS: return 4.6f; case M_KING: return 4.3f; case M_ATOWER: return 3.7f; case M_INFERNO: return 2.6f; case M_FSPIRIT: return 0.8f; case M_ISPIRIT: return 0.8f; case M_COLLECTOR: return 1.9f; case M_FURNACE: return 2.0f; case M_ICEROCK: return 2.5f; case M_HUT: return 1.7f; case M_CANNON: return 0.95f;
+  switch (model) { case M_IGIANT: return 2.3f; case M_ESPIRIT: return 0.8f; case M_GIANT: return 2.2f; case M_GOLEM: return 1.95f; case M_PRINCESS: return 4.6f; case M_KING: return 4.3f; case M_ATOWER: return 3.7f; case M_INFERNO: return 2.6f; case M_FSPIRIT: return 0.8f; case M_ISPIRIT: return 0.8f; case M_COLLECTOR: return 1.9f; case M_FURNACE: return 2.0f; case M_ICEROCK: return 2.5f; case M_HUT: return 1.7f; case M_CANNON: return 0.95f;
     case M_BULL: return 1.25f; case M_GOBKING: return 1.75f; case M_DART: return 0.95f; case M_VOLAR: return 0.8f; case M_PUP: return 0.35f; case M_ICEWIZ: return 1.45f; case M_HOG: return 1.55f; case M_MEGA: return 2.0f; case M_STRONG: return 1.9f; case M_CGOLEM: return 2.0f; case M_DRAGON: return 0.7f; case M_BAT: return 0.35f; case M_GOBLIN: return 0.85f; case M_BOMBER: return 0.85f; case M_SKELETON: return 0.85f; default: return 1.35f; }
 }
 
@@ -2541,6 +2714,33 @@ static void hpBar(float x, float y, float z, float frac, int team, int w, bool l
   if (lvlTag) { char b[8]; snprintf(b, sizeof b, "%d", lvl); int r = h + fs; fillRect(x0 - r * 2 - 1, y0 - r / 2, r * 2, h + r, team == viewTeam ? RGB(40, 90, 200) : RGB(180, 40, 35)); drawText(x0 - r, y0 - r / 2 + 1, b, imax(1, fs / 2 + (big ? 1 : 0)), RGB(255, 255, 255), 1); }
 }
 
+static const unsigned char BOLDD[10][9] = {{0x1E,0x33,0x33,0x33,0x33,0x33,0x33,0x33,0x1E},{0x0C,0x1C,0x3C,0x0C,0x0C,0x0C,0x0C,0x0C,0x3F},{0x1E,0x33,0x03,0x06,0x0C,0x18,0x30,0x30,0x3F},{0x1E,0x33,0x03,0x03,0x0E,0x03,0x03,0x33,0x1E},{0x06,0x0E,0x1E,0x36,0x36,0x3F,0x06,0x06,0x06},{0x3F,0x30,0x30,0x3E,0x03,0x03,0x03,0x33,0x1E},{0x1E,0x33,0x30,0x3E,0x33,0x33,0x33,0x33,0x1E},{0x3F,0x03,0x03,0x06,0x06,0x0C,0x0C,0x0C,0x0C},{0x1E,0x33,0x33,0x33,0x1E,0x33,0x33,0x33,0x1E},{0x1E,0x33,0x33,0x33,0x1F,0x03,0x03,0x33,0x1E}};   // жирные цифры 6x9 со скруглёнными углами
+static int boldW(const char *s, int sc) { int n = (int)strlen(s); return n > 0 ? n * 7 * sc - sc : 0; }
+// жирное число: тёмная обводка, сверху белое, книзу чуть темнее - как цифры в больших играх
+static void drawBoldNum(int cx, int y, const char *s, int sc, u32 top, u32 bot) {
+  int x0 = cx - boldW(s, sc) / 2, o = imax(1, sc / 2 + (sc >= 3 ? 1 : 0));
+  for (int pass = 0; pass < 2; pass++) { int x = x0;
+    for (const char *p = s; *p; p++, x += 7 * sc) { if (*p < '0' || *p > '9') continue; const unsigned char *g = BOLDD[*p - '0'];
+      for (int r = 0; r < 9; r++) for (int c = 0; c < 6; c++) if (g[r] & (0x20 >> c)) {
+        if (pass == 0) fillRect(x + c * sc - o, y + r * sc - o, sc + 2 * o, sc + 2 * o, RGB(16, 14, 24));
+        else fillRect(x + c * sc, y + r * sc, sc, sc, mixc(top, bot, r / 8.0f)); } } }
+}
+// ---- подпись над башней: аккуратная полоска здоровья, значок уровня слева, число по центру сверху ----
+static void towerBar(float x, float y, float z, float frac, int team, int w, int lvl, int hp, bool active) {
+  int sx, sy; float zz; if (!projectPt(RP(x, y, z), sx, sy, zz)) return; if (sx < -IW || sx > 2 * IW || sy < -IH || sy > 2 * IH) return;
+  bool me = team == viewTeam; u32 fill = me ? RGB(80, 160, 255) : RGB(240, 70, 60), back = me ? RGB(20, 34, 70) : RGB(70, 18, 16), badge = me ? RGB(40, 90, 200) : RGB(180, 40, 35);
+  int h = imax(3, fs * 2 + 1), x0 = sx - w / 2, y0 = sy - h; char b[16];
+  fillRect(x0 - 1, y0 - 1, w + 2, h + 2, RGB(14, 12, 20));                                        // рамка
+  fillRect(x0, y0, w, h, back);                                                                    // потерянное здоровье - тёмным
+  int fw = (int)(w * clampf(frac, 0, 1)); fillRect(x0, y0, fw, h, fill); fillRect(x0, y0, fw, imax(1, h / 3), mixc(fill, RGB(255, 255, 255), 0.35f));   // блик сверху
+  int bs = h + fs * 3, bx = x0 - bs + 1, by = y0 + h / 2 - bs / 2;                                 // значок уровня - квадрат, прижат к левому краю полоски
+  fillRect(bx - 1, by - 1, bs + 2, bs + 2, RGB(14, 12, 20)); fillRect(bx, by, bs, bs, badge); fillRect(bx, by, bs, imax(1, bs / 6), mixc(badge, RGB(255, 255, 255), 0.3f));
+  snprintf(b, sizeof b, "%d", lvl); int ls = imax(1, (bs - 4) / 9); while (ls > 1 && boldW(b, ls) > bs - 4) ls--;
+  drawBoldNum(bx + bs / 2, by + (bs - 9 * ls) / 2, b, ls, RGB(255, 255, 255), RGB(215, 222, 240));
+  snprintf(b, sizeof b, "%d", hp); int ts = imax(2, fs - 1);                                       // здоровье: жирные цифры по центру над полоской
+  drawBoldNum(sx, y0 - 9 * ts - imax(3, fs + 1), b, ts, RGB(255, 255, 255), RGB(200, 210, 232));
+  if (!active) { int zs = imax(1, fs - 1); drawTextOutline(sx + zs / 2, y0 + h + imax(2, fs), "ZZZ", zs, RGB(200, 210, 255), 1); }   // король спит
+}
 // ---- снаряды и эффекты ----
 // след в полёте: отрезок между двумя точками на экране
 static void STREAK(float x0, float y0, float z0, float x1, float y1, float z1, u32 col, int th) {
@@ -2569,6 +2769,12 @@ static void drawProjs(float alpha) {
       case PJ_DART: drawArrow(x, y, z, dx, dy, dz, 0.3f, RGB(120, 200, 90)); break;
       case PJ_LAVA: { for (int t = 1; t <= 3; t++) GLOW(x - dx * t * 1.2f, y - dy * t * 1.2f, z - dz * t * 1.2f, 0.14f - t * 0.03f, RGB(255, 110, 30), 140 - t * 35); GLOW(x, y, z, 0.17f, RGB(255, 160, 50), 210); } break;
       case PJ_ICE: { for (int t = 1; t <= 4; t++) GLOW(x - dx * t * 1.1f, y - dy * t * 1.1f, z - dz * t * 1.1f, 0.15f - t * 0.025f, RGB(170, 230, 255), 140 - t * 28); GLOW(x, y, z, 0.2f, RGB(200, 240, 255), 220); GLOW(x, y, z, 0.1f, RGB(255, 255, 255), 240); } break;
+      case PJ_SPARK: { for (int t = 1; t <= 7; t++) GLOW(x - dx * t * 1.4f, y - dy * t * 1.4f, z - dz * t * 1.4f, 0.12f + t * 0.03f, mixc(RGB(235, 230, 225), RGB(120, 115, 110), t / 7.0f), 150 - t * 16);   // дымный след
+          float l = sqrtf(dx * dx + dy * dy + dz * dz) + 1e-4f, ux = dx / l, uy = dy / l, uz = dz / l; int th = imax(3, (int)(focal / 80.0f));
+          STREAK(x - ux * 0.55f, y - uy * 0.55f - 0.04f, z - uz * 0.55f, x + ux * 0.15f, y + uy * 0.15f - 0.04f, z + uz * 0.15f, RGB(25, 22, 28), th + 2);
+          STREAK(x - ux * 0.5f, y - uy * 0.5f, z - uz * 0.5f, x, y, z, RGB(230, 230, 236), th);                 // корпус
+          STREAK(x, y, z, x + ux * 0.15f, y + uy * 0.15f, z + uz * 0.15f, RGB(220, 50, 40), th);                  // красный нос
+          GLOW(x - ux * 0.6f, y - uy * 0.6f, z - uz * 0.6f, 0.22f + 0.05f * sinf(gTime * 50), RGB(255, 170, 50), 230); } break;   // пламя из сопла
       case PJ_DARK: { for (int t = 1; t <= 3; t++) GLOW(x - dx * t * 1.2f, y - dy * t * 1.2f, z - dz * t * 1.2f, 0.16f - t * 0.03f, RGB(90, 220, 110), 120 - t * 30); GLOW(x, y, z, 0.22f, RGB(140, 255, 150), 200); } break;
       case PJ_BOMB: BX(x, y, z, 0.13f, 0.13f, 0.13f, gTime * 7, RGB(30, 30, 34)); BX(x, y + 0.17f, z, 0.02f, 0.05f, 0.02f, 0, RGB(120, 100, 80)); GLOW(x, y + 0.24f, z, 0.08f + 0.03f * sinf(gTime * 40), RGB(255, 200, 80), 230); break;
       case PJ_CANNON: BX(x, y, z, 0.12f, 0.12f, 0.12f, 0, RGB(40, 40, 46)); STREAK(x - dx * 1.5f, y - dy * 1.5f, z - dz * 1.5f, x, y, z, RGB(200, 200, 200), 1); break;
@@ -2644,7 +2850,7 @@ static void drawFx() {
           if (projectPt(RP(bx, 12, bz), sx0, sy0, zz) && projectPt(RP(bx, 0, bz), sx1, sy1, zz) && sx0 > -IW && sx0 < 2 * IW) { int px = sx0, py = sy0; for (int st = 1; st <= 7; st++) { int nx = sx0 + (sx1 - sx0) * st / 7 + (st < 7 ? (int)((hsh(st * 13u + br * 71u + (unsigned)(f.t * 40)) % 21) - 10) * fs : 0), ny = sy0 + (sy1 - sy0) * st / 7;
               drawLine(px, py, nx, ny, RGB(255, 250, 200), imax(1, fs - 1)); px = nx; py = ny; } } }
         int sx0, sy0, sx1, sy1; float zz; if (projectPt(RP(f.x, 9, f.z), sx0, sy0, zz) && projectPt(RP(f.x, 0, f.z), sx1, sy1, zz)) { int px = sx0, py = sy0; for (int s = 1; s <= 6; s++) { int nx = sx0 + (sx1 - sx0) * s / 6 + (s < 6 ? (int)((hsh(s * 7u + (unsigned)(f.t * 30)) % 17) - 8) * fs : 0), ny = sy0 + (sy1 - sy0) * s / 6; drawLine(px, py, nx, ny, RGB(230, 245, 255), imax(1, fs)); px = nx; py = ny; } } } break;
-      case FX_TRAIL: { bool ic = f.r > 0.5f; GLOW(f.x, f.y + 0.4f, f.z, 0.32f * (1 - k), ic ? RGB(170, 225, 255) : RGB(255, 150, 40), (int)(210 * (1 - k))); GLOW(f.x, f.y + 0.4f, f.z, 0.15f * (1 - k), ic ? RGB(255, 255, 255) : RGB(255, 235, 140), (int)(230 * (1 - k))); } break;
+      case FX_TRAIL: { bool ic = f.r > 0.5f; if (f.r > 1.5f) { GLOW(f.x, f.y + 0.4f, f.z, 0.3f * (1 - k), RGB(120, 190, 255), (int)(220 * (1 - k))); GLOW(f.x, f.y + 0.4f, f.z, 0.13f * (1 - k), RGB(255, 250, 180), (int)(240 * (1 - k))); break; } GLOW(f.x, f.y + 0.4f, f.z, 0.32f * (1 - k), ic ? RGB(170, 225, 255) : RGB(255, 150, 40), (int)(210 * (1 - k))); GLOW(f.x, f.y + 0.4f, f.z, 0.15f * (1 - k), ic ? RGB(255, 255, 255) : RGB(255, 235, 140), (int)(230 * (1 - k))); } break;
       case FX_FIREBURST: { float r = f.r, e = 1.0f - (1.0f - k) * (1.0f - k);   // огненный взрыв: выжженное пятно, ударная волна, шар огня, летящие искры и дым
         DISC(f.x, f.z, r * 0.95f, 0.02f, mixc(RGB(60, 40, 34), ARENAS[B.arena].grass, k * 0.8f));
         DISC(f.x, f.z, r * (0.35f + 0.85f * e), 0.045f, mixc(RGB(255, 190, 70), RGB(150, 60, 30), k));
@@ -2652,6 +2858,12 @@ static void drawFx() {
         for (int a = 0; a < 12; a++) { unsigned h = hsh(a * 53u + 7u); float aa = a * 0.5236f + (h & 3) * 0.1f, rr = r * (0.3f + 0.9f * e) * (0.7f + (h & 7) / 14.0f), hh = 0.2f + (0.6f + (h >> 3 & 7) * 0.12f) * sinf(k * 3.14159f);
           GLOW(f.x + cosf(aa) * rr, hh, f.z + sinf(aa) * rr, 0.2f * (1 - k) + 0.04f, mixc(RGB(255, 210, 90), RGB(255, 90, 30), k), (int)(230 * (1 - k))); }
         for (int a = 0; a < 6; a++) { unsigned h = hsh(a * 29u + 3u); float aa = (h & 15) * 0.4f; BX(f.x + cosf(aa) * r * 0.4f * e, 0.3f + 1.6f * k + (h & 3) * 0.1f, f.z + sinf(aa) * r * 0.4f * e, 0.09f * (1 - k), 0.09f * (1 - k), 0.09f * (1 - k), aa, mixc(RGB(120, 100, 95), RGB(50, 45, 45), k)); } } break;
+      case FX_CHAIN: { float x0 = f.x, z0 = f.z, x1 = f.y, z1 = f.r, a = 1.0f - k; int seg = 6; float px = x0, py = 1.0f, pz = z0;   // ломаная молния, дрожит каждый кадр
+          for (int q = 1; q <= seg; q++) { float t = q / (float)seg, j = q < seg ? 0.18f : 0.0f; unsigned h = hsh((unsigned)(i * 131 + q * 17 + (int)(gTime * 30)));
+            float nx = x0 + (x1 - x0) * t + j * (((h & 255) / 127.5f) - 1.0f), nz = z0 + (z1 - z0) * t + j * ((((h >> 8) & 255) / 127.5f) - 1.0f), ny = 1.0f + j * ((((h >> 16) & 255) / 255.0f) - 0.3f);
+            STREAK(px, py, pz, nx, ny, nz, mixc(RGB(90, 160, 255), ARENAS[B.arena].grass, 1 - a), imax(4, (int)(focal / 55.0f))); STREAK(px, py, pz, nx, ny, nz, RGB(255, 255, 230), imax(2, (int)(focal / 140.0f)));
+            px = nx; py = ny; pz = nz; }
+          GLOW(x1, 1.0f, z1, 0.3f * a, RGB(170, 210, 255), (int)(200 * a)); GLOW(x1, 1.0f, z1, 0.12f * a, RGB(255, 255, 230), (int)(230 * a)); } break;
       case FX_ICEBURST: { float r = f.r, e = 1.0f - (1.0f - k) * (1.0f - k);   // ледяной взрыв: морозное пятно, ударная волна, летящие осколки и снежинки
         DISC(f.x, f.z, r * 0.95f, 0.02f, mixc(RGB(200, 235, 255), ARENAS[B.arena].grass, k * 0.85f));
         DISC(f.x, f.z, r * (0.3f + 0.85f * e), 0.045f, mixc(RGB(235, 250, 255), RGB(140, 200, 245), k));
@@ -2681,11 +2893,11 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
         else if (u.infT >= INF_T2) { STREAK(x, 1.75f, z, bx, by, bz, RGB(255, 70, 40), th * 2); STREAK(x, 1.75f, z, bx, by, bz, RGB(255, 220, 150), th); GLOW(bx, by, bz, 0.35f + 0.1f * fl, RGB(255, 120, 50), 190); }
         else { STREAK(x, 1.75f, z, bx, by, bz, RGB(255, 150, 40), th + 1); STREAK(x, 1.75f, z, bx, by, bz, RGB(255, 235, 180), imax(1, th - 1)); GLOW(bx, by, bz, 0.22f, RGB(255, 170, 60), 170); } } }   // луч инферно: оранжевый > красный > бело-голубой
     if (u.jumpT > 0) { float jd = u.jumpDur > 0 ? u.jumpDur : 0.8f, jh = u.jumpH > 0 ? u.jumpH : 2.5f; y += sinf(clampf(1.0f - u.jumpT / jd, 0, 1) * 3.14159f) * jh; }   // прыжок мегарыцаря и духов
-    if (u.jumpT > 0 && (u.type == U_FSPIRIT || u.type == U_ISPIRIT)) GLOW(x, y + 0.4f, z, 0.75f, u.type == U_ISPIRIT ? RGB(170, 225, 255) : RGB(255, 150, 40), 150);   // разгорается в прыжке
+    if (u.jumpT > 0 && isSpirit(u.type)) GLOW(x, y + 0.4f, z, 0.75f, u.type == U_ISPIRIT ? RGB(170, 225, 255) : (u.type == U_ESPIRIT ? RGB(150, 200, 255) : RGB(255, 150, 40)), 150);   // разгорается в прыжке
     if (riverJumper(u.type) && fabsf(z - RIVER_Z) < RIVER_HW + 0.8f) y += cosf((z - RIVER_Z) / (RIVER_HW + 0.8f) * 1.5708f) * 1.3f;   // прыжок через реку
     float dep = u.deployT > 0 ? clampf(1.0f - u.deployT, 0.2f, 1) : 1;
     if (u.deployT > 0) y += (1 - dep) * 1.2f;
-    gShieldOn = u.shield > 0; drawModel(t.model, u.team, x, y, z, u.face, u.anim, u.atkAnim, u.flash, u.frozenT > 0 || u.slowT > 0, 1); gShieldOn = true;
+    if (u.type == U_IGIANT && u.deployT <= 0) drawIceAura(x, z); gShieldOn = u.shield > 0; gMoveK = u.moving ? 1.0f : 0.0f; drawModel(t.model, u.team, x, y, z, u.face, u.anim, u.atkAnim, u.flash, u.frozenT > 0 || u.slowT > 0, 1); gMoveK = 0; gShieldOn = true;
     if (u.charging) GLOW(x, 0.8f, z, 0.5f, RGB(255, 230, 120), 90); }
   if (placing && placeCard >= 0) {                            // призрак на месте будущей карты
     const Card &c = CARDS[placeCard]; u32 rc = ghostOk ? RGB(255, 255, 255) : RGB(255, 80, 70);
@@ -2698,8 +2910,7 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
   if (gShowBars) for (size_t i = 0; i < B.units.size(); i++) { const Unit &u = B.units[i]; if (!u.alive) continue; const UnitT &t = UT(u);
     float x = u.px + (u.x - u.px) * alpha, z = u.pz + (u.z - u.pz) * alpha, top = modelTop(t.model) + (t.air ? 2.0f : 0) + 0.25f;
     if (t.kind == UT_TOWER) { bool active = u.type != U_KING || B.side[u.team].kingActive;
-      hpBar(x, top, z, u.hp / u.maxhp, u.team, (int)(focal * 0.075f) * (u.type == U_KING ? 2 : 1) / 1, true, u.lvl, true);
-      int sx, sy; float zz; if (projectPt(RP(x, top, z), sx, sy, zz) && sx > -IW && sx < 2 * IW && sy > -IH && sy < 2 * IH) { char b[16]; snprintf(b, sizeof b, "%d", (int)ceilf(u.hp)); drawTextOutline(sx, sy - fs * 12, b, fs + 1, RGB(255, 255, 255), 1); if (!active) drawTextSh(sx, sy + fs * 2, "ZZZ", fs, RGB(220, 220, 255), 1); } }
+      towerBar(x, top, z, u.hp / u.maxhp, u.team, (int)(focal * 0.075f) * (u.type == U_KING ? 2 : 1), u.lvl, (int)ceilf(u.hp), active); }
     else if (u.hp < u.maxhp - 0.5f || t.kind == UT_BUILD) hpBar(x, top, z, u.hp / u.maxhp, u.team, (int)(focal * (t.radius > 0.7f ? 0.06f : 0.035f)), false, 0, false);
     if (u.deployT > 0) { int sx, sy; float zz; if (projectPt(RP(x, top + 0.3f, z), sx, sy, zz) && sx > -IW && sx < 2 * IW && sy > -IH && sy < 2 * IH) { int r = fs * 4; fillCircle(sx, sy, r, RGB(20, 20, 30), 150); fillRect(sx - r + fs, sy + r - fs * 2, (int)((2 * r - 2 * fs) * clampf(1 - u.deployT, 0, 1)), fs, teamCol(u.team)); } } }
 }
@@ -2708,7 +2919,7 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
 // =====================================================================
 //  БИТВА БАШЕН: интерфейс боя, меню, колода, сундуки, магазин, задания
 // =====================================================================
-enum { GS_MENU, GS_BATTLE, GS_RESULT, GS_CHEST, GS_LOBBY, GS_START };
+enum { GS_MENU, GS_BATTLE, GS_RESULT, GS_CHEST, GS_LOBBY, GS_START, GS_ROAD };
 static int gs = GS_MENU, menuTab = 2;
 static char msg[160] = ""; static float msgT = 0;
 static void say(const char *s, float t = 2.5f) { snprintf(msg, sizeof msg, "%s", s); msgT = t; }
@@ -2732,6 +2943,7 @@ static void thumbRender(int c, float zoom, float shx, float shy) {
   int n = imin(cd.count, 3); for (int k = 0; k < imax(1, n); k++) { float ox = n > 1 ? (k - (n - 1) * 0.5f) * 0.5f * top : 0, oz = n > 1 ? -fabsf(ox) * 0.7f : 0;
     drawModel(ut.model, 0, ox, 0, oz, 0.35f, 0.9f, 0, 0, false, 1); }
 }
+static void genChests();
 static void genThumbs() {
   if (IW < TW || IH < TH) return;
   bool gl = gGL, ov = gOverlay; gGL = false; gOverlay = false; int vt = viewTeam; viewTeam = 0;
@@ -2749,8 +2961,74 @@ static void genThumbs() {
     for (int y = 0; y < TH; y++) for (int x = 0; x < TW; x++) { if (tmp[y * TW + x] != KEYC) continue; bool edge = false;
       for (int dy = -2; dy <= 2 && !edge; dy++) for (int dx = -2; dx <= 2 && !edge; dx++) { int xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < TW && yy < TH && tmp[yy * TW + xx] != KEYC && dx * dx + dy * dy <= 5) edge = true; }
       if (edge) thumbs[c][y * TW + x] = RGB(18, 16, 24); } }
+  genChests();
   setClipRect(0, 0, IW, IH); gGL = gl; gOverlay = ov; viewTeam = vt; thumbsOk = true;
   memset(fb, 0, sizeof(u32) * IW * IH);
+}
+static const int CSW = 128, CSH = 112, CFR = 4;                 // размер картинки сундука и число кадров крышки
+static u32 chestSpr[NCHEST][CFR][CSW * CSH]; static bool chestSprOk = false;
+// коробка с любыми осями (нужна для откинутой крышки)
+static void boxAxes(V3 c, V3 ax, V3 ay, V3 az, float hx, float hy, float hz, u32 col) {
+  V3 ex = ax * hx, ey = ay * hy, ez = az * hz;
+  quadFace(c + ey, ex, ez, ay, col, true); quadFace(c - ey, ex, ez, ay * -1.0f, col, true); quadFace(c + ex, ey, ez, ax, col, true);
+  quadFace(c - ex, ey, ez, ax * -1.0f, col, true); quadFace(c + ez, ex, ey, az, col, true); quadFace(c - ez, ex, ey, az * -1.0f, col, true);
+}
+static void chestModel(int type, float lid) {                 // сундук в начале координат, передом к +z; lid - угол крышки (0 - закрыт)
+  const ChestT &ct = CHESTS[type]; float k = type == CH_GIANT ? 1.18f : 1.0f; V3 X = v3(1, 0, 0), Y = v3(0, 1, 0), Z = v3(0, 0, 1);
+  u32 body = ct.col2, top = ct.col, band = ct.band, dark = RGB(26, 20, 24), bandD = mixc(band, RGB(0, 0, 0), 0.25f);
+  #define CB(px, py, pz, hx, hy, hz, col) boxAxes(v3((px) * k, (py) * k, (pz) * k), X, Y, Z, (hx) * k, (hy) * k, (hz) * k, col)
+  CB(0, 0.04f, 0, 0.63f, 0.04f, 0.43f, bandD);                                                     // нижний обод
+  CB(0, 0.33f, 0, 0.6f, 0.3f, 0.4f, body);                                                         // корпус
+  for (int sd = -1; sd <= 1; sd += 2) CB(sd * 0.44f, 0.33f, 0, 0.065f, 0.31f, 0.415f, band);       // оковка
+  if (type == CH_GIANT) { CB(0, 0.33f, 0, 0.05f, 0.31f, 0.415f, RGB(196, 170, 110)); CB(0, 0.2f, 0, 0.61f, 0.035f, 0.41f, band); }   // верёвка и пояс
+  for (int sd = -1; sd <= 1; sd += 2) { CB(sd * 0.6f, 0.06f, 0.4f, 0.04f, 0.06f, 0.04f, band); CB(sd * 0.6f, 0.06f, -0.4f, 0.04f, 0.06f, 0.04f, band); }   // уголки
+  CB(0, 0.63f, 0, 0.55f, 0.012f, 0.35f, dark);                                                     // тёмное нутро, видно при открытой крышке
+  CB(0, 0.42f, 0.41f, 0.12f, 0.13f, 0.02f, band); CB(0, 0.39f, 0.43f, 0.025f, 0.05f, 0.006f, dark);   // замок со скважиной
+  if (type == CH_LIGHTNING) { u32 y1 = RGB(255, 226, 60);                                          // молния на боку
+    CB(0.22f, 0.5f, 0.405f, 0.04f, 0.09f, 0.008f, y1); CB(0.25f, 0.4f, 0.405f, 0.07f, 0.025f, 0.008f, y1); CB(0.28f, 0.29f, 0.405f, 0.04f, 0.09f, 0.008f, y1);
+    CB(-0.28f, 0.5f, 0.405f, 0.04f, 0.09f, 0.008f, y1); CB(-0.25f, 0.4f, 0.405f, 0.07f, 0.025f, 0.008f, y1); CB(-0.22f, 0.29f, 0.405f, 0.04f, 0.09f, 0.008f, y1); }
+  if (type == CH_EPIC || type == CH_ROYAL || type == CH_MAGIC || type == CH_LEGEND) { u32 gem = type == CH_EPIC ? RGB(255, 120, 200) : (type == CH_LEGEND ? RGB(140, 255, 240) : RGB(200, 140, 255));
+    for (int sd = -1; sd <= 1; sd += 2) boxAxes(v3(sd * 0.25f * k, 0.36f * k, 0.41f * k), vnorm(v3(1, 1, 0)), vnorm(v3(-1, 1, 0)), Z, 0.05f * k, 0.05f * k, 0.015f * k, gem); }   // камни на боку
+  #undef CB
+  // крышка: петли сзади сверху, поворачивается вверх-назад
+  float ca = cosf(lid), sa = sinf(lid); V3 hinge = v3(0, 0.63f * k, -0.4f * k), LY = v3(0, ca, -sa), LZ = v3(0, sa, ca);
+  #define LB(px, py, pz, hx, hy, hz, col) boxAxes(hinge + X * ((px) * k) + LY * ((py) * k) + LZ * ((pz) * k), X, LY, LZ, (hx) * k, (hy) * k, (hz) * k, col)
+  LB(0, 0.09f, 0.41f, 0.62f, 0.09f, 0.42f, top); LB(0, 0.22f, 0.41f, 0.6f, 0.05f, 0.3f, mixc(top, RGB(255, 255, 255), 0.08f)); LB(0, 0.3f, 0.41f, 0.58f, 0.035f, 0.16f, mixc(top, RGB(255, 255, 255), 0.16f));   // крышка выпуклая: три ступени
+  for (int sd = -1; sd <= 1; sd += 2) { LB(sd * 0.44f, 0.09f, 0.41f, 0.065f, 0.1f, 0.43f, band); LB(sd * 0.44f, 0.22f, 0.41f, 0.065f, 0.06f, 0.31f, band); LB(sd * 0.44f, 0.3f, 0.41f, 0.065f, 0.045f, 0.17f, band); }
+  LB(0, 0.08f, 0.84f, 0.1f, 0.07f, 0.02f, band);                                                   // накладка замка на крышке
+  if (type == CH_CROWN || type == CH_ROYAL) { u32 g = RGB(255, 214, 70);                             // корона на крышке
+    LB(0, 0.38f, 0.41f, 0.17f, 0.04f, 0.1f, g); for (int c = -1; c <= 1; c++) LB(c * 0.13f, 0.46f, 0.41f, 0.035f, 0.05f, 0.035f, g); LB(0, 0.4f, 0.52f, 0.035f, 0.025f, 0.01f, RGB(230, 50, 60)); }
+  if (type == CH_EPIC || type == CH_MAGIC || type == CH_LEGEND) { u32 gem = type == CH_EPIC ? RGB(255, 120, 200) : (type == CH_LEGEND ? RGB(140, 255, 240) : RGB(200, 140, 255));
+    boxAxes(hinge + X * 0.0f + LY * (0.38f * k) + LZ * (0.41f * k), vnorm(v3(1, 0, 1)), LY, vnorm(v3(-1, 0, 1)), 0.09f * k, 0.06f * k, 0.09f * k, gem); }   // большой камень сверху
+  #undef LB
+}
+static void chestRender(int type, float lid, float zoom, float shx, float shy) {
+  for (int y = 0; y < CSH; y++) for (int x = 0; x < CSW; x++) fb[y * IW + x] = KEYC; clearDepth();
+  setCamera(v3(1.15f, 1.75f, 2.6f), v3(0, 0.55f, 0)); focal = CSW * 0.95f * zoom; vcx = CSW * 0.5f + shx; vcy = CSH * 0.5f + shy;
+  gLight = 1.1f; gNight = 0; fogA = 1e9f; fogB = 2e9f; LDIR = vnorm(v3(0.4f, 0.85f, 0.55f)); chestModel(type, lid);
+}
+static void genChests() {
+  if (IW < CSW || IH < CSH) return;
+  static const float LIDS[CFR] = {0.0f, 0.55f, 1.15f, 1.85f};
+  setClipRect(0, 0, CSW, CSH);
+  for (int t = 0; t < NCHEST; t++) {
+    chestRender(t, LIDS[CFR - 1], 1.0f, 0, 0);                    // по открытому сундуку (он выше всех) подбираем масштаб - одинаковый для всех кадров
+    int x0 = CSW, y0 = CSH, x1 = -1, y1 = -1; for (int y = 0; y < CSH; y++) for (int x = 0; x < CSW; x++) if ((fb[y * IW + x] & 0xFFFFFF) != KEYC) { x0 = imin(x0, x); y0 = imin(y0, y); x1 = imax(x1, x); y1 = imax(y1, y); }
+    float z = 1, cx = 0, cy = 0; if (x1 > x0 && y1 > y0) { z = clampf(fminv(CSW * 0.92f / (x1 - x0 + 1), CSH * 0.92f / (y1 - y0 + 1)), 0.4f, 4.0f); cx = (x0 + x1) * 0.5f - CSW * 0.5f; cy = (y0 + y1) * 0.5f - CSH * 0.5f; }
+    for (int f = 0; f < CFR; f++) { chestRender(t, LIDS[f], z, -cx * z, -cy * z); u32 *d = chestSpr[t][f];
+      for (int y = 0; y < CSH; y++) for (int x = 0; x < CSW; x++) d[y * CSW + x] = fb[y * IW + x] & 0xFFFFFF;
+      static u32 tmp[CSW * CSH]; memcpy(tmp, d, sizeof tmp);                                       // тёмная обводка
+      for (int y = 0; y < CSH; y++) for (int x = 0; x < CSW; x++) { if (tmp[y * CSW + x] != KEYC) continue; bool e = false;
+        for (int dy = -2; dy <= 2 && !e; dy++) for (int dx = -2; dx <= 2 && !e; dx++) { int xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < CSW && yy < CSH && tmp[yy * CSW + xx] != KEYC && dx * dx + dy * dy <= 5) e = true; }
+        if (e) d[y * CSW + x] = RGB(18, 14, 22); } } }
+  chestSprOk = true;
+}
+// сундук в интерфейсе: картинка по размеру рамки, с сохранением пропорций, по центру
+static void drawChestSpr(int type, int frame, int x, int y, int w, int h) {
+  if (!chestSprOk || type < 0 || type >= NCHEST) return; frame = clampi(frame, 0, CFR - 1);
+  int dw = w, dh = w * CSH / CSW; if (dh > h) { dh = h; dw = h * CSW / CSH; } x += (w - dw) / 2; y += (h - dh) / 2; const u32 *src = chestSpr[type][frame];
+  for (int j = 0; j < dh; j++) { int yy = y + j; if (yy < 0 || yy >= IH) continue; int sy = j * CSH / dh;
+    for (int i = 0; i < dw; i++) { int xx = x + i; if (xx < 0 || xx >= IW) continue; u32 p = src[sy * CSW + i * CSW / dw]; if (p != KEYC) putpx(xx, yy, gOverlay ? (p | 0xFF000000u) : p); } }
 }
 static void blitThumb(int c, int x, int y, int w, int h) {
   for (int j = 0; j < h; j++) { int yy = y + j; if (yy < 0 || yy >= IH) continue; int sy = j * TH / h;
@@ -2780,7 +3058,8 @@ static void elixirDrop(int x, int y, int r, int cost, bool ok) {   // стоим
   fillCircle(x, y, r, RGB(30, 20, 10), 255); fillCircle(x, y, r - imax(1, fs / 2), rim, 255); fillCircle(x, y, r - imax(2, fs), gold, 255);
   fillCircle(x, y, r - imax(3, fs * 3 / 2), ok ? RGB(255, 214, 90) : RGB(150, 136, 100), 255);                                   // внутренний ободок монеты
   fillCircle(x - r / 3, y - r / 3, r / 4, lite, ok ? 200 : 80);                                                                 // блик
-  char b[8]; snprintf(b, sizeof b, "%d", cost); drawTextSh(x, y - fs * 3, b, fs, ok ? RGB(90, 50, 0) : RGB(60, 55, 40), 1);
+  char b[8]; snprintf(b, sizeof b, "%d", cost); int sc = imax(1, r * 11 / 70);                                          // крупная цифра по размеру монеты
+  drawTextOutline(x + sc / 2, y - sc * 7 / 2, b, sc, ok ? RGB(255, 255, 255) : RGB(175, 170, 160), 1);                     // белая с тёмной обводкой - читается на любом фоне
 }
 // скруглённые углы карты: перед рисованием запоминаем фон в углах, после - возвращаем его за дугой и рисуем тёмную обводку и рамку по дуге
 static u32 gCardSave[4][32 * 32];
@@ -2806,9 +3085,11 @@ static void drawCard(int c, int lvl, int x, int y, int w, int h, bool sel, bool 
   int ah = h - fs * (showLvl ? 9 : 2);
   if (cd.type == CT_SPELL) spellIcon(c, x + fs, y + fs, w - 2 * fs, ah); else if (thumbsOk) blitThumb(c, x + fs, y + fs, w - 2 * fs, ah);
   if (!afford) fillRectA(x, y, w, h, RGB(20, 20, 30), 130);
-  if (showLvl) { char b[24]; snprintf(b, sizeof b, "УР. %d", lvl); fillRect(x + fs, y + h - fs * 8, w - 2 * fs, fs * 7, RGB(25, 25, 35)); int sc = fs; while (sc > 1 && textW(b, sc) > w - 4) sc--; drawText(x + w / 2, y + h - fs * 7, b, sc, RGB(255, 230, 150), 1); }
+  if (showLvl) { char b[24]; snprintf(b, sizeof b, "УРОВЕНЬ %d", lvl); int bh = fs * 7, by = y + h - fs * 8, sc = fs;   // полное слово; не влезает - уменьшаем, совсем узко - "УР."
+    while (sc > 1 && textW(b, sc) > w - 4 * fs) sc--; if (textW(b, sc) > w - 4 * fs) snprintf(b, sizeof b, "УР. %d", lvl);
+    fillRect(x + fs, by, w - 2 * fs, bh, RGB(25, 25, 35)); drawText(x + w / 2 + sc / 2, by + (bh - 7 * sc) / 2, b, sc, RGB(255, 230, 150), 1); }   // текст по центру полоски
   { u32 fc = sel ? mixc(rc, RGB(255, 255, 255), 0.5f) : rc; if (!afford) fc = mixc(fc, RGB(20, 20, 30), 130.0f / 255.0f); cardRoundCorners(x - 1, y - 1, w + 2, h + 2, cr, fs, fc); }   // скруглённые углы
-  elixirDrop(x + fs * 4, y + fs * 4, fs * 4, cd.cost, afford);
+  { int er = imax(fs * 4, imin(w, h) / 7); elixirDrop(x + er, y + er, er, cd.cost, afford); }   // монета растёт вместе с картой
 }
 // ---- время ----
 static void fmtTime(char *b, int n, long long sec) { if (sec < 0) sec = 0; if (sec >= 3600) snprintf(b, n, "%lldЧ %02lldМ", sec / 3600, (sec / 60) % 60); else if (sec >= 60) snprintf(b, n, "%lldМ %02lldС", sec / 60, sec % 60); else snprintf(b, n, "%lldС", sec); }
@@ -2877,7 +3158,7 @@ static void rankStr(char *o, size_t n, int r) { if (r > 100) snprintf(o, n, "100
 static int topRank = 0;                                               // место текущего соперника в ТОП-100 (1 - сильнейший)
 static void topBotPick(int *kl, int *lv, int *dif) {
   topRank = clampi(imin(playerTopRank(), 100) + rand() % 21 - 10, 1, 100);   // соперник из ТОП-100 близок по месту к игроку
-  *lv = clampi(MAXLVL - topRank / 35, 1, MAXLVL); *kl = clampi(MAXLVL - topRank / 50, 1, MAXLVL); *dif = 3;   // 1-34: макс. уровень, 35-69: -1, 70-100: -2
+  *lv = MAXLVL; *kl = MAXLVL; *dif = 3;   // на Легендарной арене у всех соперников максимальный уровень: башни и бойцы с полным здоровьем
 }
 static void topBotName(char *out, size_t n) { snprintf(out, n, "#%d %s", topRank, topName(topRank)); }
 static void topBotTune() { if (topRank <= 10) { bot.react *= 0.75f; bot.smart = 0.95f; } else if (topRank <= 30) bot.react *= 0.88f; }   // топ-10 думают быстрее и умнее
@@ -2935,7 +3216,7 @@ static void finishBattle() {
   BI.done = true; int me = BI.myTeam, en = 1 - me; bool win = B.winner == me, lose = B.winner == en;
   if (BI.mode == MODE_TOUR) {
     if (win) { BI.goldWon = 40 * tourStage; pf.gold += BI.goldWon; questAdd(Q_WIN, 1);
-      if (tourStage >= 5) { BI.chest = -1; for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type < 0) { pf.slots[s].type = CH_LEGEND; pf.slots[s].opening = false; BI.chest = CH_LEGEND; break; }
+      if (tourStage >= 5) { BI.chest = -1; for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type < 0) { pf.slots[s].type = CH_ROYAL; pf.slots[s].opening = false; BI.chest = CH_ROYAL; break; }
         if (BI.chest < 0) { pf.gems += 100; BI.stars = 100; } pf.gold += 500; BI.goldWon += 500; BI.trophyDelta = 99; tourStage = 0; }   // турнир пройден
       else tourStage++; }
     else { BI.trophyDelta = -tourStage; tourStage = 0; }                                    // проигрыш - турнир заканчивается
@@ -2945,7 +3226,7 @@ static void finishBattle() {
   else if (!BI.net) {
     int a0 = arenaOf(pf.trophies);
     if (win) { BI.trophyDelta = 26 + rand() % 7; pf.wins++; if (B.side[me].crowns == 3) { pf.threeCrowns++; questAdd(Q_THREE, 1); } questAdd(Q_WIN, 1);
-      BI.chest = -1; for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type < 0) { int t = CHEST_CYCLE[pf.chestN % 16]; if (rand() % 100 == 0) t = CH_LEGEND; pf.slots[s].type = t; pf.slots[s].opening = false; pf.chestN++; BI.chest = t; break; }
+      BI.chest = -1; for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type < 0) { int t = rollWinChest(); pf.slots[s].type = t; pf.slots[s].opening = false; pf.chestN++; BI.chest = t; break; }
       BI.goldWon = 5 + 5 * a0; pf.gold += BI.goldWon; }
     else if (lose) { BI.trophyDelta = -(20 + rand() % 6); pf.losses++; }
     if (isLegend(a0) && (win || lose)) {                                          // Легендарная арена: рейтинг +100 за победу, -200 за поражение, кубки не меняются
@@ -3016,15 +3297,15 @@ static void frameResult() {
   drawText(IW / 2, IH / 6 + fs * 62, "КОРОНЫ", fs, RGB(200, 210, 230), 1);
   int y = IH / 6 + fs * 80;
   if (BI.mode == MODE_TOUR) {
-    if (BI.trophyDelta == 99) { drawTextSh(IW / 2, y, "ТУРНИР ПРОЙДЕН!", fs * 2, RGB(255, 220, 90), 1); y += fs * 22; drawTextSh(IW / 2, y, BI.chest >= 0 ? "НАГРАДА: ЛЕГЕНДАРНЫЙ СУНДУК" : "НАГРАДА: 100 КРИСТАЛЛОВ", fs, RGB(120, 230, 220), 1); y += fs * 12; }
+    if (BI.trophyDelta == 99) { drawTextSh(IW / 2, y, "ТУРНИР ПРОЙДЕН!", fs * 2, RGB(255, 220, 90), 1); y += fs * 22; drawTextSh(IW / 2, y, BI.chest >= 0 ? "НАГРАДА: КОРОЛЕВСКИЙ ЛЕГЕНДАРНЫЙ СУНДУК" : "НАГРАДА: 100 КРИСТАЛЛОВ", fs, RGB(120, 230, 220), 1); y += fs * 12; }
     else if (win) { snprintf(b, sizeof b, "ТУРНИР: ПОБЕДА %d ИЗ 5. ДАЛЬШЕ БОЙ %d", tourStage - 1, tourStage); drawFit(IW / 2, y, b, colW - fs * 4, fs, RGB(255, 230, 150), 1); y += fs * 12; }
     else { snprintf(b, sizeof b, "ТУРНИР ОКОНЧЕН НА БОЮ %d", -BI.trophyDelta); drawTextSh(IW / 2, y, b, fs, RGB(255, 160, 140), 1); y += fs * 12; }
-    if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
-  else if (BI.mode == MODE_TRIPLE || BI.mode == MODE_RANDOM) { drawTextSh(IW / 2, y, BI.mode == MODE_TRIPLE ? "ТРОЙНОЙ ЭЛИКСИР - КУБКИ НЕ МЕНЯЮТСЯ" : "СЛУЧАЙНЫЕ КОЛОДЫ - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
-  else if (BI.duo) { drawTextSh(IW / 2, y, "БОЙ 2 НА 2 - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); } }
+    if (win) { snprintf(b, sizeof b, "СЕРЕБРО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(215, 222, 238), 1); } }
+  else if (BI.mode == MODE_TRIPLE || BI.mode == MODE_RANDOM) { drawTextSh(IW / 2, y, BI.mode == MODE_TRIPLE ? "ТРОЙНОЙ ЭЛИКСИР - КУБКИ НЕ МЕНЯЮТСЯ" : "СЛУЧАЙНЫЕ КОЛОДЫ - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "СЕРЕБРО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(215, 222, 238), 1); } }
+  else if (BI.duo) { drawTextSh(IW / 2, y, "БОЙ 2 НА 2 - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1); y += fs * 14; if (win) { snprintf(b, sizeof b, "СЕРЕБРО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs + 1, RGB(215, 222, 238), 1); } }
   else if (!BI.net) { if (inLegend()) { char r0[16], r1[16]; rankStr(r0, sizeof r0, topRankAt(pf.rating - BI.trophyDelta)); rankStr(r1, sizeof r1, playerTopRank()); snprintf(b, sizeof b, "РЕЙТИНГ %s%d   ВСЕГО %d   МЕСТО #%s > #%s", BI.trophyDelta >= 0 ? "+" : "", BI.trophyDelta, pf.rating, r0, r1); } else snprintf(b, sizeof b, "КУБКИ %s%d   ВСЕГО %d", BI.trophyDelta >= 0 ? "+" : "", BI.trophyDelta, pf.trophies); drawTextSh(IW / 2, y, b, fs + 1, BI.trophyDelta >= 0 ? RGB(255, 220, 120) : RGB(255, 140, 120), 1); y += fs * 16;
     if (win) { if (BI.chest >= 0) { snprintf(b, sizeof b, "НАГРАДА: %s", CHESTS[BI.chest].name); drawTextSh(IW / 2, y, b, fs, CHESTS[BI.chest].col, 1); } else drawTextSh(IW / 2, y, "НЕТ МЕСТА ДЛЯ СУНДУКА", fs, RGB(255, 160, 140), 1); y += fs * 12;
-      snprintf(b, sizeof b, "ЗОЛОТО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs, RGB(255, 220, 90), 1); y += fs * 12; }
+      snprintf(b, sizeof b, "СЕРЕБРО +%d", BI.goldWon); drawTextSh(IW / 2, y, b, fs, RGB(215, 222, 238), 1); y += fs * 12; }
     int na = arenaOf(pf.trophies); if (na > pf.arenaSeen) { snprintf(b, sizeof b, "НОВАЯ АРЕНА: %s!", ARENAS[na].name); drawTextSh(IW / 2, y, b, fs, RGB(140, 255, 160), 1); y += fs * 12; } }
   else drawTextSh(IW / 2, y, "ДРУЖЕСКИЙ БОЙ - КУБКИ НЕ МЕНЯЮТСЯ", fs, RGB(200, 210, 230), 1);
   if (button(IW / 2 - fs * 40, IH * 3 / 4, fs * 80, fs * 18, "ОК", true, RGB(60, 150, 70))) { int na = arenaOf(pf.trophies); if (na > pf.arenaSeen) { pf.arenaSeen = na; saveProfile(); say("ОТКРЫТЫ НОВЫЕ КАРТЫ! СМОТРИ В КОЛОДЕ", 4); } gs = GS_MENU; menuTab = 2; sfx(SFX_CLICK); }
@@ -3035,13 +3316,24 @@ static void frameResult() {
 // =====================================================================
 struct Reward { int card, n; bool fresh; };
 static std::vector<Reward> chestR; static int chestGold = 0, chestGems = 0, chestType = 0, chestShown = 0; static float chestAnim = 0;
+static const char *chestTitle = NULL; static bool chestNoBox = false; static int chestBackGs = 0;   // награда дороги: свой заголовок, без сундука, назад на дорогу
+static float chestIntro = 0;                  // время с начала открытия: сундук трясётся, крышка откидывается
+static int chestStrikes = 0; static float chestFlash = 0;   // сундук молний: сколько замен осталось и вспышка
+static bool royalChoosing = false; static int royalPick[2] = {-1, -1};   // королевский: две легендарки на выбор
 static int pickCard(int arena, int rarity) { int av[NCARD], n = cardsUnlocked(arena, av), m = 0, ok[NCARD]; for (int i = 0; i < n; i++) if (CARDS[av[i]].rarity == rarity) ok[m++] = av[i]; if (!m) return -1; return ok[rand() % m]; }
 static void openChest(int type) {
   const ChestT &ct = CHESTS[type]; int a = arenaOf(pf.trophies); float mul = 1.0f + 0.35f * a;
-  chestR.clear(); chestType = type; chestShown = 0; chestAnim = 0;
+  chestR.clear(); chestType = type; chestShown = 0; chestAnim = 0; chestTitle = NULL; chestNoBox = false;
   chestGold = (int)(ct.gold * mul * (0.85f + 0.3f * rand() / (float)RAND_MAX)); chestGems = ct.gems ? ct.gems + rand() % (ct.gems + 1) : 0;
   int total = (int)(ct.cards * mul); int leg = (rand() % 100) < ct.legendPct ? 1 : 0, epic = ct.minEpic + ((rand() % 100) < 15 ? 1 : 0), rare = ct.minRare + total / 10;
   if (type == CH_LEGEND) { leg = 1; total = 1; rare = epic = 0; }
+  if (type == CH_EPIC) { total = epic = 10 + 2 * a; leg = rare = 0; }                       // эпический: только эпические карты
+  chestIntro = 0; chestFlash = 0; chestStrikes = type == CH_LIGHTNING ? 3 : 0; royalChoosing = false;
+  if (type == CH_ROYAL) {                                                                     // королевский: выбрать одну из двух легендарок
+    int av[NCARD], n = 0, nu = cardsUnlocked(a, av); for (int i = 0; i < nu; i++) if (CARDS[av[i]].rarity == RA_LEGEND) av[n++] = av[i];
+    if (n < 2) { n = 0; for (int c = 0; c < NCARD; c++) if (CARDS[c].rarity == RA_LEGEND) av[n++] = c; }   // на первых аренах легендарок мало - берём из всех
+    royalPick[0] = av[rand() % n]; do { royalPick[1] = av[rand() % n]; } while (royalPick[1] == royalPick[0] && n > 1);
+    royalChoosing = true; chestGold = chestGems = 0; questAdd(Q_CHEST, 1); saveProfile(); gs = GS_CHEST; sfx(SFX_CHEST); return; }
   int common = imax(0, total - leg - epic - rare);
   int cnt[NRAR] = {common, rare, epic, leg};
   for (int r = NRAR - 1; r >= 0; r--) { int left = cnt[r]; int stacks = imax(1, imin(left, r == RA_COMMON ? 3 : 2)); if (left <= 0) continue;
@@ -3051,27 +3343,65 @@ static void openChest(int type) {
   pf.gold += chestGold; pf.gems += chestGems; questAdd(Q_CHEST, 1); saveProfile();
   gs = GS_CHEST; sfx(SFX_CHEST);
 }
+static void chooseRoyal(int i) {                       // выбрана легендарка из королевского сундука
+  int c = royalPick[clampi(i, 0, 1)]; Reward rw; rw.card = c; rw.n = 1; rw.fresh = !pf.have[c]; chestR.clear(); chestR.push_back(rw);
+  addCards(c, 1); royalChoosing = false; chestShown = 0; chestAnim = 0; saveProfile(); sfx(SFX_CHEST);
+}
+static void chestLeave() { if (royalChoosing) chooseRoyal(0); gs = chestBackGs == GS_ROAD ? GS_ROAD : GS_MENU; chestBackGs = GS_MENU; chestTitle = NULL; chestNoBox = false; }   // уйти можно всегда, легендарка не теряется
+static void lightningStrike() {                        // молния: заменить показанную карту другой той же редкости
+  Reward &r = chestR[chestShown]; int c = r.card, rar = CARDS[c].rarity, a = arenaOf(pf.trophies);
+  if (r.fresh) { pf.have[c] = false; pf.cnt[c] = imax(0, pf.cnt[c] - (r.n - 1)); } else pf.cnt[c] = imax(0, pf.cnt[c] - r.n);   // забираем прежнюю
+  int nc = c; for (int t = 0; t < 20 && nc == c; t++) { int q = pickCard(a, rar); if (q >= 0) nc = q; }
+  bool dup = false; for (size_t k = 0; k < chestR.size(); k++) if ((int)k != chestShown && chestR[k].card == nc) dup = true;
+  if (nc == c || dup) for (int t = 0; t < 40; t++) { int q = rand() % NCARD; bool u = q != c; for (size_t k = 0; k < chestR.size(); k++) if (chestR[k].card == q) u = false; if (u && CARDS[q].rarity == rar) { nc = q; break; } }
+  r.card = nc; r.fresh = !pf.have[nc]; addCards(nc, r.n); chestStrikes--; chestFlash = 0.45f; chestAnim = 0; saveProfile(); sfx(SFX_ZAP);
+}
 static void frameChest(float dt) {
-  chestAnim += dt; fillRect(0, 0, IW, IH, RGB(25, 20, 45)); char b[96];
-  for (int k = 0; k < 14; k++) { float a = k * 0.4488f + gTime * 0.2f; drawLine(IW / 2, IH / 3, IW / 2 + (int)(cosf(a) * IW), IH / 3 + (int)(sinf(a) * IW), mixc(RGB(25, 20, 45), CHESTS[chestType].col, 0.25f), fs * 3); }
-  drawTextSh(IW / 2, safeTop() + fs * 10, CHESTS[chestType].name, fs + 1, CHESTS[chestType].col, 1);
+  chestAnim += dt; chestIntro += dt; chestFlash = fmaxv(0.0f, chestFlash - dt); char b[96];
+  const ChestT &ct = CHESTS[chestType];
+  for (int y = 0; y < IH; y++) fillRect(0, y, IW, 1, mixc(RGB(30, 24, 54), RGB(12, 10, 24), y / (float)IH));
+  int ccx = IW / 2, ccy = IH * 72 / 100;                                                // центр сундука внизу экрана
+  for (int k = 0; k < 16; k++) { float a = k * 0.3927f + gTime * 0.25f; drawLine(ccx, ccy, ccx + (int)(cosf(a) * IW), ccy + (int)(sinf(a) * IW), mixc(RGB(26, 20, 48), ct.col, 0.22f), fs * 3); }   // лучи из-за сундука
+  drawFit(IW / 2, safeTop() + fs * 8, chestTitle ? chestTitle : ct.name, colW - fs * 6, fs + 1, mixc(ct.col, RGB(255, 255, 255), 0.35f), 1);
+  // сундук: 0-0.45 с трясётся, 0.45-0.8 с крышка откидывается со вспышкой, дальше стоит открытый и светится
+  float sh = chestIntro < 0.45f ? sinf(chestIntro * 70.0f) * fs * 1.5f * (chestIntro / 0.45f) : 0; int fr = chestIntro < 0.45f ? 0 : clampi((int)((chestIntro - 0.45f) / 0.12f) + 1, 1, CFR - 1);
+  int cw = colW * 55 / 100, chh = cw * CSH / CSW, cx0 = ccx - cw / 2, cy0 = ccy - chh / 2;
+  if (fr > 0 && !chestNoBox) { int gr = cw / 2 + (int)(fs * 3 * sinf(gTime * 3)); fillCircle(ccx, cy0 + chh / 4, gr, mixc(ct.col, RGB(255, 240, 200), 0.5f), 45); fillCircle(ccx, cy0 + chh / 4, gr / 2, RGB(255, 245, 210), 60); }
+  if (!chestNoBox) drawChestSpr(chestType, fr, cx0 + (int)sh, cy0, cw, chh);
+  if (chestIntro > 0.45f && chestIntro < 0.9f && !chestNoBox) { float k = (chestIntro - 0.45f) / 0.45f; fillCircle(ccx, cy0 + chh / 4, (int)(cw * (0.3f + k)), RGB(255, 250, 220), (int)(200 * (1 - k))); }
+  bool ready = chestIntro >= 0.8f; if (!ready) { if (P.clicked) { P.clicked = false; chestIntro = 0.8f; } return; }   // нажатие пропускает анимацию
   int n = (int)chestR.size();
-  if (chestShown < n) { const Reward &r = chestR[chestShown]; int w = colW / 2, h = w * 6 / 5, x = IW / 2 - w / 2, y = IH / 3 - h / 3; float k = clampf(chestAnim * 3, 0, 1);
-    int ww = (int)(w * (0.3f + 0.7f * k)), hh = (int)(h * (0.3f + 0.7f * k));
-    drawCard(r.card, pf.lvl[r.card], IW / 2 - ww / 2, y + (h - hh) / 2, ww, hh, false, true, true);
-    snprintf(b, sizeof b, "X%d", r.n); drawTextSh(IW / 2, y + h + fs * 6, b, fs * 3, RGB(255, 255, 255), 1);
-    drawTextSh(IW / 2, y + h + fs * 32, CARDS[r.card].name, fs + 1, RARC[CARDS[r.card].rarity], 1);
-    drawText(IW / 2, y + h + fs * 46, RARN[CARDS[r.card].rarity], fs, RGB(200, 200, 220), 1);
-    if (r.fresh) { bool on = fmodf(gTime, 0.6f) < 0.4f; if (on) drawTextSh(IW / 2, y - fs * 14, "НОВАЯ КАРТА!", fs + 1, RGB(140, 255, 160), 1); }
-    snprintf(b, sizeof b, "ОСТАЛОСЬ: %d", n - chestShown - 1); drawText(IW / 2, IH - fs * 40, b, fs, RGB(200, 200, 220), 1);
-    drawText(IW / 2, IH - fs * 28, "НАЖМИ, ЧТОБЫ ДАЛЬШЕ", fs, RGB(255, 230, 150), 1);
+  if (royalChoosing) {                                                                    // королевский: две легендарки, выбери одну
+    drawTextSh(IW / 2, safeTop() + fs * 24, "ВЫБЕРИ ЛЕГЕНДАРНУЮ КАРТУ", fs + 1, RGB(255, 225, 120), 1);
+    int w = colW * 40 / 100, h = w * 6 / 5, y = safeTop() + fs * 40;
+    for (int i = 0; i < 2; i++) { int x = IW / 2 + (i ? fs * 4 : -fs * 4 - w), c = royalPick[i]; float pulse = 1.0f + 0.03f * sinf(gTime * 4 + i * 3);
+      int ww = (int)(w * pulse), hh = (int)(h * pulse); fillCircle(x + w / 2, y + h / 2, w * 2 / 3, RGB(255, 220, 100), 40);
+      drawCard(c, pf.lvl[c], x + (w - ww) / 2, y + (h - hh) / 2, ww, hh, false, true, true);
+      drawFit(x + w / 2, y + h + fs * 4, CARDS[c].name, w + fs * 4, fs, RARC[RA_LEGEND], 1);
+      drawText(x + w / 2, y + h + fs * 14, pf.have[c] ? "ЕСТЬ В КОЛЛЕКЦИИ" : "НОВАЯ!", imax(1, fs - 1), pf.have[c] ? RGB(190, 195, 215) : RGB(140, 255, 160), 1);
+      if (hitR(x, y, w, h + fs * 20)) { chooseRoyal(i); return; } }
+    return; }
+  if (chestShown < n) { const Reward &r = chestR[chestShown]; int w = colW * 42 / 100, h = w * 6 / 5, y = safeTop() + fs * 26; float k = clampf(chestAnim * 3, 0, 1), e = 1.0f - (1.0f - k) * (1.0f - k);
+    int ww = (int)(w * (0.25f + 0.75f * e)), hh = (int)(h * (0.25f + 0.75f * e)), yy = (int)(cy0 + (y - cy0) * e);    // карта вылетает из сундука вверх
+    drawCard(r.card, pf.lvl[r.card], IW / 2 - ww / 2, yy + (h - hh) / 2, ww, hh, false, true, true);
+    if (chestFlash > 0) { float f = chestFlash / 0.45f; fillRectA(0, 0, IW, IH, RGB(255, 250, 200), (int)(160 * f));       // вспышка молнии
+      int px = IW / 2 - w / 3, py = 0; for (int st = 1; st <= 6; st++) { int nx = IW / 2 + ((st & 1) ? w / 4 : -w / 4), ny = y + h / 2 * st / 6; drawLine(px, py, nx, ny, RGB(255, 240, 120), fs * 2); px = nx; py = ny; } }
+    if (k < 1) return;
+    snprintf(b, sizeof b, "X%d", r.n); drawTextSh(IW / 2, y + h + fs * 4, b, fs * 2, RGB(255, 255, 255), 1);
+    drawFit(IW / 2, y + h + fs * 22, CARDS[r.card].name, colW - fs * 6, fs + 1, RARC[CARDS[r.card].rarity], 1);
+    drawText(IW / 2, y + h + fs * 34, RARN[CARDS[r.card].rarity], fs, RGB(200, 200, 220), 1);
+    if (r.fresh) { bool on = fmodf(gTime, 0.6f) < 0.4f; if (on) drawTextSh(IW / 2, y + h + fs * 44, "НОВАЯ КАРТА!", fs + 1, RGB(140, 255, 160), 1); }
+    if (chestType == CH_LIGHTNING) { int bw = colW * 70 / 100, by = y + h + fs * 56; snprintf(b, sizeof b, "МОЛНИЯ: ДРУГАЯ КАРТА (%d)", chestStrikes);   // заменить карту
+      if (button(IW / 2 - bw / 2, by, bw, fs * 15, b, chestStrikes > 0, RGB(200, 160, 30))) { lightningStrike(); return; } }
+    snprintf(b, sizeof b, "ОСТАЛОСЬ: %d", n - chestShown - 1); drawText(IW / 2, IH - fs * 32, b, fs, RGB(200, 200, 220), 1);
+    drawText(IW / 2, IH - fs * 21, "НАЖМИ, ЧТОБЫ ДАЛЬШЕ", fs, RGB(255, 230, 150), 1);
     if (P.clicked) { P.clicked = false; chestShown++; chestAnim = 0; sfx(SFX_CARD); } }
-  else { int y = IH / 5; drawTextSh(IW / 2, y, "ПОЛУЧЕНО", fs * 2, RGB(255, 255, 255), 1); y += fs * 24;
-    if (chestGold) { snprintf(b, sizeof b, "ЗОЛОТО +%d", chestGold); drawTextSh(IW / 2, y, b, fs + 1, RGB(255, 220, 90), 1); y += fs * 14; }
+  else { fillRectA(0, safeTop() + fs * 20, IW, IH, RGB(10, 8, 20), 170); int y = IH / 5; drawTextSh(IW / 2, y, "ПОЛУЧЕНО", fs * 2, RGB(255, 255, 255), 1); y += fs * 24;
+    if (chestGold) { snprintf(b, sizeof b, "СЕРЕБРО +%d", chestGold); drawTextSh(IW / 2, y, b, fs + 1, RGB(215, 222, 238), 1); y += fs * 14; }
     if (chestGems) { snprintf(b, sizeof b, "КРИСТАЛЛЫ +%d", chestGems); drawTextSh(IW / 2, y, b, fs + 1, RGB(120, 230, 140), 1); y += fs * 14; }
     int cw = colW / 4 - fs * 3, ch = cw * 6 / 5;
     for (int i = 0; i < n; i++) { int x = colX + fs * 2 + (i % 4) * (cw + fs * 3), yy = y + (i / 4) * (ch + fs * 12); drawCard(chestR[i].card, pf.lvl[chestR[i].card], x, yy, cw, ch, false, true, false); snprintf(b, sizeof b, "X%d", chestR[i].n); drawTextSh(x + cw / 2, yy + ch + fs, b, fs, RGB(255, 255, 255), 1); }
-    if (button(IW / 2 - fs * 40, IH - fs * 34, fs * 80, fs * 18, "ЗАБРАТЬ", true, RGB(60, 150, 70))) { gs = GS_MENU; sfx(SFX_CLICK); } }
+    if (button(IW / 2 - fs * 40, IH - fs * 34, fs * 80, fs * 18, "ЗАБРАТЬ", true, RGB(60, 150, 70))) { chestLeave(); sfx(SFX_CLICK); } }
 }
 
 // =====================================================================
@@ -3079,29 +3409,51 @@ static void frameChest(float dt) {
 // =====================================================================
 static float deckScroll = 0; static int infoCard = -1, swapCard = -1;
 static int tabH() { return fs * 20; }
+// ---- темы меню: у каждой арены своя (фон, шапка, вкладки, панели и картина на экране БОЙ) ----
+struct MenuTheme { u32 bg1, bg2, bar, tabBg, tabLine, tabOn, tabOnHi, tabOff, tabOffHi, panel, card, cardAlt, mode, modeHi, modeBtn, sky0, sky1, sky2, sun, rays, mt1, mt2, castle, door, ground; int fx; int heroes[3]; };   // fx: 0 звёзды, 1 снег, 2 искры, 3 светлячки, 4 звёзды и луна
+static const MenuTheme THEMES[5] = {
+  // фиолетовая (как раньше) - Легендарная арена
+  {RGB(36, 45, 70), RGB(34, 42, 66), RGB(20, 26, 44), RGB(18, 22, 36), RGB(60, 70, 110), RGB(70, 110, 200), RGB(120, 160, 240), RGB(40, 46, 70), RGB(60, 68, 96), RGB(14, 16, 34), RGB(30, 36, 56), RGB(38, 45, 68),
+   RGB(70, 50, 130), RGB(100, 75, 170), RGB(90, 70, 160), RGB(26, 30, 78), RGB(120, 70, 150), RGB(60, 40, 90), RGB(255, 200, 140), RGB(255, 220, 160), RGB(70, 50, 110), RGB(52, 40, 86), RGB(40, 30, 66), RGB(20, 14, 34), RGB(40, 30, 70), 0, {M_KNIGHT, M_GOBKING, M_ICEWIZ}},
+  // НОЧНОЙ ЗАМОК: тёмно-синий, лунный свет, серебряные рамки
+  {RGB(24, 30, 52), RGB(21, 27, 47), RGB(12, 16, 30), RGB(10, 13, 26), RGB(150, 160, 185), RGB(56, 74, 130), RGB(190, 200, 222), RGB(28, 34, 56), RGB(48, 56, 84), RGB(9, 12, 26), RGB(26, 32, 54), RGB(32, 40, 64),
+   RGB(40, 52, 100), RGB(150, 160, 190), RGB(60, 74, 130), RGB(4, 7, 26), RGB(30, 46, 98), RGB(16, 22, 54), RGB(220, 230, 255), RGB(190, 210, 255), RGB(30, 38, 72), RGB(20, 26, 52), RGB(12, 16, 36), RGB(255, 210, 120), RGB(10, 14, 40), 4, {M_KNIGHT, M_MEGA, M_XBOW}},
+  // ЛЕДЯНАЯ: голубой и белый, снежинки
+  {RGB(56, 96, 136), RGB(50, 88, 126), RGB(28, 58, 92), RGB(22, 48, 78), RGB(180, 225, 250), RGB(80, 150, 215), RGB(200, 240, 255), RGB(40, 72, 106), RGB(66, 104, 144), RGB(18, 40, 68), RGB(38, 70, 106), RGB(46, 82, 120),
+   RGB(56, 116, 176), RGB(150, 210, 245), RGB(76, 136, 196), RGB(60, 120, 192), RGB(170, 215, 245), RGB(110, 160, 210), RGB(240, 250, 255), RGB(220, 240, 255), RGB(150, 190, 225), RGB(110, 155, 200), RGB(76, 116, 166), RGB(170, 230, 255), RGB(150, 190, 230), 1, {M_ICEWIZ, M_ISPIRIT, M_KNIGHT}},
+  // ОГНЕННАЯ: тёмно-красный и чёрный, угли и искры, бронзовые рамки
+  {RGB(54, 24, 22), RGB(48, 20, 19), RGB(30, 12, 12), RGB(24, 10, 10), RGB(200, 112, 52), RGB(160, 58, 30), RGB(240, 150, 70), RGB(60, 28, 24), RGB(90, 44, 34), RGB(20, 8, 8), RGB(62, 30, 26), RGB(72, 36, 30),
+   RGB(140, 50, 30), RGB(220, 120, 50), RGB(170, 70, 40), RGB(28, 6, 8), RGB(150, 50, 20), RGB(70, 20, 14), RGB(255, 140, 40), RGB(255, 170, 80), RGB(70, 26, 20), RGB(46, 16, 14), RGB(28, 10, 10), RGB(255, 120, 30), RGB(60, 20, 10), 2, {M_FIREMAGE, M_FSPIRIT, M_MEGA}},
+  // ЛЕСНАЯ: зелёный и коричневый, дерево и листья, светлячки
+  {RGB(34, 58, 36), RGB(30, 52, 32), RGB(26, 40, 24), RGB(20, 32, 20), RGB(140, 100, 58), RGB(66, 126, 56), RGB(150, 210, 110), RGB(46, 66, 40), RGB(70, 92, 56), RGB(14, 24, 14), RGB(40, 62, 40), RGB(48, 72, 46),
+   RGB(96, 72, 40), RGB(160, 125, 72), RGB(116, 88, 50), RGB(16, 36, 38), RGB(90, 140, 90), RGB(36, 66, 46), RGB(255, 240, 170), RGB(230, 255, 180), RGB(30, 70, 40), RGB(20, 50, 28), RGB(28, 38, 24), RGB(255, 220, 120), RGB(20, 50, 20), 3, {M_ARCHER, M_GOBKING, M_DART}},
+};
+static const int ARENA_THEME[7] = {4, 4, 1, 2, 3, 1, 0};   // лагерь и лес - лесная, яма и замок - ночная, пик - ледяная, долина - огненная, легендарная - фиолетовая
+static const MenuTheme *MT = &THEMES[0];
+static void pickTheme() { MT = &THEMES[ARENA_THEME[clampi(arenaOf(pf.trophies), 0, 6)]]; }
 static void topBar() {
-  char b[64], m[32]; int st = safeTop(); fillRect(0, 0, IW, st + fs * 16, devMode ? RGB(70, 30, 80) : RGB(20, 26, 44));   // в режиме разработчика полоса фиолетовая
+  char b[64], m[32]; int st = safeTop(); fillRect(0, 0, IW, st + fs * 16, devMode ? RGB(70, 30, 80) : MT->bar); fillRect(0, st + fs * 16 - imax(1, fs / 2), IW, imax(1, fs / 2), MT->tabLine);   // в режиме разработчика полоса фиолетовая
   { int pw = colW / 3 - fs * 6, ph = fs * 10, py = st + fs * 3, r = ph / 2 + fs;                          // таблетки ресурсов, как в больших играх
     for (int k = 0; k < 3; k++) { int px = colX + fs * 6 + k * (colW / 3); fillRect(px, py, pw, ph, RGB(10, 12, 24)); fillRect(px, py, pw, imax(1, fs / 2), RGB(60, 66, 90)); }
     int px0 = colX + fs * 6; fillCircle(px0, py + ph / 2, r, RGB(70, 110, 220), 255); fillCircle(px0, py + ph / 2, r - fs, RGB(110, 160, 250), 255); snprintf(m, sizeof m, "%d", pf.kingLvl); drawText(px0, py + ph / 2 - fs * 3, m, fs, RGB(255, 255, 255), 1);
     { float xp = pf.kingLvl < MAXLVL ? clampf(pf.kingXp / (float)imax(1, KING_XP[pf.kingLvl]), 0, 1) : 1; fillRect(px0 + r, py + ph - fs * 2, (int)((pw - r) * xp), fs * 2, RGB(90, 200, 240)); }
     snprintf(m, sizeof m, "%d", pf.trophies); drawText(px0 + r + (pw - r) / 2, py + fs * 2, m, fs + 1, RGB(255, 210, 120), 1);
-    int px1 = colX + fs * 6 + colW / 3; fillCircle(px1, py + ph / 2, r, RGB(200, 150, 30), 255); fillCircle(px1, py + ph / 2, r - fs, RGB(255, 210, 60), 255); fmtNum(m, sizeof m, pf.gold); drawText(px1 + r + (pw - r) / 2, py + fs * 2, m, fs + 1, RGB(255, 255, 255), 1);
+    int px1 = colX + fs * 6 + colW / 3; fillCircle(px1, py + ph / 2, r, RGB(120, 126, 140), 255); fillCircle(px1, py + ph / 2, r - fs, RGB(205, 212, 226), 255); fillCircle(px1 - r / 3, py + ph / 2 - r / 3, imax(1, r / 4), RGB(250, 252, 255), 220); fmtNum(m, sizeof m, pf.gold); drawText(px1 + r + (pw - r) / 2, py + fs * 2, m, fs + 1, RGB(255, 255, 255), 1);
     int px2 = colX + fs * 6 + colW * 2 / 3; fillCircle(px2, py + ph / 2, r, RGB(30, 130, 60), 255); fillCircle(px2, py + ph / 2, r - fs, RGB(90, 220, 110), 255); fillRect(px2 - fs, py + ph / 2 - fs * 2, fs * 2, fs * 2, RGB(200, 255, 210)); snprintf(m, sizeof m, "%d", pf.gems); drawText(px2 + r + (pw - r) / 2, py + fs * 2, m, fs + 1, RGB(255, 255, 255), 1);
     return; }
-  fmtNum(m, sizeof m, pf.gold); snprintf(b, sizeof b, "ЗОЛОТО %s", m); drawTextSh(colX + fs * 3, st + fs * 3, b, fs, RGB(255, 215, 80), 0);
+  fmtNum(m, sizeof m, pf.gold); snprintf(b, sizeof b, "СЕРЕБРО %s", m); drawTextSh(colX + fs * 3, st + fs * 3, b, fs, RGB(255, 215, 80), 0);
   snprintf(b, sizeof b, "КРИСТАЛЛЫ %d", pf.gems); drawTextSh(colX + fs * 3, st + fs * 10, b, fs, RGB(120, 230, 140), 0);
   if (inLegend()) { char rk[16]; rankStr(rk, sizeof rk, playerTopRank()); snprintf(b, sizeof b, "РЕЙТИНГ %d  #%s", pf.rating, rk); drawTextSh(colX + colW - fs * 3, st + fs * 3, b, fs, RGB(255, 225, 120), 2); }
   else { snprintf(b, sizeof b, "КУБКИ %d", pf.trophies); drawTextSh(colX + colW - fs * 3, st + fs * 3, b, fs, RGB(255, 200, 120), 2); }
-  snprintf(b, sizeof b, "КОРОЛЬ УР. %d", pf.kingLvl); drawTextSh(colX + colW - fs * 3, st + fs * 10, b, fs, RGB(160, 200, 255), 2);
+  snprintf(b, sizeof b, "КОРОЛЬ УРОВЕНЬ %d", pf.kingLvl); drawTextSh(colX + colW - fs * 3, st + fs * 10, b, fs, RGB(160, 200, 255), 2);
 }
 // ---- экран при входе: обычная игра или режим разработчика ----
 static void frameStart() {
   layoutCol(); fillRect(0, 0, IW, IH, RGB(30, 38, 62));
-  for (int y = 0; y < IH; y += fs * 4) fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? RGB(36, 45, 70) : RGB(34, 42, 66));
+  for (int y = 0; y < IH; y += fs * 4) fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? MT->bg1 : MT->bg2);
   int y = safeTop() + IH / 8; drawTextSh(IW / 2, y, "БИТВА", fs * 4, RGB(255, 220, 90), 1); drawTextSh(IW / 2, y + fs * 34, "БАШЕН", fs * 4, RGB(255, 120, 90), 1);
   y = IH * 45 / 100; int bw = colW * 3 / 4, bh = fs * 24; char b[96];
-  snprintf(b, sizeof b, "КУБКИ %d   КОРОЛЬ УР. %d", realPf.trophies, realPf.kingLvl);
+  snprintf(b, sizeof b, "КУБКИ %d   КОРОЛЬ УРОВЕНЬ %d", realPf.trophies, realPf.kingLvl);
   if (button(IW / 2 - bw / 2, y, bw, bh, "ИГРАТЬ", true, RGB(60, 150, 70))) { exitDev(); previewDirty = true; gs = GS_MENU; menuTab = 2; sfx(SFX_CLICK); return; }
   drawText(IW / 2, y + bh + fs * 3, b, fs, RGB(200, 210, 230), 1); y += bh + fs * 16;
   if (button(IW / 2 - bw / 2, y, bw, bh, "РЕЖИМ РАЗРАБОТЧИКА", true, RGB(150, 70, 170))) { enterDev(); previewDirty = true; gs = GS_MENU; menuTab = 2; sfx(SFX_CLICK); say("РЕЖИМ РАЗРАБОТЧИКА: ВСЕ КАРТЫ МАКСИМАЛЬНОГО УРОВНЯ", 4); return; }
@@ -3110,14 +3462,16 @@ static void frameStart() {
   for (int i = 0; i < 4; i++) { drawText(IW / 2, y, ln[i], fs, RGB(220, 190, 240), 1); y += fs * 10; }
   drawText(IW / 2, IH - fs * 14, "КНОПКА НАЗАД В МЕНЮ - ВЕРНУТЬСЯ СЮДА", imax(1, fs - 1), RGB(160, 170, 190), 1);
 }
+static bool roadAnyReady();
 static void tabsBar() {
   static const char *TN[4] = {"МАГАЗИН", "КОЛОДА", "БОЙ", "ЗАДАНИЯ"};
-  int h = tabH(), y = IH - h, w = colW / 4; fillRect(0, y - fs * 3, IW, h + fs * 3, RGB(18, 22, 36)); fillRect(0, y - fs * 3, IW, imax(1, fs / 2), RGB(60, 70, 110));
+  int h = tabH(), y = IH - h, w = colW / 4; fillRect(0, y - fs * 3, IW, h + fs * 3, MT->tabBg); fillRect(0, y - fs * 3, IW, imax(1, fs / 2), MT->tabLine);
   for (int i = 0; i < 4; i++) { int x = colX + i * w; bool on = menuTab == i; bool dot = false;
     if (i == 3) for (int q = 0; q < 3; q++) if (pf.quests[q].done && !pf.quests[q].claimed) dot = true;
+    if (i == 2 && roadAnyReady()) dot = true;
     if (i == 1) for (int c = 0; c < NCARD; c++) if (pf.have[c] && pf.lvl[c] < MAXLVL && pf.cnt[c] >= needCards(CARDS[c].rarity, pf.lvl[c] + 1) && pf.gold >= needGold(CARDS[c].rarity, pf.lvl[c] + 1)) dot = true;
     int bx = x + fs, by = y + fs - (on ? fs * 3 : 0), bw = w - fs * 2, bh = h - fs * 2 + (on ? fs * 3 : 0);       // выбранная вкладка приподнята
-    fillRect(bx, by, bw, bh, on ? RGB(70, 110, 200) : RGB(40, 46, 70)); fillRect(bx, by, bw, imax(1, fs), on ? RGB(120, 160, 240) : RGB(60, 68, 96));
+    fillRect(bx, by, bw, bh, on ? MT->tabOn : MT->tabOff); fillRect(bx, by, bw, imax(1, fs), on ? MT->tabOnHi : MT->tabOffHi);
     int ix = bx + bw / 2, iy = by + bh * 38 / 100, r = imin(bw, bh) / 5;
     if (i == 0) { fillRect(ix - r, iy - r / 2, r * 2, r * 3 / 2, RGB(150, 100, 50)); fillRect(ix - r, iy - r / 2, r * 2, r / 2, RGB(180, 125, 60)); fillCircle(ix + r, iy - r / 2, r / 2, RGB(255, 210, 60), 255); }
     else if (i == 1) { fillRect(ix - r, iy - r, r * 3 / 2, r * 2, RGB(60, 90, 160)); fillRect(ix - r / 2, iy - r * 3 / 4, r * 3 / 2, r * 2, RGB(240, 240, 250)); fillRect(ix - r / 3, iy - r / 2, r * 7 / 6, r, RGB(110, 160, 230)); }
@@ -3139,11 +3493,14 @@ static void slotsRow(int y) {
   int w = (colW - fs * 10) / 4, h = w * 5 / 4; char b[96];
   bool anyOpening = false; for (int s = 0; s < NSLOT; s++) if (pf.slots[s].type >= 0 && pf.slots[s].opening) anyOpening = true;
   for (int s = 0; s < NSLOT; s++) { int x = colX + fs * 2 + s * (w + fs * 2); Slot &sl = pf.slots[s];
-    fillRect(x, y, w, h, RGB(30, 36, 56)); fillRect(x + fs, y + fs, w - fs * 2, h - fs * 2, RGB(40, 48, 72));
+    fillRect(x, y, w, h, MT->card); fillRect(x + fs, y + fs, w - fs * 2, h - fs * 2, MT->cardAlt);
     if (sl.type < 0) { drawText(x + w / 2, y + h / 2 - fs * 3, "ПУСТО", imax(1, fs - 1), RGB(110, 120, 150), 1); continue; }
-    const ChestT &ct = CHESTS[sl.type]; int cx = x + w / 2, cy = y + h / 2 - fs * 2, cw = w * 3 / 5, chh = w * 2 / 5;
-    fillRect(cx - cw / 2, cy - chh / 2, cw, chh, ct.col2); fillRect(cx - cw / 2 + fs, cy - chh / 2 + fs, cw - fs * 2, chh / 2 - fs, ct.col); fillRect(cx - fs * 2, cy - fs, fs * 4, fs * 4, RGB(240, 220, 120));
-    long long left = sl.opening ? sl.unlockAt - nowSec() : (long long)ct.unlockMin * 60;
+    const ChestT &ct = CHESTS[sl.type]; int cx = x + w / 2;
+    long long left = sl.opening ? sl.unlockAt - nowSec() : (long long)ct.unlockMin * 60; bool ready = sl.opening && left <= 0;
+    int bob = ready ? -(int)(fabsf(sinf(gTime * 4 + s)) * fs * 3) : 0;                                   // готовый сундук подпрыгивает
+    if (ready) fillCircle(cx, y + h * 2 / 5, w * 2 / 5, mixc(ct.col, RGB(255, 240, 180), 0.5f), 50 + (int)(30 * sinf(gTime * 5)));
+    drawChestSpr(sl.type, ready ? 1 : 0, x + fs * 2, y + fs * 2 + bob, w - fs * 4, h - fs * 14);
+    drawFit(cx, y + h - fs * 19, ct.shortN, w - fs * 2, imax(1, fs - 1), mixc(ct.col, RGB(255, 255, 255), 0.5f), 1);
     if (sl.opening && left <= 0) { bool on = fmodf(gTime, 0.8f) < 0.5f; drawText(cx, y + h - fs * 10, "ОТКРЫТЬ!", imax(1, fs - 1), on ? RGB(140, 255, 160) : RGB(255, 255, 255), 1); }
     else { fmtTime(b, sizeof b, left); drawText(cx, y + h - fs * 10, b, imax(1, fs - 1), sl.opening ? RGB(255, 220, 120) : RGB(200, 200, 220), 1); }
     if (hitR(x, y, w, h)) { sfx(SFX_CLICK);
@@ -3153,6 +3510,117 @@ static void slotsRow(int y) {
       else { int cost = imax(1, (int)((left / 60 + 5) / 6)); if (pf.gems >= cost) { pf.gems -= cost; int t = sl.type; sl.type = -1; sl.opening = false; openChest(t); return; } snprintf(b, sizeof b, "ОТКРЫТЬ СЕЙЧАС: %d КРИСТАЛЛОВ", cost); say(b); } } }
 }
 static void startLobby();                                  // b4
+// =====================================================================
+//  ДОРОГА КУБКОВ: награда каждые 100 кубков, арены - крупными плашками
+// =====================================================================
+enum { RW_SILVER, RW_GEMS, RW_CHEST, RW_CARDS };
+struct RoadR { int tr, kind, a, b; };                      // a - сколько / какой сундук / редкость карт; b - число карт
+static const RoadR ROAD[] = {
+  {100, RW_SILVER, 100, 0},       {200, RW_CARDS, RA_COMMON, 20}, {300, RW_CHEST, CH_GOLD, 0},      {400, RW_GEMS, 20, 0},          {500, RW_SILVER, 300, 0},
+  {600, RW_CHEST, CH_LIGHTNING, 0},{700, RW_CARDS, RA_RARE, 10},  {800, RW_SILVER, 500, 0},         {900, RW_GEMS, 30, 0},          {1000, RW_CHEST, CH_GIANT, 0},
+  {1100, RW_CARDS, RA_EPIC, 2},   {1200, RW_SILVER, 800, 0},      {1300, RW_CARDS, RA_RARE, 20},    {1400, RW_GEMS, 50, 0},         {1500, RW_CHEST, CH_MAGIC, 0},
+  {1600, RW_SILVER, 1200, 0},     {1700, RW_CARDS, RA_EPIC, 4},   {1800, RW_CHEST, CH_LIGHTNING, 0},{1900, RW_GEMS, 60, 0},         {2000, RW_SILVER, 2000, 0},
+  {2100, RW_CARDS, RA_RARE, 40},  {2200, RW_CHEST, CH_EPIC, 0},   {2300, RW_SILVER, 3000, 0},       {2400, RW_CHEST, CH_LEGEND, 0}, {2500, RW_GEMS, 100, 0},
+  {2600, RW_CARDS, RA_EPIC, 8},   {2700, RW_SILVER, 5000, 0},     {2800, RW_CHEST, CH_GIANT, 0},    {2900, RW_GEMS, 150, 0},        {3000, RW_CHEST, CH_ROYAL, 0},
+};
+static const int NROAD = (int)(sizeof ROAD / sizeof ROAD[0]);
+static bool roadReady(int i) { return pf.bestTrophies >= ROAD[i].tr && !pf.roadClaimed[i]; }   // по лучшему результату: если кубки упали, награда не пропадает
+static bool roadAnyReady() { for (int i = 0; i < NROAD; i++) if (roadReady(i)) return true; return false; }
+static void roadText(int i, char *b, int n) {
+  const RoadR &r = ROAD[i];
+  switch (r.kind) { case RW_SILVER: snprintf(b, n, "%d СЕРЕБРА", r.a); break; case RW_GEMS: snprintf(b, n, "%d КРИСТАЛЛОВ", r.a); break;
+    case RW_CHEST: snprintf(b, n, "%s", CHESTS[r.a].name); break;
+    default: snprintf(b, n, "%s X%d", r.a == RA_COMMON ? "ОБЫЧНЫЕ КАРТЫ" : (r.a == RA_RARE ? "РЕДКИЕ КАРТЫ" : (r.a == RA_EPIC ? "ЭПИЧЕСКИЕ КАРТЫ" : "ЛЕГЕНДАРНАЯ")), r.b); }
+}
+static void openChest(int type);
+static void claimRoad(int i) {
+  const RoadR &r = ROAD[i]; pf.roadClaimed[i] = 1; char b[96];
+  if (r.kind == RW_SILVER) { pf.gold += r.a; snprintf(b, sizeof b, "СЕРЕБРО +%d", r.a); say(b); sfx(SFX_CHEST); saveProfile(); }
+  else if (r.kind == RW_GEMS) { pf.gems += r.a; snprintf(b, sizeof b, "КРИСТАЛЛЫ +%d", r.a); say(b); sfx(SFX_CHEST); saveProfile(); }
+  else if (r.kind == RW_CHEST) { openChest(r.a); chestBackGs = GS_ROAD; }               // сундук открывается сразу
+  else { int a = arenaOf(pf.trophies), c = pickCard(a, r.a);                           // карты: случайная карта этой редкости
+    if (c < 0) { int av[NCARD], n = 0; for (int q = 0; q < NCARD; q++) if (CARDS[q].rarity == r.a && CARDS[q].arena <= imax(a, 1)) av[n++] = q; if (!n) for (int q = 0; q < NCARD; q++) if (CARDS[q].rarity == r.a) av[n++] = q; c = av[rand() % n]; }
+    chestR.clear(); Reward rw; rw.card = c; rw.n = r.b; rw.fresh = !pf.have[c]; chestR.push_back(rw); addCards(c, r.b);
+    chestType = CH_FREE; chestShown = 0; chestAnim = 0; chestIntro = 1.0f; chestFlash = 0; chestStrikes = 0; royalChoosing = false; chestGold = chestGems = 0;
+    chestTitle = "НАГРАДА ДОРОГИ КУБКОВ"; chestNoBox = true; chestBackGs = GS_ROAD; gs = GS_CHEST; saveProfile(); sfx(SFX_CHEST); }
+}
+static float roadScroll = 0; static bool roadCenter = true;
+static void openRoad() { gs = GS_ROAD; roadCenter = true; sfx(SFX_CLICK); }
+static void roadIcon(int i, int x, int y, int w, int h) {                  // значок награды
+  const RoadR &r = ROAD[i]; int cx = x + w / 2, cy = y + h / 2, rr = imin(w, h) * 2 / 5;
+  if (r.kind == RW_CHEST) { drawChestSpr(r.a, 0, x, y, w, h); return; }
+  if (r.kind == RW_SILVER) { for (int k = 2; k >= 0; k--) { int ox = (k - 1) * rr / 2, oy = -k * rr / 4; fillCircle(cx + ox, cy + oy + rr / 4, rr * 2 / 3, RGB(110, 116, 130), 255); fillCircle(cx + ox, cy + oy + rr / 4, rr * 2 / 3 - fs, RGB(210, 216, 230), 255); fillCircle(cx + ox - rr / 5, cy + oy, imax(1, rr / 6), RGB(250, 252, 255), 220); } return; }
+  if (r.kind == RW_GEMS) { for (int k = 0; k < rr; k++) { int ww = k < rr / 3 ? rr / 2 + k * 3 / 2 : (rr - k) * 3 / 2; fillRect(cx - ww, cy - rr / 2 + k, ww * 2, 1, k < rr / 3 ? RGB(150, 255, 170) : RGB(60, 200, 90)); } fillRect(cx - rr / 4, cy - rr / 2 + fs, rr / 4, fs, RGB(230, 255, 235)); return; }
+  int cw = imin(w * 3 / 5, h * 5 / 6 * 5 / 6), chh = cw * 6 / 5, x0 = cx - cw / 2, y0 = cy - chh / 2; u32 rc = RARC[r.a];   // карта рубашкой вверх
+  fillRect(x0 + fs, y0 + fs, cw, chh, RGB(10, 10, 16)); fillRect(x0, y0, cw, chh, rc); fillRect(x0 + fs, y0 + fs, cw - fs * 2, chh - fs * 2, mixc(rc, RGB(20, 20, 40), 0.55f));
+  drawTextOutline(cx + fs / 2, cy - fs * 3, "?", fs, RGB(255, 255, 255), 1);
+}
+static void frameRoad() {
+  layoutCol(); dailyRefresh(); pickTheme(); char b[96];
+  for (int y = 0; y < IH; y += fs * 4) fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? MT->bg1 : MT->bg2);
+  int hy0 = safeTop() + fs * 30, hy1 = IH - fs * 26, viewH = hy1 - hy0, RH = fs * 34, BH = fs * 84;
+  int tx = colX + colW * 20 / 100;                                                            // линия дороги
+  // раскладка сверху вниз: арена встаёт над наградой своего порога
+  int nIt = 0, itKind[64], itIdx[64], itY[64], itH[64], yy = 0;
+  for (int i = NROAD - 1; i >= -1; i--) {
+    for (int a = NARENA - 1; a >= 0; a--) if ((i >= 0 && ARENAS[a].trophies == ROAD[i].tr) || (i < 0 && ARENAS[a].trophies == 0)) { itKind[nIt] = 1; itIdx[nIt] = a; itY[nIt] = yy; itH[nIt] = BH; yy += BH; nIt++; }
+    if (i >= 0) { itKind[nIt] = 0; itIdx[nIt] = i; itY[nIt] = yy; itH[nIt] = RH; yy += RH; nIt++; } }
+  int total = yy, nodeY[64]; int y0tr = total; for (int k = 0; k < nIt; k++) if (itKind[k] == 0) nodeY[itIdx[k]] = itY[k] + RH / 2;
+  y0tr = total - BH;                                                                          // 0 кубков - верх нижней плашки (тренировочный лагерь)
+  float my; { int t = imin(pf.trophies, ROAD[NROAD - 1].tr); if (t < ROAD[0].tr) my = y0tr + (nodeY[0] - y0tr) * (t / (float)ROAD[0].tr);   // где на дороге игрок
+    else { int i = 0; while (i + 1 < NROAD && ROAD[i + 1].tr <= t) i++; my = i + 1 < NROAD ? nodeY[i] + (nodeY[i + 1] - nodeY[i]) * ((t - ROAD[i].tr) / (float)(ROAD[i + 1].tr - ROAD[i].tr)) : nodeY[i]; } }
+  if (roadCenter) { roadScroll = viewH / 2 - my; roadCenter = false; }
+  static int dragY = -1; static float dragS = 0;
+  if (P.pressed && P.y > hy0 && P.y < hy1) { dragY = P.y; dragS = roadScroll; }
+  if (P.down && dragY >= 0) roadScroll = dragS + (P.y - dragY);
+  if (!P.down) dragY = -1;
+  roadScroll = clampf(roadScroll, (float)imin(0, viewH - total), 0.0f);
+  bool clk = P.clicked, tap = clk && abs(P.cy - P.sy) < fs * 6 && P.cy > hy0 && P.cy < hy1; if (!tap) P.clicked = false;
+  int off = hy0 + (int)roadScroll, top0 = off + nodeY[NROAD - 1], bot0 = off + y0tr, mys = off + (int)my;
+  // сама дорога: пройденная часть золотая
+  fillRect(tx - fs * 3, imax(hy0, top0), fs * 6, imax(0, imin(hy1, bot0) - imax(hy0, top0)), RGB(20, 18, 30)); fillRect(tx - fs * 2, imax(hy0, top0), fs * 4, imax(0, imin(hy1, bot0) - imax(hy0, top0)), RGB(60, 62, 84));
+  { int a = imax(hy0, mys), z = imin(hy1, bot0); if (z > a) { fillRect(tx - fs * 2, a, fs * 4, z - a, RGB(240, 190, 50)); fillRect(tx - fs * 2, a, fs, z - a, RGB(255, 236, 140)); } }
+  for (int k = 0; k < nIt; k++) { int y = off + itY[k], h = itH[k]; if (y + h < hy0 - fs * 10 || y > hy1 + fs * 10) continue;
+    if (itKind[k] == 1) {                                                                       // плашка арены: поле в цветах арены, название и её карты
+      int a = itIdx[k]; const Arena &ar = ARENAS[a]; bool open = pf.bestTrophies >= ar.trophies || a == 0; int x = colX + fs * 3, w = colW - fs * 6, py = y + fs * 4, ph = h - fs * 8;
+      fillRect(x - 1, py - 1, w + 2, ph + 2, RGB(14, 12, 20));
+      for (int j = 0; j < ph; j += fs * 4) for (int i = 0; i < w; i += fs * 4) fillRect(x + i, py + j, imin(fs * 4, w - i), imin(fs * 4, ph - j), ((i / (fs * 4) + j / (fs * 4)) & 1) ? ar.grass : ar.grass2);
+      fillRect(x + w / 2 - fs * 4, py, fs * 8, ph, ar.path); fillRect(x, py + ph / 2 - fs * 2, w, fs * 4, mixc(ar.path, RGB(80, 140, 220), 0.5f));   // дорожка и речка
+      fillRect(x, py, w, fs * 14, mixc(ar.border, RGB(0, 0, 0), 0.25f)); fillRect(x, py + fs * 14, w, imax(1, fs / 2), ar.deco);
+      snprintf(b, sizeof b, "АРЕНА %d", a + 1); drawTextSh(x + fs * 4, py + fs * 4, b, fs, RGB(255, 225, 140), 0);
+      drawFit(x + w - fs * 4, py + fs * 4, ar.name, w * 6 / 10, fs, RGB(255, 255, 255), 2);
+      int nc = 0, cc[NCARD]; for (int c = 0; c < NCARD; c++) if (CARDS[c].arena == a) cc[nc++] = c;
+      int cw = imin((w - fs * 8) / imax(4, nc) - fs * 2, fs * 22), chh = cw * 6 / 5, cx = x + w / 2 - (nc * (cw + fs * 2) - fs * 2) / 2, cy = py + fs * 20;
+      for (int q = 0; q < nc; q++) drawCard(cc[q], 1, cx + q * (cw + fs * 2), cy, cw, chh, false, open, false);
+      if (!open) { fillRectA(x, py, w, ph, RGB(10, 10, 20), 120); snprintf(b, sizeof b, "ОТКРОЕТСЯ С %d КУБКОВ", ar.trophies); drawTextOutline(x + w / 2, py + ph - fs * 10, b, fs, RGB(255, 210, 120), 1); }
+      else { snprintf(b, sizeof b, a == 0 ? "НАЧАЛО ПУТИ" : "С %d КУБКОВ", ar.trophies); drawTextOutline(x + w / 2, py + ph - fs * 10, b, imax(1, fs - 1), RGB(220, 230, 255), 1); }
+      continue; }
+    int i = itIdx[k]; const RoadR &r = ROAD[i]; bool reached = pf.bestTrophies >= r.tr, got = pf.roadClaimed[i] != 0, ready = reached && !got; int ny = y + RH / 2;
+    fillCircle(tx, ny, fs * 5, RGB(14, 12, 20), 255); fillCircle(tx, ny, fs * 4, reached ? RGB(250, 200, 60) : RGB(80, 84, 104), 255);   // точка на дороге
+    if (got) { drawLine(tx - fs * 2, ny, tx - fs / 2, ny + fs * 2, RGB(40, 120, 40), imax(2, fs)); drawLine(tx - fs / 2, ny + fs * 2, tx + fs * 2, ny - fs * 2, RGB(40, 120, 40), imax(2, fs)); }
+    snprintf(b, sizeof b, "%d", r.tr); drawBoldNum(colX + (tx - colX) / 2 - fs, ny - fs * 4, b, imax(1, fs - 1), reached ? RGB(255, 236, 150) : RGB(190, 196, 215), reached ? RGB(240, 190, 80) : RGB(150, 156, 175));
+    int px = tx + fs * 9, pw = colX + colW - fs * 3 - px, py = y + fs * 3, ph = RH - fs * 6;
+    u32 fr = ready ? mixc(RGB(250, 200, 60), RGB(255, 250, 200), 0.5f + 0.5f * sinf(gTime * 5)) : (got ? RGB(70, 140, 80) : RGB(50, 54, 74));
+    fillRect(px - fs / 2 - 1, py - fs / 2 - 1, pw + fs + 2, ph + fs + 2, fr); fillRect(px, py, pw, ph, ready ? mixc(MT->card, RGB(255, 220, 120), 0.12f) : MT->card);
+    roadIcon(i, px + fs, py + fs, ph - fs * 2, ph - fs * 2);
+    roadText(i, b, sizeof b); int tx2 = px + ph + fs * 2, bw = pw * 40 / 100; drawFit(tx2, py + fs * 4, b, px + pw - tx2 - fs * 3, fs, reached ? RGB(255, 255, 255) : RGB(170, 176, 196), 0);   // название во всю ширину, кнопка строкой ниже
+    if (ready) { if (button(px + pw - bw - fs * 2, py + ph - fs * 15, bw, fs * 13, "ЗАБРАТЬ", true, RGB(60, 160, 70))) { claimRoad(i); P.clicked = clk = false; if (gs != GS_ROAD) return; } }
+    else if (got) drawText(px + pw - fs * 4, py + ph - fs * 11, "ПОЛУЧЕНО", imax(1, fs - 1), RGB(140, 230, 150), 2);
+    else { snprintf(b, sizeof b, "ЕЩЁ %d", r.tr - pf.bestTrophies); drawText(px + pw - fs * 4, py + ph - fs * 11, b, imax(1, fs - 1), RGB(150, 156, 180), 2); } }
+  if (mys > hy0 - fs * 8 && mys < hy1 + fs * 8) {                                              // где я сейчас
+    fillCircle(tx, mys, fs * 8, RGB(14, 12, 20), 255); fillCircle(tx, mys, fs * 7, RGB(70, 130, 240), 255); fillCircle(tx, mys, fs * 5, RGB(110, 170, 255), 255);
+    snprintf(b, sizeof b, "%d", pf.trophies); int ns = imax(1, fs - 1); while (ns > 1 && boldW(b, ns) > fs * 12) ns--; drawBoldNum(tx, mys - 9 * ns / 2, b, ns, RGB(255, 255, 255), RGB(210, 225, 255)); }
+  if (!tap) P.clicked = clk;
+  // шапка и низ поверх прокрутки
+  fillRect(0, 0, IW, hy0, MT->bar); fillRect(0, hy0 - imax(1, fs / 2), IW, imax(1, fs / 2), MT->tabLine);
+  drawTextSh(IW / 2, safeTop() + fs * 4, "ДОРОГА КУБКОВ", fs * 2, RGB(255, 225, 120), 1);
+  snprintf(b, sizeof b, "КУБКИ %d   ЛУЧШЕЕ %d", pf.trophies, pf.bestTrophies); drawText(IW / 2, safeTop() + fs * 20, b, fs, RGB(220, 226, 245), 1);
+  fillRect(0, hy1, IW, IH - hy1, MT->bar); fillRect(0, hy1, IW, imax(1, fs / 2), MT->tabLine);
+  int bw = colW * 45 / 100;
+  if (button(colX + fs * 3, hy1 + fs * 6, bw, fs * 14, "НАЗАД", true, RGB(90, 90, 110))) { gs = GS_MENU; sfx(SFX_CLICK); return; }
+  if (button(colX + colW - fs * 3 - bw, hy1 + fs * 6, bw, fs * 14, "КО МНЕ", true, RGB(70, 110, 200))) roadCenter = true;
+  if (msgT > 0) { int w = textW(msg, fs) + fs * 8; fillRectA(IW / 2 - w / 2, hy1 - fs * 16, w, fs * 11, RGB(0, 0, 0), 190); drawText(IW / 2, hy1 - fs * 14, msg, fs, RGB(255, 230, 160), 1); }
+}
 static int previewY0() { return safeTop() + fs * 16; }
 static int previewY1() { return previewY0() + (IH - tabH() - previewY0()) * 45 / 100; }
 // ---- главный экран: картина-фон, плашка игрока, выбор режима и большая кнопка БОЙ ----
@@ -3165,33 +3633,46 @@ static void bigButton(int x, int y, int w, int h, u32 col) {      // объём�
 static void menuArt(int y0, int y1) {
   int a = arenaOf(pf.trophies); const Arena &ar = ARENAS[a]; int h = imax(1, y1 - y0);
   // небо: от тёмно-синего вверху к сиреневому у горизонта
-  for (int y = y0; y < y1; y++) { float t = (y - y0) / (float)h; fillRect(0, y, IW, 1, t < 0.62f ? mixc(RGB(26, 30, 78), RGB(120, 70, 150), t / 0.62f) : mixc(RGB(120, 70, 150), RGB(60, 40, 90), (t - 0.62f) / 0.38f)); }
+  for (int y = y0; y < y1; y++) { float t = (y - y0) / (float)h; fillRect(0, y, IW, 1, t < 0.62f ? mixc(MT->sky0, MT->sky1, t / 0.62f) : mixc(MT->sky1, MT->sky2, (t - 0.62f) / 0.38f)); }
   int hz = y0 + h * 60 / 100, cx = IW / 2;
   for (int k = 0; k < 9; k++) { float an = -1.5708f + (k - 4) * 0.2f + sinf(gTime * 0.3f) * 0.03f; int len = h;   // лучи света из-за замка
-    for (int t = 0; t < len; t += imax(2, fs)) { int px = cx + (int)(cosf(an) * t), py = hz - h / 6 + (int)(sinf(an) * t); if (py < y0) break; fillRectA(px - fs * 3, py, fs * 6, imax(2, fs), RGB(255, 220, 160), 18); } }
-  fillCircle(cx, hz - h / 6, h / 5, RGB(255, 200, 140), 40); fillCircle(cx, hz - h / 6, h / 9, RGB(255, 230, 190), 60);
-  for (int k = 0; k < 40; k++) { unsigned hh = hsh(k * 977u); int sx = (int)(hh % (unsigned)IW), sy = y0 + (int)((hh >> 12) % (unsigned)imax(1, h / 2)); int tw = (int)(sinf(gTime * 2 + k) * 60 + 150); fillRectA(sx, sy, imax(1, fs / 2 + 1), imax(1, fs / 2 + 1), RGB(255, 255, 230), tw); }   // звёзды
+    for (int t = 0; t < len; t += imax(2, fs)) { int px = cx + (int)(cosf(an) * t), py = hz - h / 6 + (int)(sinf(an) * t); if (py < y0) break; fillRectA(px - fs * 3, py, fs * 6, imax(2, fs), MT->rays, 18); } }
+  fillCircle(cx, hz - h / 6, h / 5, MT->sun, 40); fillCircle(cx, hz - h / 6, h / 9, mixc(MT->sun, RGB(255, 255, 255), 0.4f), 60);
+  if (MT->fx == 0 || MT->fx == 4) for (int k = 0; k < 40; k++) { unsigned hh = hsh(k * 977u); int sx = (int)(hh % (unsigned)IW), sy = y0 + (int)((hh >> 12) % (unsigned)imax(1, h / 2)); int tw = (int)(sinf(gTime * 2 + k) * 60 + 150); fillRectA(sx, sy, imax(1, fs / 2 + 1), imax(1, fs / 2 + 1), RGB(255, 255, 230), tw); }   // звёзды
+  if (MT->fx == 4) { int mx = IW * 84 / 100, my = y0 + h * 31 / 100, mr = imax(fs * 4, h / 13);                     // луна с кратерами
+    fillCircle(mx, my, mr * 2, RGB(170, 190, 255), 25); fillCircle(mx, my, mr, RGB(235, 240, 255), 255); fillCircle(mx - mr / 3, my - mr / 4, mr / 4, RGB(200, 208, 230), 255); fillCircle(mx + mr / 3, my + mr / 3, mr / 5, RGB(205, 212, 232), 255); fillCircle(mx + mr / 5, my - mr / 2, mr / 7, RGB(210, 216, 235), 255); }
   // горы двумя слоями
   for (int x = 0; x < IW; x += imax(1, fs)) { float fx = x / (float)IW;
-    int m1 = hz - (int)((0.22f + 0.1f * sinf(fx * 7.0f + 1.0f) + 0.06f * sinf(fx * 17.0f)) * h * 0.55f); fillRect(x, m1, imax(1, fs), hz - m1, RGB(70, 50, 110));
-    int m2 = hz - (int)((0.1f + 0.07f * sinf(fx * 11.0f + 3.0f) + 0.03f * sinf(fx * 29.0f)) * h * 0.55f); fillRect(x, m2, imax(1, fs), hz - m2, RGB(52, 40, 86)); }
+    float saw = MT->fx == 3 ? 0.09f * (1.0f - 2.0f * fabsf(fmodf(fx * 26.0f, 1.0f) - 0.5f)) : 0.0f;
+    int m1 = hz - (int)((0.22f + saw + 0.1f * sinf(fx * 7.0f + 1.0f) + 0.06f * sinf(fx * 17.0f)) * h * 0.55f); fillRect(x, m1, imax(1, fs), hz - m1, MT->mt1);
+    if (MT->fx == 2 && ((x / imax(1, fs)) % 9) < 2) fillRect(x, m1 + fs * 2, imax(1, fs), (hz - m1) / 2, RGB(200, 70, 25));
+    float saw2 = MT->fx == 3 ? 0.07f * (1.0f - 2.0f * fabsf(fmodf(fx * 34.0f + 0.3f, 1.0f) - 0.5f)) : 0.0f;
+    int m2 = hz - (int)((0.1f + saw2 + 0.07f * sinf(fx * 11.0f + 3.0f) + 0.03f * sinf(fx * 29.0f)) * h * 0.55f); fillRect(x, m2, imax(1, fs), hz - m2, MT->mt2); }
   // замок-силуэт на горизонте
-  { int cw = IW * 36 / 100, chh = h * 22 / 100, x0 = cx - cw / 2, top = hz - chh; u32 cc = RGB(40, 30, 66), hl = RGB(255, 200, 110);
+  { int cw = IW * 36 / 100, chh = h * 22 / 100, x0 = cx - cw / 2, top = hz - chh; u32 cc = MT->castle, hl = MT->door;
     fillRect(x0, top + chh / 3, cw, chh * 2 / 3, cc);
     for (int t = 0; t < 4; t++) { int tw = cw / 7, tx = x0 + t * (cw - tw) / 3, th = chh * (t == 1 || t == 2 ? 100 : 75) / 100; fillRect(tx, hz - th, tw, th, cc);
       for (int z = 0; z < 3; z++) fillRect(tx + z * tw / 3, hz - th - fs * 3, tw / 5, fs * 3, cc);
       fillRect(tx + tw / 2 - fs, hz - th + th / 4, fs * 2, fs * 3, hl); fillRect(tx + tw / 2, hz - th - fs * 12, imax(1, fs / 2), fs * 9, cc); fillRect(tx + tw / 2, hz - th - fs * 12, fs * 5, fs * 3, t & 1 ? RGB(220, 70, 60) : RGB(70, 120, 230)); }
-    fillRect(cx - cw / 14, hz - chh / 4, cw / 7, chh / 4, RGB(20, 14, 34)); }
+    fillRect(cx - cw / 14, hz - chh / 4, cw / 7, chh / 4, mixc(MT->castle, RGB(0, 0, 0), 0.5f)); }
   // земля арены
-  for (int y = hz; y < y1; y++) { float t = (y - hz) / (float)imax(1, y1 - hz); fillRect(0, y, IW, 1, mixc(mixc(ar.grass2, RGB(40, 30, 70), 0.55f), ar.grass, t)); }
+  for (int y = hz; y < y1; y++) { float t = (y - hz) / (float)imax(1, y1 - hz); fillRect(0, y, IW, 1, mixc(mixc(ar.grass2, MT->ground, 0.55f), ar.grass, t)); }
   // герои на переднем плане: свои 3D-модели, крупно
   setClipRect(0, y0, IW, y1); clearDepth(); gLight = 1.1f; gNight = 0; fogA = 1e9f; fogB = 2e9f; LDIR = vnorm(v3(0.35f, 0.8f, 0.6f)); int vt = viewTeam; viewTeam = 0;
   setCamera(v3(9, 2.4f, 7.5f), v3(9, 1.5f, 0)); focal = IW * 1.15f; vcx = IW * 0.5f; vcy = y1 - h * 0.36f;
-  int heroes[3] = {M_KNIGHT, M_GOBKING, M_ICEWIZ}; float hx[3] = {7.0f, 9.0f, 11.0f}, hzz[3] = {0.8f, 0.0f, 0.8f}, hyaw[3] = {0.45f, 0.0f, -0.45f};
+  int heroes[3] = {MT->heroes[0], MT->heroes[1], MT->heroes[2]}; float hx[3] = {7.0f, 9.0f, 11.0f}, hzz[3] = {0.8f, 0.0f, 0.8f}, hyaw[3] = {0.45f, 0.0f, -0.45f};
   for (int i = 0; i < 3; i++) { float at = fmodf(gTime * 0.5f + i * 0.33f, 1.0f); float atk = at > 0.85f ? (at - 0.85f) / 0.15f : 0;
     DISC(hx[i], hzz[i], 0.9f, 0.01f, mixc(ar.grass, RGB(0, 0, 0), 0.35f)); drawModel(heroes[i], 0, hx[i], 0, hzz[i], hyaw[i], 0, atk, 0, false, 1); }
   viewTeam = vt; setClipRect(0, 0, IW, IH);
-  for (int k = 0; k < fs * 10; k++) fillRectA(0, y1 - k, IW, 1, RGB(14, 16, 34), 250 - k * 250 / (fs * 10));   // плавный переход в панель
+  if (MT->fx == 1) for (int k = 0; k < 60; k++) { unsigned hh = hsh(k * 613u + 9u); float sp = 0.06f + (hh & 15) / 160.0f;     // снег падает и покачивается
+      int sx = (int)(hh % (unsigned)IW + sinf(gTime * 1.3f + k) * fs * 4), sy = y0 + (int)(fmodf((hh >> 8) % 1000 / 1000.0f + gTime * sp, 1.0f) * h); int sz = imax(1, fs / 2 + (int)(hh >> 20 & 1) * fs / 2 + 1);
+      fillRectA(sx, sy, sz, sz, RGB(255, 255, 255), 210); }
+  if (MT->fx == 2) for (int k = 0; k < 45; k++) { unsigned hh = hsh(k * 431u + 5u); float ph = fmodf((hh >> 8) % 1000 / 1000.0f + gTime * (0.08f + (hh & 15) / 200.0f), 1.0f);   // искры летят вверх и гаснут
+      int sx = (int)(hh % (unsigned)IW + sinf(gTime * 2 + k) * fs * 3), sy = y1 - (int)(ph * h); fillRectA(sx, sy, imax(1, fs / 2 + 1), imax(1, fs / 2 + 1), mixc(RGB(255, 220, 90), RGB(255, 70, 20), ph), (int)(230 * (1 - ph))); }
+  if (MT->fx == 3) for (int k = 0; k < 24; k++) { unsigned hh = hsh(k * 311u + 3u); float t = gTime * (0.3f + (hh & 7) / 20.0f) + k;   // светлячки кружат над поляной
+      int sx = (int)((hh % (unsigned)IW) + sinf(t) * IW / 12), sy = y0 + h / 2 + (int)((hh >> 10) % (unsigned)imax(1, h / 2)) + (int)(cosf(t * 1.3f) * h / 16); int al = (int)(120 + 120 * sinf(gTime * 3 + k * 1.7f));
+      if (al > 0 && sy < y1) { fillCircle(sx, sy, fs * 2, RGB(200, 255, 120), al / 4); fillRectA(sx - fs / 2, sy - fs / 2, imax(1, fs), imax(1, fs), RGB(240, 255, 170), al); } }
+  for (int k = 0; k < fs * 10; k++) fillRectA(0, y1 - k, IW, 1, MT->panel, 250 - k * 250 / (fs * 10));   // плавный переход в панель
 }
 static void menuBattle() {
   char b[96]; int a = arenaOf(pf.trophies);
@@ -3202,20 +3683,23 @@ static void menuBattle() {
   // плашка игрока
   { int w = colW * 62 / 100, x = colX + fs * 2; fillRectA(x, bannerY + fs * 2, w, bannerH, RGB(10, 14, 40), 190); fillRect(x, bannerY + fs * 2, fs, bannerH, RGB(255, 200, 70));
     drawTextSh(x + fs * 4, bannerY + fs * 4, pf.name, fs + 1, RGB(255, 255, 255), 0);
-    snprintf(b, sizeof b, "АРЕНА %d: %s", a + 1, ARENAS[a].name); drawFit(x + fs * 4, bannerY + fs * 14, b, w - fs * 6, fs, RGB(255, 220, 140), 0); }
+    snprintf(b, sizeof b, "АРЕНА %d: %s", a + 1, ARENAS[a].name); drawFit(x + fs * 4, bannerY + fs * 14, b, w - fs * 16, fs, RGB(255, 220, 140), 0);
+    drawText(x + w - fs * 3, bannerY + fs * 4, ">", fs + 1, RGB(255, 225, 120), 2);                           // нажатие на плашку - дорога кубков
+    if (roadAnyReady()) fillCircle(x + w - fs * 3, bannerY + fs * 3, fs * 3, RGB(255, 70, 60), 255);
+    if (hitR(x, bannerY + fs * 2, w, bannerH)) { openRoad(); return; } }
   // сундук корон - справа на картине
   { int w = colW * 30 / 100, x = colX + colW - w - fs * 2, y = bannerY + fs * 2; bool ok = pf.crowns >= 10 && pf.crownDay >= 0;
     if (pf.crowns < 0) snprintf(b, sizeof b, "СУНДУК КОРОН\nЗАВТРА"); else snprintf(b, sizeof b, "СУНДУК КОРОН\n%d / 10", pf.crowns);
     if (button(x, y, w, bannerH, ok ? "СУНДУК КОРОН\nОТКРЫТЬ!" : b, ok, RGB(70, 110, 220))) { pf.crowns = -1000; openChest(CH_CROWN); return; } }
   if (a + 1 < NARENA) { snprintf(b, sizeof b, "СЛЕДУЮЩАЯ АРЕНА - С %d КУБКОВ", ARENAS[a + 1].trophies); drawTextSh(IW / 2, bannerY + bannerH + fs * 6, b, fs, RGB(220, 225, 245), 1); }
   // панель внизу
-  fillRect(0, modeY, IW, tabsTop - modeY, RGB(14, 16, 34));
+  fillRect(0, modeY, IW, tabsTop - modeY, MT->panel);
   // выбор режима
   { static const char *MN[6] = {"1 НА 1 С БОТОМ", "2 НА 2 С БОТОМ", "С ДРУГОМ (WI-FI)", "ТРОЙНОЙ ЭЛИКСИР", "СЛУЧАЙНЫЕ КОЛОДЫ", "ТУРНИР ИЗ 5 БОЁВ"}; int w = colW * 70 / 100, x = IW / 2 - w / 2, h = fs * 12;
-    fillRect(x, modeY + fs, w, h, RGB(70, 50, 130)); fillRect(x, modeY + fs, w, imax(1, h / 4), RGB(100, 75, 170));
+    fillRect(x, modeY + fs, w, h, MT->mode); fillRect(x, modeY + fs, w, imax(1, h / 4), MT->modeHi);
     snprintf(b, sizeof b, "РЕЖИМ: %s", MN[menuMode]); drawFit(IW / 2, modeY + fs * 4, b, w - fs * 26, fs, RGB(255, 255, 255), 1);
-    if (button(x, modeY + fs, fs * 12, h, "<", true, RGB(90, 70, 160))) { menuMode = (menuMode + 5) % 6; sfx(SFX_CLICK); }
-    if (button(x + w - fs * 12, modeY + fs, fs * 12, h, ">", true, RGB(90, 70, 160))) { menuMode = (menuMode + 1) % 6; sfx(SFX_CLICK); } }
+    if (button(x, modeY + fs, fs * 12, h, "<", true, MT->modeBtn)) { menuMode = (menuMode + 5) % 6; sfx(SFX_CLICK); }
+    if (button(x + w - fs * 12, modeY + fs, fs * 12, h, ">", true, MT->modeBtn)) { menuMode = (menuMode + 1) % 6; sfx(SFX_CLICK); } }
   // колода слева, БОЙ по центру, бесплатный сундук справа
   int sideW = colW * 22 / 100, midW = colW - sideW * 2 - fs * 8, x0 = colX + fs * 2;
   { bigButton(x0, btnY, sideW, btnH, RGB(60, 90, 170)); int ch = btnH - fs * 14, cw = imin(sideW * 45 / 100, ch * 5 / 6);
@@ -3245,6 +3729,8 @@ static int cardStatLine(int c, int lvl, char lines[][64]) {
   if (cd.unit == U_STRONG) snprintf(lines[n++], 64, "ПЛОЩАДЬ УДАРА: 2 x 6 КЛЕТОК");
   if (cd.unit == U_FSPIRIT) snprintf(lines[n++], 64, "ВЗРЫВ ПО ПЛОЩАДИ: %d, ПО ЗЕМЛЕ И ВОЗДУХУ", (int)(u.dmg * k));
   if (cd.unit == U_ISPIRIT) snprintf(lines[n++], 64, "ВЗРЫВ %d И ЗАМОРОЗКА НА %.0f С", (int)(u.dmg * k), SPIRIT_FREEZE);
+  if (cd.unit == U_ESPIRIT) { snprintf(lines[n++], 64, "МОЛНИЯ: %d КАЖДОЙ ЦЕЛИ", (int)(u.dmg * k)); snprintf(lines[n++], 64, "ЦЕПЬ ДО %d ВРАГОВ, ОГЛУШЕНИЕ %.1f С", ESP_CHAIN, ESP_STUN); }
+  if (cd.unit == U_IGIANT) snprintf(lines[n++], 64, "АУРА ХОЛОДА: 2 КЛЕТКИ, ВСЕ МЕДЛЕННЕЕ НА 45%%");
   if (cd.unit == U_ICEROCK) snprintf(lines[n++], 64, "ВЫПУСКАЕТ ЛЕДЯНОГО ДУХА КАЖДЫЕ %.0f С", UNITS[U_ICEROCK].spawnT);
   if (cd.unit == U_FURNACE) snprintf(lines[n++], 64, "ВЫПУСКАЕТ ОГНЕННОГО ДУХА КАЖДЫЕ %.0f С", UNITS[U_FURNACE].spawnT);
   if (cd.unit == U_COLLECTOR) { snprintf(lines[n++], 64, "ЭЛИКСИР: +1 КАЖДЫЕ %.0f С", COLL_T); snprintf(lines[n++], 64, "ПРИ ГИБЕЛИ: +1 ЭЛИКСИР"); }
@@ -3279,7 +3765,7 @@ static void cardInfo() {
     int n = cardStatLine(c, lvl, lines); for (int i = 0; i < n; i++) { drawText(x0 + fs * 4, y, lines[i], fs, RGB(190, 200, 225), 0); y += fs * 10; } }
   int by = y0 + ph - fs * 22, bw = (pw - fs * 12) / 3;
   bool inDeck = false; for (int i = 0; i < 8; i++) if (pf.deck[i] == c) inDeck = true;
-  if (lvl < MAXLVL && pf.have[c]) { int need = needCards(cd.rarity, lvl + 1), gold = needGold(cd.rarity, lvl + 1); snprintf(b, sizeof b, "УЛУЧШИТЬ\n%d ЗОЛОТА", gold);
+  if (lvl < MAXLVL && pf.have[c]) { int need = needCards(cd.rarity, lvl + 1), gold = needGold(cd.rarity, lvl + 1); snprintf(b, sizeof b, "УЛУЧШИТЬ\n%d СЕРЕБРА", gold);
     if (button(x0 + fs * 3, by, bw, fs * 18, b, pf.cnt[c] >= need && pf.gold >= gold, RGB(60, 150, 70))) { pf.cnt[c] -= need; pf.gold -= gold; pf.lvl[c]++; addKingXp(XP_UP[pf.lvl[c] - 1]); questAdd(Q_UPGRADE, 1); saveProfile(); sfx(SFX_CHEST); say("КАРТА УЛУЧШЕНА!"); } }
   if (!inDeck && pf.have[c] && button(x0 + fs * 6 + bw, by, bw, fs * 18, "В КОЛОДУ", true, RGB(70, 110, 190))) { swapCard = c; infoCard = -1; say("ВЫБЕРИ КАРТУ В КОЛОДЕ ДЛЯ ЗАМЕНЫ", 3); sfx(SFX_CLICK); return; }
   if (button(x0 + fs * 9 + bw * 2, by, bw, fs * 18, "ЗАКРЫТЬ", true, RGB(90, 90, 110))) { infoCard = -1; sfx(SFX_CLICK); }
@@ -3323,19 +3809,21 @@ static void menuShop() {
   for (int i = 0; i < 3; i++) { int c = pf.shopCard[i], x = colX + fs * 3 + i * (cw + fs * 3); drawCard(c, pf.lvl[c], x, y, cw, ch, false, !pf.shopBought[i], true);
     snprintf(b, sizeof b, "X%d", shopCount(c)); drawTextSh(x + cw / 2, y + ch + fs * 2, b, fs, RGB(255, 255, 255), 1);
     if (pf.shopBought[i]) drawText(x + cw / 2, y + ch + fs * 12, "КУПЛЕНО", fs, RGB(150, 160, 180), 1);
-    else { snprintf(b, sizeof b, "%d ЗОЛ.", shopPrice(c)); if (button(x, y + ch + fs * 11, cw, fs * 13, b, pf.gold >= shopPrice(c), RGB(60, 150, 70))) { pf.gold -= shopPrice(c); addCards(c, shopCount(c)); pf.shopBought[i] = true; saveProfile(); sfx(SFX_CHEST); say("КУПЛЕНО!"); } } }
+    else { snprintf(b, sizeof b, "%d СЕР.", shopPrice(c)); if (button(x, y + ch + fs * 11, cw, fs * 13, b, pf.gold >= shopPrice(c), RGB(60, 150, 70))) { pf.gold -= shopPrice(c); addCards(c, shopCount(c)); pf.shopBought[i] = true; saveProfile(); sfx(SFX_CHEST); say("КУПЛЕНО!"); } } }
   y += ch + fs * 32;
   drawTextSh(IW / 2, y, "СУНДУКИ", fs + 1, RGB(255, 230, 150), 1); y += fs * 12;
-  struct SC { int type, price; }; static const SC sc[3] = {{CH_GOLD, 120}, {CH_MAGIC, 360}, {CH_LEGEND, 900}};
-  for (int i = 0; i < 3; i++) { int x = colX + fs * 3 + i * (cw + fs * 3); const ChestT &ct = CHESTS[sc[i].type];
-    fillRect(x, y, cw, cw * 2 / 3, RGB(30, 36, 56)); fillRect(x + cw / 5, y + cw / 6, cw * 3 / 5, cw * 2 / 5, ct.col2); fillRect(x + cw / 5 + fs, y + cw / 6 + fs, cw * 3 / 5 - fs * 2, cw / 5 - fs, ct.col);
-    { int sc2 = fs; while (sc2 > 1 && textW(ct.name, sc2) > cw) sc2--; drawText(x + cw / 2, y + cw * 2 / 3 + fs * 2, ct.name, sc2, ct.col, 1); }
-    snprintf(b, sizeof b, "%d КРИСТ.", sc[i].price); if (button(x, y + cw * 2 / 3 + fs * 11, cw, fs * 13, b, pf.gems >= sc[i].price, RGB(70, 110, 190))) { pf.gems -= sc[i].price; openChest(sc[i].type); return; } }
-  y += cw * 2 / 3 + fs * 32;
-  drawTextSh(IW / 2, y, "ЗОЛОТО", fs + 1, RGB(255, 230, 150), 1); y += fs * 12;
+  static const int SHOPCH[8] = {CH_GOLD, CH_LIGHTNING, CH_GIANT, CH_MAGIC, CH_EPIC, CH_LEGEND, CH_ROYAL, -1};   // 7 сундуков в две строки по 4
+  int qw = (colW - fs * 15) / 4, qh = qw * 3 / 4;
+  for (int i = 0; i < 7; i++) { int x = colX + fs * 3 + (i % 4) * (qw + fs * 3), yy = y + (i / 4) * (qh + fs * 30); int t = SHOPCH[i]; const ChestT &ct = CHESTS[t];
+    fillRect(x, yy, qw, qh, MT->card); fillRect(x, yy, qw, imax(1, fs / 2), mixc(ct.col, RGB(255, 255, 255), 0.3f));
+    drawChestSpr(t, 0, x + fs, yy + fs, qw - fs * 2, qh - fs * 2);
+    drawFit(x + qw / 2, yy + qh + fs * 2, ct.shortN, qw, imax(1, fs - 1), mixc(ct.col, RGB(255, 255, 255), 0.45f), 1);
+    snprintf(b, sizeof b, "%d КР.", CHEST_PRICE[t]); if (button(x, yy + qh + fs * 11, qw, fs * 13, b, pf.gems >= CHEST_PRICE[t], RGB(70, 110, 190))) { pf.gems -= CHEST_PRICE[t]; openChest(t); return; } }
+  y += 2 * (qh + fs * 30) + fs * 2;
+  drawTextSh(IW / 2, y, "СЕРЕБРО", fs + 1, RGB(255, 230, 150), 1); y += fs * 12;
   struct GP { int gold, gems; }; static const GP gp[3] = {{500, 30}, {2000, 100}, {10000, 450}};
-  for (int i = 0; i < 3; i++) { int x = colX + fs * 3 + i * (cw + fs * 3); snprintf(b, sizeof b, "%d ЗОЛОТА\n%d КРИСТ.", gp[i].gold, gp[i].gems);
-    if (button(x, y, cw, fs * 18, b, pf.gems >= gp[i].gems, RGB(170, 130, 40))) { pf.gems -= gp[i].gems; pf.gold += gp[i].gold; saveProfile(); sfx(SFX_CHEST); } }
+  for (int i = 0; i < 3; i++) { int x = colX + fs * 3 + i * (cw + fs * 3); snprintf(b, sizeof b, "%d СЕРЕБРА\n%d КРИСТ.", gp[i].gold, gp[i].gems);
+    if (button(x, y, cw, fs * 18, b, pf.gems >= gp[i].gems, RGB(120, 128, 150))) { pf.gems -= gp[i].gems; pf.gold += gp[i].gold; saveProfile(); sfx(SFX_CHEST); } }
   y += fs * 24; long long left = 86400 - (nowSec() % 86400); char t[32]; fmtTime(t, sizeof t, left); snprintf(b, sizeof b, "НОВЫЕ КАРТЫ ДНЯ ЧЕРЕЗ %s", t); drawText(IW / 2, y, b, fs, RGB(170, 180, 200), 1);
 }
 static bool showTop = false; static float topScroll = 0;
@@ -3358,7 +3846,7 @@ static void menuTop100() {
   for (int k = 1; k <= 100; k++) { int yy = listY0 + (int)topScroll + (k - 1) * rowH; bool me = (k == pr), vis = !(yy + rowH < listY0 || yy > listY1);
     const char *nm = me ? "YOU" : topName(bi + 1); int tr = me ? pf.rating : topRating(bi + 1); if (!me) bi++;
     if (!vis) continue;
-    u32 base = me ? RGB(40, 110, 60) : (k == 1 ? RGB(120, 96, 24) : (k == 2 ? RGB(92, 98, 112) : (k == 3 ? RGB(110, 70, 40) : ((k & 1) ? RGB(30, 36, 56) : RGB(38, 45, 68)))));
+    u32 base = me ? RGB(40, 110, 60) : (k == 1 ? RGB(120, 96, 24) : (k == 2 ? RGB(92, 98, 112) : (k == 3 ? RGB(110, 70, 40) : ((k & 1) ? MT->card : MT->cardAlt))));
     int x = colX + fs * 3, w = colW - fs * 6; fillRect(x, yy, w - 0, rowH - fs, base); if (k <= 3) fillRect(x, yy, fs * 3, rowH - fs, k == 1 ? RGB(255, 215, 80) : (k == 2 ? RGB(220, 225, 235) : RGB(215, 140, 80)));
     snprintf(b, sizeof b, "#%d", k); drawText(x + fs * 6, yy + fs * 3, b, fs, k <= 3 ? RGB(255, 235, 150) : RGB(190, 200, 225), 0);
     drawText(x + fs * 24, yy + fs * 3, nm, fs, me ? RGB(255, 255, 255) : RGB(235, 235, 245), 0);
@@ -3370,38 +3858,35 @@ static void menuQuests() {
   int y = safeTop() + fs * 24; char b[96];
   drawTextSh(IW / 2, y, "ЗАДАНИЯ ДНЯ", fs + 1, RGB(255, 230, 150), 1); y += fs * 12;
   for (int i = 0; i < 3; i++) { Quest &q = pf.quests[i]; const QuestT &qt = QUESTS[q.type]; int h = fs * 30, x = colX + fs * 3, w = colW - fs * 6;
-    fillRect(x, y, w, h, RGB(30, 36, 56)); snprintf(b, sizeof b, "%s: %d", qt.text, q.need); drawText(x + fs * 4, y + fs * 3, b, fs, RGB(235, 235, 245), 0);
+    fillRect(x, y, w, h, MT->card); snprintf(b, sizeof b, "%s: %d", qt.text, q.need); drawText(x + fs * 4, y + fs * 3, b, fs, RGB(235, 235, 245), 0);
     fillRect(x + fs * 4, y + fs * 13, w * 3 / 5, fs * 5, RGB(20, 20, 30)); fillRect(x + fs * 4, y + fs * 13, (int)(w * 3 / 5 * clampf(q.prog / (float)q.need, 0, 1)), fs * 5, q.done ? RGB(80, 200, 90) : RGB(60, 120, 220));
     snprintf(b, sizeof b, "%d / %d", q.prog, q.need); drawText(x + fs * 4 + w * 3 / 10, y + fs * 13, b, imax(1, fs - 1), RGB(255, 255, 255), 1);
-    if (qt.gold) snprintf(b, sizeof b, "+%d ЗОЛ.", qt.gold); else snprintf(b, sizeof b, "+%d КРИСТ.", qt.gems); if (qt.gold && qt.gems) snprintf(b, sizeof b, "+%d ЗОЛ. +%d КР.", qt.gold, qt.gems);
+    if (qt.gold) snprintf(b, sizeof b, "+%d СЕР.", qt.gold); else snprintf(b, sizeof b, "+%d КРИСТ.", qt.gems); if (qt.gold && qt.gems) snprintf(b, sizeof b, "+%d СЕР. +%d КР.", qt.gold, qt.gems);
     drawText(x + fs * 4, y + fs * 21, b, imax(1, fs - 1), RGB(255, 215, 90), 0);
     if (q.claimed) drawText(x + w - fs * 4, y + fs * 14, "ГОТОВО", fs, RGB(140, 255, 160), 2);
     else if (button(x + w - fs * 34, y + fs * 10, fs * 30, fs * 14, "ЗАБРАТЬ", q.done, RGB(60, 150, 70))) { q.claimed = true; pf.gold += qt.gold; pf.gems += qt.gems; saveProfile(); sfx(SFX_CHEST); }
     y += h + fs * 4; }
   long long left = 86400 - (nowSec() % 86400); char t[32]; fmtTime(t, sizeof t, left); snprintf(b, sizeof b, "НОВЫЕ ЗАДАНИЯ ЧЕРЕЗ %s", t); drawText(IW / 2, y, b, fs, RGB(170, 180, 200), 1); y += fs * 14;
-  drawTextSh(colX + fs * 4, y + fs, "ПУТЬ АРЕН", fs + 1, RGB(255, 230, 150), 0);
-  { int bw = colW * 42 / 100; if (button(colX + colW - fs * 3 - bw, y - fs, bw, fs * 12, "РЕЙТИНГ ТОП-100", true, RGB(150, 110, 30))) { showTop = true; topScroll = 0; sfx(SFX_CLICK); } }
-  y += fs * 12;
-  int a = arenaOf(pf.trophies);
-  for (int i = 0; i < NARENA; i++) { int h = fs * 15, x = colX + fs * 3, w = colW - fs * 6; u32 c = i <= a ? ARENAS[i].grass : RGB(50, 54, 66);
-    fillRect(x, y, w, h, mixc(c, RGB(0, 0, 0), 0.35f)); fillRect(x, y, fs * 3, h, i == a ? RGB(255, 220, 80) : c);
-    snprintf(b, sizeof b, "%d. %s", i + 1, ARENAS[i].name); drawText(x + fs * 6, y + fs * 2, b, fs, i <= a ? RGB(255, 255, 255) : RGB(150, 155, 170), 0);
-    if (isLegend(i)) snprintf(b, sizeof b, "ОТ %d КУБКОВ. ВМЕСТО КУБКОВ - РЕЙТИНГ ТОП-100", ARENAS[i].trophies); else snprintf(b, sizeof b, "ОТ %d КУБКОВ", ARENAS[i].trophies); drawText(x + fs * 6, y + fs * 9, b, imax(1, fs - 1), RGB(220, 210, 160), 0);
-    int k = 0; for (int cc = 0; cc < NCARD; cc++) if (CARDS[cc].arena == i) k++; snprintf(b, sizeof b, "КАРТ: %d", k); drawText(x + w - fs * 4, y + fs * 5, b, imax(1, fs - 1), RGB(200, 210, 230), 2);
-    y += h + fs; }
+  { int bw = colW * 45 / 100; if (button(colX + fs * 3, y - fs, bw, fs * 12, "ДОРОГА КУБКОВ", true, RGB(200, 140, 30))) { openRoad(); return; }
+    if (roadAnyReady()) fillCircle(colX + fs * 3 + bw - fs, y, fs * 3, RGB(255, 70, 60), 255);
+    if (button(colX + colW - fs * 3 - bw, y - fs, bw, fs * 12, "РЕЙТИНГ ТОП-100", true, RGB(150, 110, 30))) { showTop = true; topScroll = 0; sfx(SFX_CLICK); } }
+  y += fs * 14;
   y += fs * 4; snprintf(b, sizeof b, inLegend() ? "ПОБЕД %d   ПОРАЖЕНИЙ %d   ЛУЧШИЙ РЕЙТИНГ %d" : "ПОБЕД %d   ПОРАЖЕНИЙ %d   ЛУЧШЕЕ %d КУБКОВ", pf.wins, pf.losses, inLegend() ? pf.ratingBest : pf.bestTrophies); drawText(IW / 2, y, b, imax(1, fs - 1), RGB(190, 200, 225), 1);
   y += fs * 12; if (button(IW / 2 - fs * 30, y, fs * 60, fs * 12, pf.soundOn ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", true, RGB(70, 80, 110))) { pf.soundOn = !pf.soundOn; saveProfile(); }
 }
 // одна страница меню (вкладка или экран рейтинга) - рисуется и как текущая, и как уходящая при анимации перехода
 static void drawMenuPage(int tab, bool top) {
-  for (int y = 0; y < IH && tab != 2; y += fs * 4) fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? RGB(36, 45, 70) : RGB(34, 42, 66));
+  for (int y = 0; y < IH && tab != 2; y += fs * 4) fillRect(0, y, IW, fs * 4, ((y / (fs * 4)) & 1) ? MT->bg1 : MT->bg2);
   if (tab == 2) menuBattle(); else if (tab == 1) menuDeck(); else if (tab == 0) menuShop(); else if (top) menuTop100(); else menuQuests();
 }
 static void frameMenu() {
-  layoutCol(); dailyRefresh();
+  layoutCol(); dailyRefresh(); pickTheme();
   if (P.clicked && infoCard < 0) { int dx = P.cx - P.sx, dy = P.cy - P.sy;                 // свайп влево-вправо - соседняя вкладка
     if (abs(dx) > IW / 5 && abs(dx) > abs(dy) * 2) { int nt = clampi(menuTab + (dx < 0 ? 1 : -1), 0, 3); if (nt != menuTab) { menuTab = nt; swapCard = -1; sfx(SFX_CLICK); } P.clicked = false; } }
-  if (weekJustReset) { weekJustReset = false; say("НОВАЯ НЕДЕЛЯ: РЕЙТИНГ СБРОШЕН"); }
+  if (weekJustReset) { weekJustReset = false; char wb[160];
+    if (weekRewardChest >= 0 && !weekRewardGems) snprintf(wb, sizeof wb, "НОВАЯ НЕДЕЛЯ! ЗА %d МЕСТО: %s", weekRewardRank, CHESTS[weekRewardChest].name);
+    else if (weekRewardChest >= 0) snprintf(wb, sizeof wb, "НОВАЯ НЕДЕЛЯ! ЗА %d МЕСТО: +%d КРИСТАЛЛОВ (НЕТ МЕСТА ДЛЯ СУНДУКА)", weekRewardRank, weekRewardGems);
+    else snprintf(wb, sizeof wb, "НОВАЯ НЕДЕЛЯ: РЕЙТИНГ СБРОШЕН"); say(wb, 5); weekRewardChest = -1; }
   if (menuTab != 3) showTop = false;
   // анимация перехода: новая страница выезжает сбоку, старая уезжает; шапка и вкладки остаются на месте
   static int lastPid = -1, animFrom = -1; static Uint32 animT0 = 0, lastTick = 0; static std::vector<u32> snap, rowBuf;
@@ -3807,8 +4292,9 @@ static void goBack(bool &running) {
   if (gs == GS_START) running = false;
   else if (gs == GS_MENU) { if (infoCard >= 0) infoCard = -1; else if (showTop) showTop = false; else if (menuTab != 2) menuTab = 2; else { saveProfile(); if (!devMode) realPf = pf; gs = GS_START; } }
   else if (gs == GS_LOBBY) { netClose(); gs = GS_MENU; }
-  else if (gs == GS_CHEST) gs = GS_MENU;
+  else if (gs == GS_CHEST) chestLeave();
   else if (gs == GS_RESULT) gs = GS_MENU;
+  else if (gs == GS_ROAD) gs = GS_MENU;
 }
 static float fpsShow = 0, fpsAcc = 0; static int fpsN = 0;
 
@@ -3867,7 +4353,7 @@ int main(int argc, char **argv) {
 #endif
     netTick(dt);
     if (msgT > 0 && gs != GS_BATTLE) msgT -= dt;
-    if (gs == GS_START) frameStart(); else if (gs == GS_MENU) frameMenu(); else if (gs == GS_BATTLE) frameBattle(dt); else if (gs == GS_RESULT) frameResult(); else if (gs == GS_CHEST) frameChest(dt); else frameLobby(dt);
+    if (gs == GS_START) frameStart(); else if (gs == GS_MENU) frameMenu(); else if (gs == GS_BATTLE) frameBattle(dt); else if (gs == GS_RESULT) frameResult(); else if (gs == GS_CHEST) frameChest(dt); else if (gs == GS_ROAD) frameRoad(); else frameLobby(dt);
     if (fpsOn) { char b[16]; snprintf(b, sizeof b, "%d", (int)(fpsShow + 0.5f)); drawText(IW - fs * 2, IH - fs * 9, b, imax(1, fs - 1), RGB(150, 160, 180), 2); }
     gfxPresent();
     Uint32 spent = SDL_GetTicks() - now; fpsAcc += dt; fpsN++; if (fpsAcc >= 1.0f) { fpsShow = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; }

@@ -1120,10 +1120,10 @@ enum { CT_TROOP, CT_BUILD, CT_SPELL };
 enum { RA_COMMON, RA_RARE, RA_EPIC, RA_LEGEND, NRAR };
 static const char *RARN[NRAR] = {"ОБЫЧНАЯ", "РЕДКАЯ", "ЭПИЧЕСКАЯ", "ЛЕГЕНДАРНАЯ"};
 static const u32 RARC[NRAR] = {RGB(170, 220, 255), RGB(90, 200, 70), RGB(235, 90, 170), RGB(240, 225, 60)};   // рамки по эскизу: синяя, зелёная, розовая, жёлтая
-enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL, SP_MAGEFALL };   // SP_MAGEFALL - огненный шар, из которого появляется маг огня
+enum { SP_NONE, SP_FIREBALL, SP_ARROWS, SP_FREEZE, SP_HEAL, SP_ROCKET, SP_ZAP, SP_BARREL, SP_MAGEFALL, SP_CONFUSE };   // SP_MAGEFALL - огненный шар, из которого появляется маг огня
 struct Card { const char *name; int cost, type, rarity, unit, count, arena; int spell; float sR, sDmg, sTowerK, sDelay, sTime; const char *desc; };
 enum { C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON,
-       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, C_STRONG, C_CGOLEM, C_INFERNO, C_COLLECTOR, C_FSPIRIT, C_ISPIRIT, C_FURNACE, C_ICEROCK, C_SPARKY, C_ESPIRIT, C_IGIANT, C_TROJAN, NCARD };
+       C_LANCER, C_BATS, C_ZAP, C_NECRO, C_BOMBER, C_ATOWER, C_FREEZE, C_DRAGON, C_XBOW, C_FIREMAGE, C_ROCKET, C_HUT, C_GOLEM, C_BULL, C_HEAL, C_GOBKING, C_DART, C_VOLAR, C_SKARMY, C_RECRUITS, C_ICEWIZ, C_BARREL, C_BARBS, C_EBARBS, C_HOG, C_MEGA, C_STRONG, C_CGOLEM, C_INFERNO, C_COLLECTOR, C_FSPIRIT, C_ISPIRIT, C_FURNACE, C_ICEROCK, C_SPARKY, C_ESPIRIT, C_IGIANT, C_TROJAN, C_CONFUSE, NCARD };
 static Card CARDS[NCARD] = {
   {"РЫЦАРЬ",            3, CT_TROOP, RA_COMMON, U_KNIGHT,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "КРЕПКИЙ БОЕЦ С МЕЧОМ. ДЕРЖИТ УДАР И БЬЁТ ВБЛИЗИ."},
   {"ЛУЧНИЦЫ",           3, CT_TROOP, RA_COMMON, U_ARCHER,   2, 0, SP_NONE, 0, 0, 0, 0, 0, "ДВЕ ЛУЧНИЦЫ. СТРЕЛЯЮТ ИЗДАЛЕКА, ДОСТАЮТ ЛЕТАЮЩИХ."},
@@ -1135,7 +1135,7 @@ static Card CARDS[NCARD] = {
   {"ПУШКА",             3, CT_BUILD, RA_COMMON, U_CANNON,   1, 0, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. СТРЕЛЯЕТ ПО НАЗЕМНЫМ, ОТВЛЕКАЕТ ВЕЛИКАНОВ."},
   {"КОПЕЙЩИК",          4, CT_TROOP, RA_RARE,   U_LANCER,   1, 1, SP_NONE, 0, 0, 0, 0, 0, "РАЗГОНЯЕТСЯ И ПЕРВЫМ УДАРОМ БЬЁТ ВДВОЕ СИЛЬНЕЕ."},
   {"ЛЕТУЧИЕ МЫШИ",      2, CT_TROOP, RA_COMMON, U_BAT,      4, 1, SP_NONE, 0, 0, 0, 0, 0, "СТАЯ ИЗ ЧЕТЫРЁХ. ЛЕТАЮТ, БЫСТРЫЕ, НО ХРУПКИЕ."},
-  {"РАЗРЯД",            2, CT_SPELL, RA_RARE,   -1,         0, 1, SP_ZAP, 2.5f, 160, 0.35f, 0, 0, "МГНОВЕННАЯ МОЛНИЯ. ОГЛУШАЕТ НА ПОЛСЕКУНДЫ."},
+  {"РАЗРЯД",            2, CT_SPELL, RA_RARE,   -1,         0, 5, SP_ZAP, 2.5f, 160, 0.35f, 0, 0, "МГНОВЕННАЯ МОЛНИЯ. ОГЛУШАЕТ НА ПОЛСЕКУНДЫ."},
   {"НЕКРОМАНТ",         5, CT_TROOP, RA_EPIC,   U_NECRO,    1, 2, SP_NONE, 0, 0, 0, 0, 0, "ПОДНИМАЕТ ПО 4 СКЕЛЕТА. ТЁМНАЯ МАГИЯ БЬЁТ ПО ПЛОЩАДИ."},
   {"ГНОМ-ПОДРЫВНИК",    3, CT_TROOP, RA_COMMON, U_BOMBER,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "КИДАЕТ БОМБЫ ПО ТОЛПЕ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
   {"БАШНЯ ЛУЧНИКОВ",    4, CT_BUILD, RA_RARE,   U_ATOWER,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. ДАЛЕКО СТРЕЛЯЕТ ПО ВСЕМ, И ПО ЛЕТАЮЩИМ."},
@@ -1145,9 +1145,9 @@ static Card CARDS[NCARD] = {
   {"МАГ ОГНЯ",          5, CT_TROOP, RA_LEGEND, U_FIREMAGE, 1, 4, SP_NONE, 0, 0, 0, 0, 0, "ОГНЕННЫЕ ШАРЫ ПО ПЛОЩАДИ. ПРОТИВ ТОЛПЫ И ЛЕТАЮЩИХ."},
   {"РАКЕТА",            6, CT_SPELL, RA_LEGEND, -1,         0, 4, SP_ROCKET, 2.0f, 2025, 0.2f, 1.0f, 0, "ЛЕТИТ С КОРОЛЕВСКОЙ БАШНИ. ОГРОМНЫЙ УРОН В НЕБОЛЬШОМ КРУГЕ."},
   {"ГОБЛИНСКАЯ ХИЖИНА", 5, CT_BUILD, RA_RARE,   U_HUT,      1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 5 СЕКУНД ВЫПУСКАЕТ ГОБЛИНА."},
-  {"КАМЕННЫЙ ГОЛЕМ",    8, CT_TROOP, RA_EPIC,   U_GOLEM,    1, 5, SP_NONE, 0, 0, 0, 0, 0, "САМЫЙ КРЕПКИЙ. ИДЁТ К ЗДАНИЯМ, ПРИ ГИБЕЛИ ВЗРЫВАЕТСЯ."},
-  {"БОЕВОЙ БЫК",        4, CT_TROOP, RA_RARE,   U_BULL,     1, 5, SP_NONE, 0, 0, 0, 0, 0, "БЫСТРО НЕСЁТСЯ К БАШНЯМ, ПЕРЕПРЫГИВАЕТ РЕКУ."},
-  {"ЛЕЧЕНИЕ",           3, CT_SPELL, RA_RARE,   -1,         0, 5, SP_HEAL, 3.0f, 450, 0, 0, 2.0f, "ЛЕЧИТ СВОИХ В КРУГУ ЗА 2 СЕКУНДЫ."},
+  {"КАМЕННЫЙ ГОЛЕМ",    8, CT_TROOP, RA_EPIC,   U_GOLEM,    1, 6, SP_NONE, 0, 0, 0, 0, 0, "САМЫЙ КРЕПКИЙ. ИДЁТ К ЗДАНИЯМ, ПРИ ГИБЕЛИ ВЗРЫВАЕТСЯ."},
+  {"БОЕВОЙ БЫК",        4, CT_TROOP, RA_RARE,   U_BULL,     1, 6, SP_NONE, 0, 0, 0, 0, 0, "БЫСТРО НЕСЁТСЯ К БАШНЯМ, ПЕРЕПРЫГИВАЕТ РЕКУ."},
+  {"ЛЕЧЕНИЕ",           3, CT_SPELL, RA_RARE,   -1,         0, 6, SP_HEAL, 3.0f, 450, 0, 0, 2.0f, "ЛЕЧИТ СВОИХ В КРУГУ ЗА 2 СЕКУНДЫ."},
   {"КОРОЛЬ ГОБЛИНОВ",   7, CT_TROOP, RA_LEGEND, U_GOBKING,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ИДЁТ ТОЛЬКО К ЗДАНИЯМ И БАШНЯМ. КАЖДЫЕ 5 СЕКУНД ПРИЗЫВАЕТ 4 ГОБЛИНОВ."},
   {"ГОБЛИН-ДУДЕЦ",      3, CT_TROOP, RA_RARE,   U_DART,     1, 1, SP_NONE, 0, 0, 0, 0, 0, "ПЛЮЁТСЯ ИЗ ДУДКИ ОЧЕНЬ БЫСТРО И ДАЛЕКО. ДОСТАЁТ ЛЕТАЮЩИХ."},
   {"ВОЛАР БЕБЕ",        7, CT_TROOP, RA_LEGEND, U_VOLAR,    1, 4, SP_NONE, 0, 0, 0, 0, 0, "ЛЕТАЕТ И АТАКУЕТ ТОЛЬКО ЗДАНИЯ. ПРИ ГИБЕЛИ - 6 ЩЕНКОВ, ОНИ БЬЮТ ВСЕХ."},
@@ -1163,25 +1163,27 @@ static Card CARDS[NCARD] = {
   {"МЕДНЫЙ ГОЛЕМ",      5, CT_TROOP, RA_LEGEND, U_CGOLEM,   1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЦЕПЬЮ ПРИТЯГИВАЕТ ВРАГОВ К СЕБЕ. ОДНОГО БЬЁТ СИЛЬНО, А ТОЛПУ - УДАРОМ ПО ПЛОЩАДИ: КАЖДОМУ СЛЕДУЮЩЕМУ УРОН +10%."},
   {"ИНФЕРНО",           5, CT_BUILD, RA_RARE,   U_INFERNO,  1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. ЛУЧ БЬЁТ ОДНУ ЦЕЛЬ, И ЧЕМ ДОЛЬШЕ - ТЕМ БОЛЬНЕЕ. БЬЁТ И ПО ЛЕТАЮЩИМ. СМЕНА ЦЕЛИ СБРАСЫВАЕТ РАЗОГРЕВ."},
   {"СБОРНИК ЭЛИКСИРА",  6, CT_BUILD, RA_RARE,   U_COLLECTOR,1, 1, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 9 СЕКУНД ДАЁТ ТЕБЕ 1 ЭЛИКСИР, А ПРИ ГИБЕЛИ ЕЩЁ 1. ВРАГИ ЛОМАЮТ ЕГО, ПОКА ОН НЕ ОКУПИЛСЯ."},
-  {"ОГНЕННЫЙ ДУХ",      1, CT_TROOP, RA_COMMON, U_FSPIRIT,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "БЫСТРЫЙ ДУХ. БЕЖИТ К БАШНЕ, ПРЫГАЕТ НА ВРАГА И ВЗРЫВАЕТСЯ ОГНЁМ ПО ПЛОЩАДИ. БЬЁТ И ЛЕТАЮЩИХ."},
-  {"ЛЕДЯНОЙ ДУХ",       1, CT_TROOP, RA_COMMON, U_ISPIRIT,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-СНЕЖОК. ПРЫГАЕТ НА ВРАГА, ВЗРЫВАЕТСЯ ЛЬДОМ И ЗАМОРАЖИВАЕТ ВСЕХ ВОКРУГ. БЬЁТ И ЛЕТАЮЩИХ."},
+  {"ОГНЕННЫЙ ДУХ",      1, CT_TROOP, RA_COMMON, U_FSPIRIT,  1, 4, SP_NONE, 0, 0, 0, 0, 0, "БЫСТРЫЙ ДУХ. БЕЖИТ К БАШНЕ, ПРЫГАЕТ НА ВРАГА И ВЗРЫВАЕТСЯ ОГНЁМ ПО ПЛОЩАДИ. БЬЁТ И ЛЕТАЮЩИХ."},
+  {"ЛЕДЯНОЙ ДУХ",       1, CT_TROOP, RA_COMMON, U_ISPIRIT,  1, 3, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-СНЕЖОК. ПРЫГАЕТ НА ВРАГА, ВЗРЫВАЕТСЯ ЛЬДОМ И ЗАМОРАЖИВАЕТ ВСЕХ ВОКРУГ. БЬЁТ И ЛЕТАЮЩИХ."},
   {"ПЕЧЬ",              5, CT_BUILD, RA_RARE,   U_FURNACE,  1, 2, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 4 СЕКУНДЫ ВЫПУСКАЕТ ОГНЕННОГО ДУХА, КОТОРЫЙ БЕЖИТ К БАШНЕ И ВЗРЫВАЕТСЯ. ЖИВЁТ 50 СЕКУНД."},
   {"ЛЕДЯНАЯ СКАЛА",     5, CT_BUILD, RA_RARE,   U_ICEROCK,  1, 3, SP_NONE, 0, 0, 0, 0, 0, "ЗДАНИЕ. КАЖДЫЕ 4 СЕКУНДЫ ВЫПУСКАЕТ ЛЕДЯНОГО ДУХА, КОТОРЫЙ ПРЫГАЕТ НА ВРАГА И ЗАМОРАЖИВАЕТ. ЖИВЁТ 50 СЕКУНД."},
-  {"СПАРКИ",            6, CT_TROOP, RA_LEGEND, U_SPARKY,   1, 4, SP_NONE, 0, 0, 0, 0, 0, "РАКЕТНАЯ ТЕЛЕЖКА. МЕДЛЕННО КАТИТСЯ И РАЗ В 2 СЕКУНДЫ ЗАПУСКАЕТ РАКЕТУ: ОГРОМНЫЙ УРОН ПО ПЛОЩАДИ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
-  {"ЭЛЕКТРОДУХ",        1, CT_TROOP, RA_COMMON, U_ESPIRIT,  1, 1, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-МОЛНИЯ. ПРЫГАЕТ НА ВРАГА, И МОЛНИЯ ЦЕПЬЮ БЬЁТ ДО 9 ВРАГОВ ПОДРЯД И ОГЛУШАЕТ ИХ. БЬЁТ И ЛЕТАЮЩИХ."},
+  {"СПАРКИ",            6, CT_TROOP, RA_LEGEND, U_SPARKY,   1, 5, SP_NONE, 0, 0, 0, 0, 0, "ЭЛЕКТРИЧЕСКАЯ ПУШКА НА КОЛЁСАХ. МЕДЛЕННО КАТИТСЯ, НАКАПЛИВАЕТ ЗАРЯД И РАЗ В 2 СЕКУНДЫ БЬЁТ ОГРОМНЫМ ЭЛЕКТРИЧЕСКИМ РАЗРЯДОМ ПО ПЛОЩАДИ. ЛЕТАЮЩИХ НЕ ДОСТАЁТ."},
+  {"ЭЛЕКТРОДУХ",        1, CT_TROOP, RA_COMMON, U_ESPIRIT,  1, 5, SP_NONE, 0, 0, 0, 0, 0, "ДУХ-МОЛНИЯ. ПРЫГАЕТ НА ВРАГА, И МОЛНИЯ ЦЕПЬЮ БЬЁТ ДО 9 ВРАГОВ ПОДРЯД И ОГЛУШАЕТ ИХ. БЬЁТ И ЛЕТАЮЩИХ."},
   {"ЛЕДЯНОЙ ВЕЛИКАН",   5, CT_TROOP, RA_EPIC,   U_IGIANT,   1, 3, SP_NONE, 0, 0, 0, 0, 0, "ЗДОРОВЬЕ И УДАР КАК У ВЕЛИКАНА. ВОКРУГ НЕГО ЛЕДЯНОЙ ХОЛОД: ВСЕ ВРАГИ В 2 КЛЕТКАХ ХОДЯТ И БЬЮТ НА 45% МЕДЛЕННЕЕ."},
-  {"ТРОЯНСКИЙ КОНЬ",    6, CT_TROOP, RA_EPIC,   U_TROJAN,   1, 5, SP_NONE, 0, 0, 0, 0, 0, "ДЕРЕВЯННЫЙ КОНЬ НА КОЛЁСАХ. ЕДЕТ К ЗДАНИЯМ И БАШНЯМ, ТАРАНИТ ИХ И РАЗВАЛИВАЕТСЯ. ИЗНУТРИ ВЫХОДЯТ 3 ВАРВАРА И ЭЛИТНЫЙ ВАРВАР - ДАЖЕ ЕСЛИ КОНЯ СЛОМАЮТ."},
+  {"ТРОЯНСКИЙ КОНЬ",    6, CT_TROOP, RA_EPIC,   U_TROJAN,   1, 6, SP_NONE, 0, 0, 0, 0, 0, "ДЕРЕВЯННЫЙ КОНЬ НА КОЛЁСАХ. ЕДЕТ К ЗДАНИЯМ И БАШНЯМ, ТАРАНИТ ИХ И РАЗВАЛИВАЕТСЯ. ИЗНУТРИ ВЫХОДЯТ 3 ВАРВАРА И ЭЛИТНЫЙ ВАРВАР - ДАЖЕ ЕСЛИ КОНЯ СЛОМАЮТ."},
+  {"ЗЕЛЬЕ ДЕЗОРИЕНТАЦИИ", 5, CT_SPELL, RA_EPIC,  -1,         0, 6, SP_CONFUSE, 3.0f, 0, 0, 0, 5.0f, "ВРАГИ В КРУГУ ТЕРЯЮТ ГОЛОВУ И 5 СЕКУНД БЬЮТ ДРУГ ДРУГА И СВОИ ЖЕ БАШНИ, А ТВОИХ НЕ ТРОГАЮТ."},
 };
 static const int START_DECK[8] = {C_KNIGHT, C_ARCHERS, C_GOBLINS, C_GIANT, C_FIREBALL, C_ARROWS, C_SKELETONS, C_CANNON};
 
 // ---- арены ----
-struct Arena { const char *name; int trophies; u32 grass, grass2, path, border, deco; int decoKind; };   // decoKind: 0 ёлки, 1 сосны, 2 кости, 3 лёд, 4 лава, 5 замок, 6 легендарная
+struct Arena { const char *name; int trophies; u32 grass, grass2, path, border, deco; int decoKind; };   // decoKind: 0 ёлки, 1 сосны, 2 кости, 3 лёд, 4 лава, 5 замок, 6 легендарная, 7 электрическая
 static const Arena ARENAS[] = {
   {"ТРЕНИРОВОЧНЫЙ ЛАГЕРЬ", 0,    RGB(96, 160, 70),  RGB(88, 150, 64),  RGB(196, 170, 120), RGB(120, 96, 70),  RGB(60, 120, 50), 0},
   {"ГОБЛИНСКИЙ ЛЕС",       300,  RGB(70, 140, 60),  RGB(62, 128, 54),  RGB(150, 120, 80),  RGB(90, 70, 50),   RGB(40, 100, 45), 1},
   {"КОСТЯНАЯ ЯМА",         600,  RGB(140, 130, 100),RGB(128, 120, 92), RGB(110, 100, 86),  RGB(80, 70, 60),   RGB(220, 215, 200), 2},
   {"ЛЕДЯНОЙ ПИК",          1000, RGB(200, 220, 235),RGB(186, 208, 226),RGB(150, 180, 205), RGB(120, 150, 180),RGB(170, 210, 240), 3},
   {"ОГНЕННАЯ ДОЛИНА",      1500, RGB(120, 80, 60),  RGB(108, 70, 54),  RGB(160, 110, 70),  RGB(70, 40, 30),   RGB(255, 120, 40), 4},
+  {"ЭЛЕКТРИЧЕСКАЯ ДОЛИНА", 1800, RGB(52, 64, 92),   RGB(46, 57, 84),   RGB(120, 130, 150), RGB(60, 66, 84),   RGB(255, 225, 60), 7},   // тёмная металлическая земля, катушки Теслы, искры
   {"КОРОЛЕВСКИЙ ЗАМОК",    2200, RGB(90, 150, 90),  RGB(82, 140, 82),  RGB(190, 185, 175), RGB(140, 135, 130),RGB(220, 190, 80), 5},
   {"ЛЕГЕНДАРНАЯ АРЕНА",    3000, RGB(58, 48, 92),   RGB(50, 41, 82),   RGB(214, 178, 84),  RGB(120, 88, 36),  RGB(255, 215, 90), 6},   // здесь играют ТОП-100 ботов
 };
@@ -1257,7 +1259,7 @@ typedef ProfileBaseT<MAXCARDS> ProfileV2;                           // прош�
 typedef ProfileBaseT<23> ProfileV1;                                 // первая версия (23 карты)
 static_assert(NCARD <= MAXCARDS, "карт больше запаса");
 // ---- баланс: множители силы карт, подобраны на 24 000 боях ботов (цель - 49-52% побед) ----
-static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.269f, 1.000f};
+static const float BAL_K[NCARD] = {1.000f, 1.000f, 1.152f, 1.269f, 1.228f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.258f, 1.000f, 1.300f, 1.000f, 1.000f, 1.000f, 1.300f, 1.558f, 1.438f, 1.298f, 1.300f, 1.000f, 1.000f, 1.233f, 1.000f, 1.184f, 1.671f, 1.501f, 1.590f, 1.468f, 1.600f, 1.579f, 1.000f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.000f, 1.269f, 1.000f, 1.000f};
 static void balanceInit() {   // МЕДНЫЙ ГОЛЕМ и ИНФЕРНО: +20% здоровья и урона (по боям ботов они были слабейшими)
   static bool done = false; if (done) return; done = true;
   for (int c = 0; c < NCARD; c++) { float k = BAL_K[c]; if (fabsf(k - 1) < 1e-4f) continue; Card &cd = CARDS[c];
@@ -1266,6 +1268,7 @@ static void balanceInit() {   // МЕДНЫЙ ГОЛЕМ и ИНФЕРНО: +20%
     if (cd.type == CT_SPELL) { if (cd.spell == SP_FREEZE) cd.sTime *= k; cd.sDmg *= k; continue; }
     UnitT &u = UNITS[cd.unit]; u.hp *= k; u.dmg *= k; u.shield *= k;
     if (c == C_VOLAR) { UNITS[U_PUP].hp *= k; UNITS[U_PUP].dmg *= k; } }
+  UNITS[U_BULL].dmg = 1000.0f / lvlK(10); UNITS[U_EBARB].dmg = 800.0f / lvlK(10);   // урон на 10 уровне: боевой бык 1000, элитный варвар 800
   UNITS[U_FIREMAGE].hp *= 0.7f;   // маг огня: -30% здоровья (по боям ботов выигрывал 88%)
   UNITS[U_ICEWIZ].hp *= 1.1f; UNITS[U_INFERNO].hp *= 1.1f;   // ледяной маг и инферно: +10% здоровья (по боям ботов были слабейшими)
 }
@@ -1388,9 +1391,11 @@ static const float MATCH_T = 180.0f, OVER_T = 60.0f, ELIX_T = 2.8f;
 struct Unit {
   int id, type, team, lvl; float x, z, px, pz, y, hp, maxhp, dmg, atkCD, deployT, frozenT, stunT, spawnCD, chargeDist, face, anim, atkAnim, flash, slowT, shield, jumpT, jumpCD, jumpDur, jumpH, jx0, jz0, jx1, jz1, pullT, pullX, pullZ, infT;
   int target, infTg, owner; bool alive, attacking, charging, moving;
-};
+ float confT;};
+static int effTeam(const Unit &a);
 enum { PJ_ARROW, PJ_BOLT, PJ_FIRE, PJ_BOMB, PJ_CANNON, PJ_DARK, PJ_DART, PJ_LAVA, PJ_ICE, PJ_SPARK };
-struct Proj { int kind, team, target; float x, z, y, px, pz, py, tx, tz, ty, v, dmg, splash; bool canAir, canGround, arc, dead; float sx, sz, sy, t, T, arcH; };
+static const float CONFUSE_T = 5.0f;                                            // зелье дезориентации: сколько секунд враги бьют друг друга
+struct Proj { int kind, team, target; float x, z, y, px, pz, py, tx, tz, ty, v, dmg, splash; bool canAir, canGround, arc, dead; float sx, sz, sy, t, T, arcH; int src, lvl; };   // src, lvl - кто и какого уровня выстрелил
 struct Spell { int kind, team, lvl; float x, z, r, dmg, towerK, delay, time, t, sx, sz; bool hit; };
 enum { FX_HIT, FX_BOOM, FX_DEATH, FX_DEPLOY, FX_TOWERDOWN, FX_ZAP, FX_SPLASH, FX_HEALP, FX_FIREBURST, FX_ICEBURST, FX_TRAIL, FX_CHAIN };   // FX_CHAIN: молния электродуха от (x,z) к (y,r)   // взрыв огненного духа, ледяной взрыв, огненный/ледяной след прыжка
 struct Fx { int kind, team; float x, z, y, t, T, r; };
@@ -1533,7 +1538,7 @@ static const float ICEWIZ_SPAWN_DMG = 84.85f;                                 //
 static const float MEGA_JUMP_K = 0.68f;                                       // прыжок мегарыцаря = 68% его удара
 static void lineSplash(const Unit &u, float len, float halfW, float dmg) {     // силач: удар полосой вперёд по направлению взгляда
   float fx = sinf(u.face), fz = cosf(u.face);
-  for (size_t i = 0; i < B.units.size(); i++) { Unit &e = B.units[i]; if (!e.alive || e.team == u.team || UT(e).air) continue;
+  for (size_t i = 0; i < B.units.size(); i++) { Unit &e = B.units[i]; if (!e.alive || e.team == effTeam(u) || e.id == u.id || UT(e).air) continue;
     float dx = e.x - u.x, dz = e.z - u.z, along = dx * fx + dz * fz, side = dx * fz - dz * fx, r = UT(e).radius * 0.5f;
     if (along < -r || along > len + r || fabsf(side) > halfW + r) continue; dealDmg(e, dmg, u.team); }
   for (int k = 1; k <= 5; k++) { float a = len * k / 5.5f; addFx(FX_SPLASH, u.team, u.x + fx * a, u.z + fz * a, 0.1f, 0.45f, 0.9f); }
@@ -1608,7 +1613,8 @@ static void killUnit(Unit &u) {
 }
 
 // ---- выбор цели ----
-static bool canHit(const Unit &a, const Unit &b) { if (!b.alive || b.team == a.team) return false; if (UT(b).air && !UT(a).canAir) return false; if (UT(a).onlyBuild && !isBuild(b)) return false; return true; }
+static int effTeam(const Unit &a) { return a.confT > 0 && UT(a).kind == UT_TROOP ? 1 - a.team : a.team; }   // дезориентированный боец «играет» за другую сторону
+static bool canHit(const Unit &a, const Unit &b) { if (!b.alive || b.team == effTeam(a) || b.id == a.id) return false; if (UT(b).air && !UT(a).canAir) return false; if (UT(a).onlyBuild && !isBuild(b)) return false; return true; }
 static float edgeDist(const Unit &a, const Unit &b) { float dx = a.x - b.x, dz = a.z - b.z; return sqrtf(dx * dx + dz * dz) - UT(a).radius - UT(b).radius; }
 static int findTarget(const Unit &u) {
   const UnitT &t = UT(u); int best = -1; float bd = 1e9f;
@@ -1629,9 +1635,9 @@ static int findTarget(const Unit &u) {
 static void shoot(Unit &u, Unit &tg) {
   const UnitT &t = UT(u); Proj p; memset(&p, 0, sizeof p);
   p.kind = u.type == U_FIREMAGE || u.type == U_DRAGON ? PJ_FIRE : (u.type == U_BOMBER ? PJ_BOMB : (u.type == U_CANNON ? PJ_CANNON : (u.type == U_XBOW ? PJ_BOLT : (u.type == U_NECRO ? PJ_DARK : (u.type == U_DART ? PJ_DART : (u.type == U_VOLAR || u.type == U_PUP ? PJ_LAVA : (u.type == U_ICEWIZ ? PJ_ICE : (u.type == U_SPARKY ? PJ_SPARK : PJ_ARROW))))))));
-  p.team = u.team; p.target = tg.id; p.dmg = u.dmg; p.splash = t.splash; p.canAir = t.canAir; p.canGround = true; p.arc = true;
-  p.arcH = p.kind == PJ_SPARK ? 1.6f : p.kind == PJ_BOMB ? 2.5f : (p.kind == PJ_ARROW ? 0.9f : (p.kind == PJ_FIRE ? 0.6f : (p.kind == PJ_CANNON ? 0.25f : (p.kind == PJ_DART ? 0.3f : 0.35f))));   // снаряды летят дугой
-  float h0 = u.type == U_SPARKY ? 1.7f : u.type == U_PRINCESS ? 4.2f : (u.type == U_KING ? 4.8f : (u.type == U_ATOWER ? 3.4f : (t.air ? u.y : 1.0f)));
+  p.team = effTeam(u); p.target = tg.id; p.dmg = u.dmg; p.splash = t.splash; p.src = u.type; p.lvl = u.lvl; p.canAir = t.canAir; p.canGround = true; p.arc = true;
+  p.arcH = p.kind == PJ_SPARK ? 0.5f : p.kind == PJ_BOMB ? 2.5f : (p.kind == PJ_ARROW ? 0.9f : (p.kind == PJ_FIRE ? 0.6f : (p.kind == PJ_CANNON ? 0.25f : (p.kind == PJ_DART ? 0.3f : 0.35f))));   // снаряды летят дугой
+  float h0 = u.type == U_SPARKY ? 0.95f : u.type == U_PRINCESS ? 4.2f : (u.type == U_KING ? 4.8f : (u.type == U_ATOWER ? 3.4f : (t.air ? u.y : 1.0f)));
   p.x = p.sx = u.x; p.z = p.sz = u.z; p.y = p.sy = h0; p.tx = tg.x; p.tz = tg.z; p.ty = UT(tg).air ? tg.y : 0.8f; p.v = t.projV;
   float d = sqrtf((p.tx - p.x) * (p.tx - p.x) + (p.tz - p.z) * (p.tz - p.z)); p.T = fmaxv(0.12f, d / p.v); p.t = 0;
   B.projs.push_back(p); bEvent(BE_SHOOT, u.team, u.x, u.z, p.kind);
@@ -1642,8 +1648,10 @@ static void updateProjs(float dt) {
     p.px = p.x; p.pz = p.z; p.py = p.y; p.t += dt; float k = clampf(p.t / p.T, 0, 1);
     p.x = p.sx + (p.tx - p.sx) * k; p.z = p.sz + (p.tz - p.sz) * k; p.y = p.sy + (p.ty - p.sy) * k + (p.arc ? sinf(k * 3.14159f) * p.arcH * fminv(1.0f, p.T * 1.5f) : 0);
     if (k >= 1) { p.dead = true;
-      if (p.splash > 0) { splashAt(p.tx, p.tz, p.splash, p.dmg, p.team, p.canAir, p.canGround, 1.0f, false); if (p.kind == PJ_ICE) slowArea(p.tx, p.tz, p.splash, p.team, 2.5f); addFx(p.kind == PJ_FIRE ? FX_SPLASH : FX_BOOM, p.team, p.tx, p.tz, p.ty, 0.4f, p.splash); }
-      else if (tg) { dealDmg(*tg, p.dmg, p.team); addFx(FX_HIT, p.team, p.tx, p.tz, p.ty, 0.25f, 0.4f); }
+      if (p.splash > 0) { splashAt(p.tx, p.tz, p.splash, p.dmg, p.team, p.canAir, p.canGround, 1.0f, false); if (p.kind == PJ_ICE) slowArea(p.tx, p.tz, p.splash, p.team, 2.5f); addFx(p.kind == PJ_FIRE ? FX_SPLASH : (p.kind == PJ_SPARK ? FX_ZAP : FX_BOOM), p.team, p.tx, p.tz, p.ty, p.kind == PJ_SPARK ? 0.5f : 0.4f, p.splash); }
+      else if (tg) { float dm = p.dmg;
+        if (p.src == U_PRINCESS && tg->type == U_SKELETON && abs(tg->lvl - p.lvl) <= 5) dm = fmaxv(dm, tg->hp + tg->shield + 1.0f);   // башня принцессы убивает скелета с одного выстрела, если уровни отличаются не больше чем на 5
+        dealDmg(*tg, dm, p.team); addFx(FX_HIT, p.team, p.tx, p.tz, p.ty, 0.25f, 0.4f); }
       bEvent(BE_HIT, p.team, p.tx, p.tz, p.kind); } }
   B.projs.erase(std::remove_if(B.projs.begin(), B.projs.end(), [](const Proj &p){ return p.dead; }), B.projs.end());
 }
@@ -1668,6 +1676,9 @@ static void updateSpells(float dt) {
           freezeArea(s, s.time);
           bEvent(BE_SPELL, s.team, s.x, s.z, SP_FREEZE); break;
         case SP_HEAL: bEvent(BE_SPELL, s.team, s.x, s.z, SP_HEAL); break;
+        case SP_CONFUSE: for (size_t k = 0; k < B.units.size(); k++) { Unit &u = B.units[k]; if (!u.alive || u.team == s.team || UT(u).kind != UT_TROOP) continue;
+            float dx = u.x - s.x, dz = u.z - s.z, rr = s.r + UT(u).radius; if (dx * dx + dz * dz < rr * rr) { u.confT = s.time; u.target = -1; u.attacking = false; } }
+          bEvent(BE_SPELL, s.team, s.x, s.z, SP_CONFUSE); break;
         case SP_BARREL: { const Card &bc = CARDS[C_BARREL];                                          // бочка разбилась - гоблины выскакивают
           for (int k = 0; k < bc.count; k++) { float a = k * 6.2832f / bc.count + 0.5f; float gx = clampf(s.x + cosf(a) * 0.6f, 0.5f, AW - 0.5f), gz = clampf(s.z + sinf(a) * 0.6f, 0.5f, AL - 0.5f);
             if (fabsf(gz - RIVER_Z) < RIVER_HW + 0.2f) gz = s.z < RIVER_Z ? RIVER_Z - RIVER_HW - 0.3f : RIVER_Z + RIVER_HW + 0.3f;
@@ -1752,6 +1763,7 @@ static void updateUnit(Unit &u, float dt) {
     return; }
   if (u.jumpCD > 0) u.jumpCD -= dt;
   if (t.kind == UT_BUILD && t.lifeT > 0) { u.hp -= u.maxhp / t.lifeT * dt; if (u.hp <= 0) { killUnit(u); return; } }
+  if (u.confT > 0) { u.confT -= dt; if (u.confT <= 0) { u.confT = 0; u.target = -1; u.attacking = false; } }   // зелье выветрилось - снова ищет врагов
   if (u.frozenT > 0) { u.frozenT -= dt; u.infT = 0; return; }
   if (u.stunT > 0) { u.stunT -= dt; u.infT = 0; return; }
   // спавн (некромант, хижина)
@@ -1788,12 +1800,12 @@ static void updateUnit(Unit &u, float dt) {
     if (u.atkCD <= 0) { u.atkCD = t.hitT; u.atkAnim = 1.0f;
       float dm = u.dmg * (u.charging ? 2.0f : 1.0f); u.charging = false; u.chargeDist = 0;
       if (t.projV > 0) { Unit tmp = u; tmp.dmg = dm; shoot(tmp, *tg); }
-      else if (u.type == U_INFERNO) { dealDmg(*tg, dm * infMul(u.infT), u.team); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); }
-      else if (u.type == U_CGOLEM) { int near = 0; for (size_t q = 0; q < B.units.size(); q++) { const Unit &e = B.units[q]; if (e.alive && e.team != u.team && !UT(e).air && (e.x - tg->x) * (e.x - tg->x) + (e.z - tg->z) * (e.z - tg->z) < (1.6f + UT(e).radius * 0.5f) * (1.6f + UT(e).radius * 0.5f)) near++; }
-        if (near >= 2) { splashAt(tg->x, tg->z, 1.6f, dm * CG_SPLASH_K, u.team, false, true, 1.0f, true, CG_SPLASH_STEP); addFx(FX_BOOM, u.team, tg->x, tg->z, 0, 0.4f, 1.6f); bEvent(BE_BOOM, u.team, tg->x, tg->z); }   // толпа - удар по площади
-        else { dealDmg(*tg, dm, u.team); addFx(FX_HIT, u.team, tg->x, tg->z, 0.8f, 0.25f, 0.5f); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); } }   // одна цель - сильный удар
+      else if (u.type == U_INFERNO) { dealDmg(*tg, dm * infMul(u.infT), effTeam(u)); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); }
+      else if (u.type == U_CGOLEM) { int near = 0; for (size_t q = 0; q < B.units.size(); q++) { const Unit &e = B.units[q]; if (e.alive && e.team != effTeam(u) && !UT(e).air && (e.x - tg->x) * (e.x - tg->x) + (e.z - tg->z) * (e.z - tg->z) < (1.6f + UT(e).radius * 0.5f) * (1.6f + UT(e).radius * 0.5f)) near++; }
+        if (near >= 2) { splashAt(tg->x, tg->z, 1.6f, dm * CG_SPLASH_K, effTeam(u), false, true, 1.0f, true, CG_SPLASH_STEP); addFx(FX_BOOM, u.team, tg->x, tg->z, 0, 0.4f, 1.6f); bEvent(BE_BOOM, u.team, tg->x, tg->z); }   // толпа - удар по площади
+        else { dealDmg(*tg, dm, effTeam(u)); addFx(FX_HIT, u.team, tg->x, tg->z, 0.8f, 0.25f, 0.5f); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); } }   // одна цель - сильный удар
       else if (u.type == U_STRONG) { lineSplash(u, 6.0f, 1.0f, dm); bEvent(BE_BOOM, u.team, tg->x, tg->z); }
-      else { if (t.splash > 0) splashAt(tg->x, tg->z, t.splash, dm, u.team, t.canAir, true, 1.0f, false); else dealDmg(*tg, dm, u.team); addFx(FX_HIT, u.team, tg->x, tg->z, UT(*tg).air ? tg->y : 0.8f, 0.2f, 0.35f); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); } }
+      else { if (t.splash > 0) splashAt(tg->x, tg->z, t.splash, dm, effTeam(u), t.canAir, true, 1.0f, false); else dealDmg(*tg, dm, effTeam(u)); addFx(FX_HIT, u.team, tg->x, tg->z, UT(*tg).air ? tg->y : 0.8f, 0.2f, 0.35f); bEvent(BE_HIT, u.team, tg->x, tg->z, -1); } }
   } else {
     u.attacking = false; u.infT = 0; u.atkCD = fmaxv(0.0f, u.atkCD - dt);
     if (t.kind == UT_TROOP) { moveToward(u, tg->x, tg->z, dt); if (u.type == U_LANCER && u.chargeDist > 2.5f) u.charging = true; }
@@ -1853,7 +1865,7 @@ static void botThink(float dt) {
     int best = -1; float bestScore = -1;
     for (int i = 0; i < 4; i++) { int c = botHandCard(i); const Card &cd = CARDS[c]; if (cd.cost > s.elixir + 0.01f || cd.unit == U_COLLECTOR) continue; float sc = 0;
       if (cd.type == CT_SPELL) { if (cd.spell == SP_HEAL) continue; if (th.swarm >= 2 && (cd.spell == SP_ARROWS || cd.spell == SP_ZAP || cd.spell == SP_FIREBALL)) sc = 3 + th.swarm; else if (th.n >= 3 && cd.spell == SP_FIREBALL) sc = 2.5f;
-        else if (cd.spell == SP_ROCKET && th.hp >= 2000 && th.n >= 2) sc = 2.0f; else if (cd.spell == SP_FREEZE && th.hp >= 2500 && zOf(bot.team, th.z) < 9.0f) sc = 2.2f; else continue; }
+        else if (cd.spell == SP_ROCKET && th.hp >= 2000 && th.n >= 2) sc = 2.0f; else if (cd.spell == SP_CONFUSE && th.n >= 3 && th.hp >= 1500) sc = 2.6f; else if (cd.spell == SP_FREEZE && th.hp >= 2500 && zOf(bot.team, th.z) < 9.0f) sc = 2.2f; else continue; }
       else { const UnitT &ut = UNITS[cd.unit];
         if (th.air && !ut.canAir) sc -= 3;
         if (th.tank && (cd.type == CT_BUILD || ut.dmg * imax(1, cd.count) > 300)) sc += 3;
@@ -2104,6 +2116,7 @@ static void humanoid(float x, float y, float z, float yaw, float s, u32 skin, u3
   }
 }
 // ---- модели ----
+static void STREAK(float x0, float y0, float z0, float x1, float y1, float z1, u32 col, int th);
 static void drawModel(int model, int team, float x, float y, float z, float yaw, float walk, float atk, float flash, bool frozen, float life01) {
   u32 tc = teamCol(team), td = teamDark(team);
   if (flash > 0) tc = mixc(tc, RGB(255, 255, 255), 0.6f);
@@ -2248,16 +2261,19 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
           drawWheel(c, axw, v3(0, 1, 0), azw, 0.19f * s, 0.07f * s, tire); drawWheel(c + axw * (wx > 0 ? 0.075f * s : -0.075f * s), axw, v3(0, 1, 0), azw, 0.09f * s, 0.01f * s, brass);
           PART(wx * 1.22f, 0.19f + sinf(wr) * 0.06f, wz + cosf(wr) * 0.06f, 0.006f, 0.025f, 0.025f, metd); } }
       PART(0, 0.3f, 0, 0.34f, 0.08f, 0.46f, metd); PART(0, 0.4f, 0, 0.35f, 0.025f, 0.47f, FZ(tc));             // рама и полоса цвета команды
-      PART(0, 0.58f, -0.1f, 0.3f, 0.16f, 0.3f, wood); for (int k = 0; k < 3; k++) PART(0, 0.48f + k * 0.1f, -0.1f, 0.305f, 0.012f, 0.305f, FZ(RGB(110, 72, 40)));   // ящик с боезапасом
-      PART(0.2f, 0.8f, -0.36f, 0.04f, 0.14f, 0.04f, metd); PART(0.2f, 0.96f, -0.36f, 0.055f, 0.025f, 0.055f, met);     // выхлопная труба
-      PART(0, 0.78f, 0.02f, 0.09f, 0.05f, 0.09f, met);                                                          // поворотная опора
-      PART(0, 0.98f, 0.08f + rec, 0.26f, 0.16f, 0.26f, met); PART(0, 1.15f, 0.08f + rec, 0.265f, 0.015f, 0.265f, FZ(tc));   // пусковая установка
-      PART(-0.27f, 0.98f, 0.08f + rec, 0.012f, 0.12f, 0.22f, metd); PART(0.27f, 0.98f, 0.08f + rec, 0.012f, 0.12f, 0.22f, metd);
-      for (int r = 0; r < 2; r++) for (int c = 0; c < 2; c++) { float tx = c ? 0.115f : -0.115f, ty = r ? 1.055f : 0.905f;             // 4 трубы, в них красные головки ракет
-        PART(tx, ty, 0.34f + rec, 0.075f, 0.062f, 0.012f, FZ(RGB(18, 16, 20)));
-        if (loaded > 0) PART(tx, ty, 0.345f + rec, 0.04f, 0.04f, 0.012f, FZ(RGB(225, 55, 45))); }
-      PART(-0.17f, 1.22f, -0.1f, 0.02f, 0.06f, 0.02f, metd); { float gx, gz; LP(x, z, yaw, -0.17f * s, -0.1f * s, gx, gz); GLOW(gx, y + 1.32f * s, gz, 0.07f, RGB(255, 120, 40), (int)(150 + 100 * sinf(gTime * 6 + x))); }   // сигнальный огонёк
-      if (atk > 0.6f) GLOW(x + sinf(yaw) * 0.45f * s, y + 0.98f * s, z + cosf(yaw) * 0.45f * s, 0.35f * atk, RGB(255, 190, 80), (int)(220 * atk)); } break;   // вспышка пуска
+      { u32 cop = FZ(RGB(205, 125, 60)), copD = FZ(RGB(150, 85, 40)), blu = RGB(120, 205, 255); float ch = 0.55f + 0.45f * sinf(gTime * 5.0f + x), fire = atk > 0.5f ? atk : 0.0f;   // Спарки: генератор с катушками сзади и электропушка спереди
+        PART(0, 0.56f, -0.2f, 0.24f, 0.14f, 0.2f, met); PART(0, 0.71f, -0.2f, 0.25f, 0.015f, 0.21f, FZ(tc));                    // корпус генератора
+        for (int k = 0; k < 4; k++) PART(0, 0.78f + k * 0.08f, -0.22f, 0.12f - k * 0.012f, 0.03f, 0.12f - k * 0.012f, k & 1 ? cop : copD);   // медная катушка
+        PART(0, 1.12f, -0.22f, 0.05f, 0.05f, 0.05f, FZ(RGB(220, 240, 255))); { float gx, gz; LP(x, z, yaw, 0, -0.22f * s, gx, gz); GLOW(gx, y + 1.13f * s, gz, (0.16f + 0.08f * ch) * s, blu, (int)(150 + 90 * ch)); }   // светящийся шар на катушке
+        PART(0, 0.84f, 0.05f, 0.09f, 0.08f, 0.09f, met);                                                       // опора пушки
+        PART(0, 0.92f, 0.28f + rec, 0.13f, 0.13f, 0.26f, metd);                                                // ствол
+        for (int k = 0; k < 3; k++) PART(0, 0.92f, 0.12f + k * 0.13f + rec, 0.145f, 0.145f, 0.025f, cop);         // медные кольца на стволе
+        PART(0, 0.92f, 0.56f + rec, 0.17f, 0.17f, 0.03f, met); PART(0, 0.92f, 0.59f + rec, 0.1f, 0.1f, 0.01f, FZ(RGB(20, 30, 50)));   // раструб
+        PART(0, 0.92f, 0.57f + rec, 0.07f, 0.07f, 0.03f, FZ(mixc(RGB(110, 190, 255), RGB(255, 255, 255), ch * 0.6f)));   // заряд в стволе
+        { float mx, mz; LP(x, z, yaw, 0, (0.62f + rec) * s, mx, mz); GLOW(mx, y + 0.92f * s, mz, (0.16f + 0.1f * ch) * s, blu, (int)(120 + 100 * ch));   // светится, пока копит заряд
+          if (fire > 0) { GLOW(mx, y + 0.92f * s, mz, 0.6f * fire * s, RGB(200, 235, 255), (int)(240 * fire)); GLOW(mx, y + 0.92f * s, mz, 0.25f * fire * s, RGB(255, 255, 255), 255); } }   // вспышка выстрела
+        if (fmodf(gTime * 3.3f + x, 1.0f) < 0.18f) { float a = gTime * 9 + x, sx0, sz0, sx1, sz1; LP(x, z, yaw, 0, -0.22f * s, sx0, sz0); LP(x, z, yaw, cosf(a) * 0.25f * s, (-0.22f + sinf(a) * 0.2f) * s, sx1, sz1);   // искра с катушки
+          STREAK(sx0, y + 1.12f * s, sz0, sx1, y + 0.8f * s, sz1, RGB(255, 240, 140), 2); } } } break;
     case M_ISPIRIT: { s = 0.95f * US; float bob = fabsf(sinf(walk * 2.6f)) * 0.06f, lg = sinf(walk * 2.6f) * 0.07f; u32 ib = FZ(RGB(140, 205, 252)), iw = FZ(RGB(225, 245, 255));   // ледяной дух: как в Clash Royale - голубой снежок с большими глазами и милой улыбкой
       float bl = (fmodf(gTime * 0.7f + x * 0.29f + z * 0.41f, 3.4f) < 0.12f) ? 0.2f : 1.0f, mo = atk > 0.3f ? 0.07f : 0.028f;
       PART(-0.1f, 0.06f, lg, 0.06f, 0.06f, 0.07f, FZ(RGB(110, 170, 225))); PART(0.1f, 0.06f, -lg, 0.06f, 0.06f, 0.07f, FZ(RGB(110, 170, 225)));
@@ -2489,6 +2505,13 @@ static void drawModel(int model, int team, float x, float y, float z, float yaw,
   (void)life01;
 }
 static float modelTop0(int model);
+static void drawIceBlock(float x, float y, float z, float r, float h, float left) {   // замёрзший враг: ледяные кристаллы вокруг и иней - сразу видно, кто заморожен
+  float k = clampf(left / 0.4f, 0, 1), rr = (r * 0.9f + 0.25f) * (0.85f + 0.15f * k); int n = 7;
+  DISC(x, z, rr + 0.1f, 0.016f, mixc(ARENAS[B.arena].grass, RGB(200, 235, 255), 0.6f * k));
+  for (int i = 0; i < n; i++) { float a = i * 6.2832f / n + x * 1.3f, ht = (0.22f + 0.18f * ((i * 37) % 5) / 4.0f) * (0.5f + 0.5f * h) * k;
+    BX(x + cosf(a) * rr, y + ht, z + sinf(a) * rr, 0.07f * k, ht, 0.07f * k, a, i & 1 ? RGB(190, 230, 255) : RGB(150, 205, 245)); }
+  GLOW(x, y + h * 0.5f, z, (rr + 0.2f) * k, RGB(190, 230, 255), (int)(90 * k));
+}
 static void drawIceAura(float x, float z) {                       // круг холода ледяного великана на земле: радиус ауры и кружащие снежинки
   float pulse = 0.5f + 0.5f * sinf(gTime * 2.2f + x);
   DISC(x, z, IGIANT_AURA, 0.012f, mixc(ARENAS[B.arena].grass, RGB(190, 230, 255), 0.35f + 0.1f * pulse));
@@ -2597,6 +2620,28 @@ static void drawProp(int kind, float x, float z, float s, unsigned h, float inw)
       BX(x, 0.12f * s, z, 0.3f * s, 0.12f * s, 0.3f * s, 0, basalt);
       for (int k = 0; k < 4; k++) { float t = fmodf(gTime * 0.8f + k * 0.25f + x, 1.0f); GLOW(x + sinf(k * 2.0f + x) * 0.1f, 0.3f + t * 1.6f * s, z, (0.2f - t * 0.1f) * s, mixc(RGB(255, 220, 90), lava, t), (int)(220 * (1 - t))); } return; }
     BX(x, 0.35f * s, z, 0.07f * s, 0.35f * s, 0.07f * s, 0, RGB(30, 24, 22)); BX(x + 0.2f * s, 0.7f * s, z, 0.22f * s, 0.04f * s, 0.04f * s, 0.4f, RGB(30, 24, 22)); GLOW(x, 0.5f * s, z, 0.1f * s, lava, 150); return; }   // обугленное дерево
+  if (kind == 7) {   // ЭЛЕКТРИЧЕСКАЯ ДОЛИНА: катушки Теслы, провода на столбах, генераторы, кристаллы-аккумуляторы
+    u32 met = RGB(110, 116, 132), metD = RGB(66, 70, 84), cop = RGB(200, 120, 60), ylw = RGB(255, 225, 60), blu = RGB(110, 200, 255);
+    float fl = 0.5f + 0.5f * sinf(gTime * 13 + x * 3 + z), on = fmodf(gTime * 1.7f + (h & 31) * 0.1f, 1.0f) < 0.25f ? 1.0f : 0.0f;
+    if (v == 0 || v == 4) {   // катушка Теслы: медная обмотка и светящийся шар, иногда бьёт молния
+      BX(x, 0.12f * s, z, 0.32f * s, 0.12f * s, 0.32f * s, 0, metD); for (int k = 0; k < 5; k++) BX(x, (0.32f + k * 0.2f) * s, z, (0.17f - k * 0.015f) * s, 0.07f * s, (0.17f - k * 0.015f) * s, 0, k & 1 ? cop : mixc(cop, RGB(0, 0, 0), 0.25f));
+      BX(x, 1.35f * s, z, 0.04f * s, 0.15f * s, 0.04f * s, 0, met); BX(x, 1.6f * s, z, 0.14f * s, 0.14f * s, 0.14f * s, 0.785f, mixc(blu, RGB(255, 255, 255), 0.4f));
+      GLOW(x, 1.6f * s, z, (0.45f + 0.15f * fl) * s, blu, 120 + (int)(80 * fl));
+      if (on > 0) { float a = (h & 7) * 0.8f + gTime; STREAK(x, 1.6f * s, z, x + cosf(a) * 0.7f * s, 1.2f * s, z + sinf(a) * 0.7f * s, ylw, 3); STREAK(x + cosf(a) * 0.7f * s, 1.2f * s, z + sinf(a) * 0.7f * s, x + cosf(a + 0.5f) * 1.1f * s, 0.6f * s, z + sinf(a + 0.5f) * 1.1f * s, ylw, 2); }
+      return; }
+    if (v == 1 || v == 5) {   // столб с проводами и фонарём
+      BX(x, 1.1f * s, z, 0.07f * s, 1.1f * s, 0.07f * s, 0, RGB(92, 70, 52)); BX(x, 2.05f * s, z, 0.45f * s, 0.04f * s, 0.05f * s, yaw, RGB(92, 70, 52));
+      for (int k = -1; k <= 1; k += 2) { BX(x + k * 0.38f * s * cosf(yaw), 2.12f * s, z - k * 0.38f * s * sinf(yaw), 0.03f * s, 0.05f * s, 0.03f * s, 0, RGB(230, 230, 210)); }
+      BX(x, 1.7f * s, z + 0.09f * s, 0.07f * s, 0.07f * s, 0.05f * s, 0, ylw); GLOW(x, 1.7f * s, z + 0.1f * s, 0.35f * s, ylw, 90 + (int)(40 * fl)); return; }
+    if (v == 2 || v == 6) {   // генератор: корпус, знак молнии, гудящая решётка
+      BX(x, 0.4f * s, z, 0.42f * s, 0.4f * s, 0.32f * s, yaw, met); BX(x, 0.82f * s, z, 0.44f * s, 0.03f * s, 0.34f * s, yaw, metD);
+      BX(x, 0.45f * s, z + 0.33f * s, 0.12f * s, 0.18f * s, 0.01f * s, 0, ylw); BX(x - 0.03f * s, 0.47f * s, z + 0.335f * s, 0.03f * s, 0.12f * s, 0.01f * s, 0.5f, RGB(30, 30, 40));
+      for (int k = 0; k < 3; k++) BX(x - 0.25f * s, (0.25f + k * 0.18f) * s, z + 0.33f * s, 0.1f * s, 0.02f * s, 0.01f * s, 0, metD);
+      GLOW(x, 0.9f * s, z, 0.3f * s, blu, (int)(60 + 60 * on)); return; }
+    { for (int k = 0; k < 3; k++) { float ht = (0.5f + ((h >> (k * 4)) & 7) * 0.12f) * s;   // кристаллы-аккумуляторы
+        BX(x + (k - 1) * 0.26f * s, ht, z + ((int)((h >> (k * 3)) & 3) - 1) * 0.14f * s, 0.09f * s, ht, 0.09f * s, k * 0.4f, k == 1 ? ylw : mixc(blu, RGB(255, 255, 255), 0.2f)); }
+      GLOW(x, 0.6f * s, z, 0.6f * s, mixc(RGB(110, 200, 255), RGB(255, 225, 60), fl), 70); return; }
+  }
   if (kind == 6) {   // ЛЕГЕНДАРНАЯ АРЕНА: кубки, золотые колонны, фиолетовые кристаллы, статуи чемпионов, пьедесталы ТОП-3
     u32 gold = RGB(240, 200, 80), goldD = RGB(190, 140, 40), marble = RGB(222, 218, 232), vio = RGB(130, 80, 220);
     if (v == 0) {   // кубок на постаменте
@@ -2649,7 +2694,7 @@ static bool onBridgeX(float x) { return fabsf(x - BRIDGE_X[0]) < BRIDGE_HW + 0.3
 static void drawArena(bool placing, int placeCard) {
   const Arena &ar = ARENAS[clampi(B.arena, 0, NARENA - 1)];
   // дальний фон
-  u32 outer = ar.decoKind == 3 ? RGB(225, 235, 245) : (ar.decoKind == 4 ? RGB(55, 38, 34) : (ar.decoKind == 2 ? RGB(110, 100, 85) : mixc(ar.grass2, RGB(0, 30, 0), 0.3f)));
+  u32 outer = ar.decoKind == 7 ? RGB(30, 34, 48) : ar.decoKind == 3 ? RGB(225, 235, 245) : (ar.decoKind == 4 ? RGB(55, 38, 34) : (ar.decoKind == 2 ? RGB(110, 100, 85) : mixc(ar.grass2, RGB(0, 30, 0), 0.3f)));
   GQ(-14, -14, AW + 14, AL + 14, -0.03f, outer);
   for (int k = 0; k < 26; k++) { unsigned h = hsh(k * 131u + 7u); float side = (k & 1) ? -1 : 1, px = side < 0 ? -1.2f - (h % 500) / 100.0f : AW + 1.2f + (h % 500) / 100.0f, pz = -3 + (h >> 10) % 38, rr = 0.6f + ((h >> 5) % 10) / 10.0f;   // пятна на земле вокруг
     GQ(px - rr, pz - rr * 0.7f, px + rr, pz + rr * 0.7f, -0.025f, mixc(outer, k % 3 ? RGB(0, 0, 0) : RGB(255, 255, 255), 0.08f)); }
@@ -2677,8 +2722,8 @@ static void drawArena(bool placing, int placeCard) {
     GQ(bx - 0.6f, 6.5f + 1.3f, bx + 0.6f, RIVER_Z - RIVER_HW, 0.005f, ar.path); GQ(bx - 0.6f, RIVER_Z + RIVER_HW, bx + 0.6f, AL - 6.5f - 1.3f, 0.005f, ar.path); }
   GQ(BRIDGE_X[0], 3.2f, BRIDGE_X[1], 4.2f, 0.004f, ar.path); GQ(BRIDGE_X[0], AL - 4.2f, BRIDGE_X[1], AL - 3.2f, 0.004f, ar.path);
   // река с волнами
-  static const u32 WATERS[7] = { RGB(64, 150, 215), RGB(78, 120, 66), RGB(70, 62, 78), RGB(190, 228, 248), RGB(240, 110, 30), RGB(70, 150, 225), RGB(112, 72, 196) };   // лагерь: речка, лес: болото, яма: мутная жижа, пик: лёд, долина: лава, замок: ров, легендарная: фиолетовая магия
-  u32 water = WATERS[clampi(B.arena, 0, 6)];
+  static const u32 WATERS[8] = { RGB(64, 150, 215), RGB(78, 120, 66), RGB(70, 62, 78), RGB(190, 228, 248), RGB(240, 110, 30), RGB(60, 200, 255), RGB(70, 150, 225), RGB(112, 72, 196) };   // лагерь: речка, лес: болото, яма: мутная жижа, пик: лёд, долина: лава, замок: ров, легендарная: фиолетовая магия
+  u32 water = WATERS[clampi(B.arena, 0, 7)];
   GQ(-14, RIVER_Z - RIVER_HW, AW + 14, RIVER_Z + RIVER_HW, -0.015f, water);
   GQ(-14, RIVER_Z - RIVER_HW * 0.35f, AW + 14, RIVER_Z + RIVER_HW * 0.35f, -0.014f, mixc(water, RGB(0, 0, 40), 0.18f));    // глубина посередине
   for (int k = 0; k < 8; k++) { float wx = fmodf(k * 2.7f + gTime * 0.6f, AW + 4) - 2; GQ(wx, RIVER_Z - 0.2f + (k % 3) * 0.25f - 0.25f, wx + 1.2f, RIVER_Z - 0.1f + (k % 3) * 0.25f - 0.25f, -0.012f, mixc(water, RGB(255, 255, 255), 0.35f)); }
@@ -2712,6 +2757,7 @@ static void drawArena(bool placing, int placeCard) {
     else if (ar.decoKind == 4) { c = kind < 3 ? RGB(255, 120, 30) : RGB(40, 30, 28); if (kind < 3) GLOW(px, 0.05f, pz, 0.12f, RGB(255, 120, 30), 60); }   // угли
     else if (ar.decoKind == 2) c = kind < 4 ? RGB(230, 225, 210) : RGB(95, 88, 76);                          // косточки и камешки
     else if (ar.decoKind == 1) c = kind < 3 ? RGB(200, 70, 70) : (kind < 5 ? RGB(170, 240, 120) : mixc(ar.grass, RGB(0, 30, 0), 0.4f));   // грибочки, светляки и тёмный мох
+    else if (ar.decoKind == 7) { c = kind < 2 ? RGB(255, 230, 80) : (kind < 4 ? RGB(110, 200, 255) : mixc(ar.grass, RGB(0, 0, 0), 0.25f)); if (kind < 2) GLOW(px, 0.05f, pz, 0.1f, RGB(255, 230, 120), 50); }   // искры и заклёпки
     else if (ar.decoKind == 6) c = kind < 2 ? RGB(240, 200, 80) : (kind < 4 ? RGB(170, 130, 250) : mixc(ar.grass, RGB(255, 255, 255), 0.12f));   // золотая и фиолетовая пыль
     else if (ar.decoKind == 0) c = kind < 4 ? RGB(205, 175, 110) : (kind < 6 ? RGB(250, 215, 60) : mixc(ar.grass, RGB(0, 40, 0), 0.2f));   // вытоптанная земля и сено
     else c = kind < 2 ? RGB(250, 245, 240) : (kind < 4 ? RGB(250, 215, 60) : (kind < 5 ? RGB(230, 90, 120) : mixc(ar.grass, RGB(0, 40, 0), 0.25f)));   // ромашки, лютики, тюльпаны, кустики травы
@@ -2720,12 +2766,12 @@ static void drawArena(bool placing, int placeCard) {
   for (int k = 0; k < 36; k++) { unsigned h = hsh(k * 31u + B.arena * 7u); float side = (k & 1) ? -1 : 1, x = side < 0 ? -2.2f - (h % 300) / 100.0f : AW + 2.2f + (h % 300) / 100.0f, z = (k / 2) * 1.8f - 0.5f + ((h >> 9) % 100) / 100.0f;
     float sc = 0.9f + ((h >> 4) & 7) / 14.0f; if (ar.decoKind == 3 || ar.decoKind == 4) sc *= 0.9f;
     drawProp(ar.decoKind, x, z, sc, h, side < 0 ? 1.0f : -1.0f); }
-  if (ar.decoKind >= 5) for (int sd = 0; sd < 2; sd++) for (int k = 0; k < 5; k++) { float x = sd ? AW + 1.5f : -1.5f, z = 3.0f + k * 6.5f; bool lg = ar.decoKind == 6; BX(x, 1.2f, z, 0.5f, 1.2f, 0.5f, 0, lg ? RGB(224, 220, 236) : RGB(170, 165, 155)); BX(x, 2.6f, z, 0.25f, 0.2f, 0.4f, 0, sd ? COL_EN : COL_ME); if (lg) GLOW(x, 3.1f, z, 0.5f, RGB(255, 215, 100), 110); }
+  if (ar.decoKind == 5 || ar.decoKind == 6) for (int sd = 0; sd < 2; sd++) for (int k = 0; k < 5; k++) { float x = sd ? AW + 1.5f : -1.5f, z = 3.0f + k * 6.5f; bool lg = ar.decoKind == 6; BX(x, 1.2f, z, 0.5f, 1.2f, 0.5f, 0, lg ? RGB(224, 220, 236) : RGB(170, 165, 155)); BX(x, 2.6f, z, 0.25f, 0.2f, 0.4f, 0, sd ? COL_EN : COL_ME); if (lg) GLOW(x, 3.1f, z, 0.5f, RGB(255, 215, 100), 110); }
   // особенности самого поля
   if (ar.decoKind == 3) { for (int k = 0; k < 16; k++) { unsigned h = hsh(k * 977u + 5u); float wx = -13 + (h % 2600) / 100.0f, wz = RIVER_Z - RIVER_HW * 0.8f + ((h >> 12) % 100) / 100.0f * RIVER_HW * 1.6f; GQ(wx, wz, wx + 1.4f + (h % 3) * 0.4f, wz + 0.04f, -0.012f, RGB(255, 255, 255)); } }   // трещины на льду
   if (ar.decoKind == 4) { for (int k = 0; k < 22; k++) { unsigned h = hsh(k * 613u + 3u); float px = 0.5f + (h % 1700) / 100.0f, pz = 0.5f + ((h >> 11) % 3100) / 100.0f; if (fabsf(pz - RIVER_Z) < RIVER_HW + 0.5f) continue; if (fabsf(px - 9) < 3.0f && (pz < 6.0f || pz > AL - 6.0f)) continue;
       float len = 0.5f + (h % 5) * 0.2f; GQ(px, pz, px + len, pz + 0.06f, 0.0035f, RGB(255, 110, 30)); GQ(px + len * 0.5f, pz, px + len * 0.5f + 0.06f, pz + len * 0.6f, 0.0035f, RGB(255, 150, 50)); GLOW(px + len * 0.5f, 0.04f, pz, 0.2f, RGB(255, 120, 30), 45); } }   // трещины с лавой на земле
-  if (ar.decoKind >= 5) { u32 carp = ar.decoKind == 6 ? RGB(96, 52, 170) : RGB(170, 40, 50); for (int s = 0; s < 2; s++) { float bx = BRIDGE_X[s];
+  if (ar.decoKind == 5 || ar.decoKind == 6) { u32 carp = ar.decoKind == 6 ? RGB(96, 52, 170) : RGB(170, 40, 50); for (int s = 0; s < 2; s++) { float bx = BRIDGE_X[s];
       GQ(bx - 0.5f, 7.9f, bx + 0.5f, RIVER_Z - RIVER_HW, 0.006f, carp); GQ(bx - 0.5f, RIVER_Z + RIVER_HW, bx + 0.5f, AL - 7.9f, 0.006f, carp);   // красная дорожка к мостам
       for (int sd = -1; sd <= 1; sd += 2) { GQ(bx + sd * 0.5f - 0.05f, 7.9f, bx + sd * 0.5f + 0.05f, RIVER_Z - RIVER_HW, 0.0065f, RGB(235, 200, 80)); GQ(bx + sd * 0.5f - 0.05f, RIVER_Z + RIVER_HW, bx + sd * 0.5f + 0.05f, AL - 7.9f, 0.0065f, RGB(235, 200, 80)); } } }
 }
@@ -2793,12 +2839,10 @@ static void drawProjs(float alpha) {
       case PJ_DART: drawArrow(x, y, z, dx, dy, dz, 0.3f, RGB(120, 200, 90)); break;
       case PJ_LAVA: { for (int t = 1; t <= 3; t++) GLOW(x - dx * t * 1.2f, y - dy * t * 1.2f, z - dz * t * 1.2f, 0.14f - t * 0.03f, RGB(255, 110, 30), 140 - t * 35); GLOW(x, y, z, 0.17f, RGB(255, 160, 50), 210); } break;
       case PJ_ICE: { for (int t = 1; t <= 4; t++) GLOW(x - dx * t * 1.1f, y - dy * t * 1.1f, z - dz * t * 1.1f, 0.15f - t * 0.025f, RGB(170, 230, 255), 140 - t * 28); GLOW(x, y, z, 0.2f, RGB(200, 240, 255), 220); GLOW(x, y, z, 0.1f, RGB(255, 255, 255), 240); } break;
-      case PJ_SPARK: { for (int t = 1; t <= 7; t++) GLOW(x - dx * t * 1.4f, y - dy * t * 1.4f, z - dz * t * 1.4f, 0.12f + t * 0.03f, mixc(RGB(235, 230, 225), RGB(120, 115, 110), t / 7.0f), 150 - t * 16);   // дымный след
-          float l = sqrtf(dx * dx + dy * dy + dz * dz) + 1e-4f, ux = dx / l, uy = dy / l, uz = dz / l; int th = imax(3, (int)(focal / 80.0f));
-          STREAK(x - ux * 0.55f, y - uy * 0.55f - 0.04f, z - uz * 0.55f, x + ux * 0.15f, y + uy * 0.15f - 0.04f, z + uz * 0.15f, RGB(25, 22, 28), th + 2);
-          STREAK(x - ux * 0.5f, y - uy * 0.5f, z - uz * 0.5f, x, y, z, RGB(230, 230, 236), th);                 // корпус
-          STREAK(x, y, z, x + ux * 0.15f, y + uy * 0.15f, z + uz * 0.15f, RGB(220, 50, 40), th);                  // красный нос
-          GLOW(x - ux * 0.6f, y - uy * 0.6f, z - uz * 0.6f, 0.22f + 0.05f * sinf(gTime * 50), RGB(255, 170, 50), 230); } break;   // пламя из сопла
+      case PJ_SPARK: { for (int t = 1; t <= 5; t++) GLOW(x - dx * t * 1.2f, y - dy * t * 1.2f, z - dz * t * 1.2f, 0.28f - t * 0.04f, RGB(110, 190, 255), 170 - t * 28);   // электрический заряд: голубой шар с белым ядром и трескучими молниями
+          GLOW(x, y, z, 0.5f + 0.06f * sinf(gTime * 40), RGB(120, 200, 255), 210); GLOW(x, y, z, 0.24f, RGB(235, 248, 255), 250);
+          for (int b = 0; b < 4; b++) { unsigned hb = hsh((unsigned)(b * 97 + (int)(gTime * 24) * 13 + (int)(x * 10))); float a = (hb & 255) / 40.0f, e = (((hb >> 8) & 255) / 255.0f - 0.5f) * 0.6f;
+            STREAK(x, y, z, x + cosf(a) * 0.45f, y + e, z + sinf(a) * 0.45f, RGB(255, 245, 160), imax(2, (int)(focal / 160.0f))); } } break;
       case PJ_DARK: { for (int t = 1; t <= 3; t++) GLOW(x - dx * t * 1.2f, y - dy * t * 1.2f, z - dz * t * 1.2f, 0.16f - t * 0.03f, RGB(90, 220, 110), 120 - t * 30); GLOW(x, y, z, 0.22f, RGB(140, 255, 150), 200); } break;
       case PJ_BOMB: BX(x, y, z, 0.13f, 0.13f, 0.13f, gTime * 7, RGB(30, 30, 34)); BX(x, y + 0.17f, z, 0.02f, 0.05f, 0.02f, 0, RGB(120, 100, 80)); GLOW(x, y + 0.24f, z, 0.08f + 0.03f * sinf(gTime * 40), RGB(255, 200, 80), 230); break;
       case PJ_CANNON: BX(x, y, z, 0.12f, 0.12f, 0.12f, 0, RGB(40, 40, 46)); STREAK(x - dx * 1.5f, y - dy * 1.5f, z - dz * 1.5f, x, y, z, RGB(200, 200, 200), 1); break;
@@ -2841,6 +2885,10 @@ static void drawSpells() {
           else if (after < 0.8f) { float sink = fminv(1.0f, after * 6); STREAK(tx, 0.02f, tz, tx - 0.06f, 0.45f - sink * 0.15f, tz - 0.1f, RGB(130, 95, 60), 1); STREAK(tx - 0.06f, 0.45f - sink * 0.15f, tz - 0.1f, tx - 0.07f, 0.52f - sink * 0.15f, tz - 0.12f, RGB(240, 240, 245), 1); } }
         if (s.hit && after < 0.25f) DISC(s.x, s.z, s.r, 0.02f, mixc(grass, RGB(255, 240, 200), 0.3f * (1 - after * 4)));
         break;
+      case SP_CONFUSE: if (s.t < 1.2f) { float fade = clampf((1.2f - s.t) / 0.6f, 0, 1), grow = clampf(s.t * 4, 0, 1);
+          DISC(s.x, s.z, s.r * grow, 0.03f, mixc(grass, RGB(190, 120, 240), 0.55f * fade));
+          for (int a = 0; a < 14; a++) { unsigned h = hsh(a * 13u + 7u); float ph = fmodf(s.t * 0.9f + (h & 255) / 255.0f, 1.0f), rr = ((h >> 8) & 255) / 255.0f * s.r * 0.9f * grow, aa = ((h >> 16) & 255) / 255.0f * 6.28f + s.t;
+            GLOW(s.x + cosf(aa) * rr, 0.3f + 2.2f * ph, s.z + sinf(aa) * rr, 0.12f + 0.08f * ph, a & 1 ? RGB(200, 130, 255) : RGB(255, 150, 230), (int)(210 * fade * (1 - ph * 0.5f))); } } break;   // пузыри зелья
       case SP_FREEZE: if (s.t < s.time) { float fade = clampf((s.time - s.t) / 0.5f, 0, 1), grow = clampf(s.t * 4, 0, 1);
           DISC(s.x, s.z, s.r * grow, 0.03f, mixc(grass, RGB(190, 230, 255), 0.6f * fade));
           for (int a = 0; a < 10; a++) { float aa = a * 0.628f; float rx = s.x + cosf(aa) * s.r * 0.92f * grow, rz = s.z + sinf(aa) * s.r * 0.92f * grow; BX(rx, 0.25f * fade, rz, 0.08f, 0.25f * fade + 0.01f, 0.08f, aa, RGB(200, 235, 255)); }   // ледяные иглы по краю
@@ -2921,6 +2969,9 @@ static void drawBattle3D(float alpha, bool placing, int placeCard, float gx, flo
     if (riverJumper(u.type) && fabsf(z - RIVER_Z) < RIVER_HW + 0.8f) y += cosf((z - RIVER_Z) / (RIVER_HW + 0.8f) * 1.5708f) * 1.3f;   // прыжок через реку
     float dep = u.deployT > 0 ? clampf(1.0f - u.deployT, 0.2f, 1) : 1;
     if (u.deployT > 0) y += (1 - dep) * 1.2f;
+    if (u.confT > 0) { float top = modelTop(t.model) + y + 0.25f, k2 = clampf(u.confT / 0.4f, 0, 1);   // дезориентирован: над головой кружатся звёздочки
+      for (int q = 0; q < 3; q++) { float a = gTime * 5.0f + q * 2.094f; GLOW(x + cosf(a) * 0.35f, top + 0.06f * sinf(gTime * 7 + q), z + sinf(a) * 0.35f, 0.17f * k2, q == 1 ? RGB(255, 230, 90) : RGB(220, 140, 255), (int)(240 * k2)); } }
+    if (u.frozenT > 0 && t.kind != UT_TOWER) drawIceBlock(x, y, z, t.radius, fminv(1.6f, modelTop(t.model) * 0.6f), u.frozenT);
     if (u.type == U_IGIANT && u.deployT <= 0) drawIceAura(x, z); gShieldOn = u.shield > 0; gMoveK = u.moving ? 1.0f : 0.0f; drawModel(t.model, u.team, x, y, z, u.face, u.anim, u.atkAnim, u.flash, u.frozenT > 0 || u.slowT > 0, 1); gMoveK = 0; gShieldOn = true;
     if (u.charging) GLOW(x, 0.8f, z, 0.5f, RGB(255, 230, 120), 90); }
   if (placing && placeCard >= 0) {                            // призрак на месте будущей карты
@@ -3063,6 +3114,9 @@ static void spellIcon(int c, int x, int y, int w, int h) {
   switch (CARDS[c].spell) {
     case SP_FIREBALL: fillCircle(cx, cy, r, RGB(255, 120, 30), 255); fillCircle(cx - r / 4, cy - r / 4, r / 2, RGB(255, 220, 120), 255); for (int k = 0; k < 3; k++) fillCircle(cx + r + k * r / 3, cy + r + k * r / 3, r / 3 - k, RGB(255, 150, 40), 200); break;
     case SP_ARROWS: for (int k = 0; k < 5; k++) { int ax = x + w / 6 + k * w / 7, ay = y + h / 6 + (k & 1) * h / 8; drawLine(ax, ay, ax + w / 6, ay + h / 2, RGB(140, 100, 60), imax(1, fs)); fillRect(ax + w / 6 - fs, ay + h / 2 - fs, fs * 2 + 1, fs * 2 + 1, RGB(220, 220, 230)); } break;
+    case SP_CONFUSE: { fillCircle(cx, cy + r / 3, r, RGB(70, 30, 100), 255); fillCircle(cx, cy + r / 3, r - imax(1, fs), RGB(170, 80, 230), 255); fillCircle(cx - r / 3, cy, r / 3, RGB(230, 180, 255), 200);   // склянка с зельем
+        fillRect(cx - r / 3, cy - r - r / 2, r * 2 / 3, r, RGB(200, 210, 230)); fillRect(cx - r / 2, cy - r - r / 2 - fs * 2, r, fs * 3, RGB(140, 100, 60));
+        for (int k = 0; k < 3; k++) fillCircle(cx + (k - 1) * r / 2, cy - r - r / 2 - fs * 5 - k * fs * 3, imax(1, fs + k), RGB(220, 160, 255), 200); } break;
     case SP_FREEZE: fillCircle(cx, cy, r, RGB(150, 210, 250), 255); for (int k = 0; k < 3; k++) { float a = k * 1.047f; drawLine(cx - (int)(cosf(a) * r * 1.2f), cy - (int)(sinf(a) * r * 1.2f), cx + (int)(cosf(a) * r * 1.2f), cy + (int)(sinf(a) * r * 1.2f), RGB(255, 255, 255), imax(1, fs)); } break;
     case SP_HEAL: fillCircle(cx, cy, r, RGB(255, 230, 120), 255); fillRect(cx - r / 4, cy - r * 2 / 3, r / 2, r * 4 / 3, RGB(255, 255, 255)); fillRect(cx - r * 2 / 3, cy - r / 4, r * 4 / 3, r / 2, RGB(255, 255, 255)); break;
     case SP_ROCKET: { for (int k = 0; k < 4; k++) fillCircle(cx - r / 2 - k * r / 3, cy + r / 2 + k * r / 3, r / 3 + k * r / 8, RGB(200, 195, 190), 200 - k * 40);   // дым
@@ -3452,9 +3506,9 @@ static const MenuTheme THEMES[5] = {
   {RGB(34, 58, 36), RGB(30, 52, 32), RGB(26, 40, 24), RGB(20, 32, 20), RGB(140, 100, 58), RGB(66, 126, 56), RGB(150, 210, 110), RGB(46, 66, 40), RGB(70, 92, 56), RGB(14, 24, 14), RGB(40, 62, 40), RGB(48, 72, 46),
    RGB(96, 72, 40), RGB(160, 125, 72), RGB(116, 88, 50), RGB(16, 36, 38), RGB(90, 140, 90), RGB(36, 66, 46), RGB(255, 240, 170), RGB(230, 255, 180), RGB(30, 70, 40), RGB(20, 50, 28), RGB(28, 38, 24), RGB(255, 220, 120), RGB(20, 50, 20), 3, {M_ARCHER, M_GOBKING, M_DART}},
 };
-static const int ARENA_THEME[7] = {4, 4, 1, 2, 3, 1, 0};   // лагерь и лес - лесная, яма и замок - ночная, пик - ледяная, долина - огненная, легендарная - фиолетовая
+static const int ARENA_THEME[8] = {4, 4, 1, 2, 3, 1, 1, 0};   // лагерь и лес - лесная, яма и замок - ночная, пик - ледяная, долина - огненная, легендарная - фиолетовая
 static const MenuTheme *MT = &THEMES[0];
-static void pickTheme() { MT = &THEMES[ARENA_THEME[clampi(arenaOf(pf.trophies), 0, 6)]]; }
+static void pickTheme() { MT = &THEMES[ARENA_THEME[clampi(arenaOf(pf.trophies), 0, 7)]]; }
 static void topBar() {
   char b[64], m[32]; int st = safeTop(); fillRect(0, 0, IW, st + fs * 16, devMode ? RGB(70, 30, 80) : MT->bar); fillRect(0, st + fs * 16 - imax(1, fs / 2), IW, imax(1, fs / 2), MT->tabLine);   // в режиме разработчика полоса фиолетовая
   { int pw = colW / 3 - fs * 6, ph = fs * 10, py = st + fs * 3, r = ph / 2 + fs;                          // таблетки ресурсов, как в больших играх
@@ -3745,6 +3799,7 @@ static void menuBattle() {
 static int cardStatLine(int c, int lvl, char lines[][64]) {
   const Card &cd = CARDS[c]; int n = 0; float k = lvlK(lvl);
   if (cd.type == CT_SPELL && cd.spell == SP_BARREL) { const UnitT &g = UNITS[cd.unit]; snprintf(lines[n++], 64, "ГОБЛИНОВ: %d", cd.count); if (cd.sDmg > 0) snprintf(lines[n++], 64, "УРОН ПРИ ПАДЕНИИ: %d", (int)(cd.sDmg * k)); snprintf(lines[n++], 64, "ГОБЛИН: ЗДОРОВЬЕ %d, УРОН %d", (int)(g.hp * k), (int)(g.dmg * k)); snprintf(lines[n++], 64, "РАДИУС: %.1f", cd.sR); snprintf(lines[n++], 64, "ЛЕТИТ КУДА УГОДНО"); return n; }
+  if (cd.type == CT_SPELL && cd.spell == SP_CONFUSE) { snprintf(lines[n++], 64, "ВРАГИ БЬЮТ ДРУГ ДРУГА: %.0f С", cd.sTime); snprintf(lines[n++], 64, "РАДИУС: %.1f", cd.sR); snprintf(lines[n++], 64, "БЬЮТ И СВОИ БАШНИ"); return n; }
   if (cd.type == CT_SPELL) { if (cd.spell == SP_HEAL) snprintf(lines[n++], 64, "ЛЕЧЕНИЕ: %d", (int)(cd.sDmg * k)); else snprintf(lines[n++], 64, "УРОН: %d (ПО БАШНЯМ %d)", (int)(cd.sDmg * k), (int)(cd.sDmg * k * cd.sTowerK));
     snprintf(lines[n++], 64, "РАДИУС: %.1f", cd.sR); if (cd.sTime > 0) snprintf(lines[n++], 64, "ДЛИТСЯ: %.0f С", cd.sTime); return n; }
   const UnitT &u = UNITS[cd.unit];
